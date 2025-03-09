@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Usuario</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <!-- El primero es para tus propios estilos.
+    El segundo es necesario para que Slick Carousel funcione bien.
+    El tercero agrega un diseño más atractivo al carrusel. -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">MyDeptos</div>
+            <ul class="menu">
+                <li><a href="/">Inicio</a></li>
+                <li><a href="/favorites">Favoritos</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container user-panel">
+        <div class="card profile-info">
+            <h2>Bienvenido, {{ user_data[0] }}</h2>
+            <p><strong>Email:</strong> {{ user_data[1] }}</p>
+            <p><strong>Fecha de Registro:</strong> {{ user_data[2] }}</p>
+            <div class="btn-group">
+                <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Editar Perfil</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-cancel">Cerrar Sesión</a>
+            </div>
+        </div>
+        <div class="card my-publications">
+            <h2>Mis Publicaciones</h2>
+            {% if mis_publicaciones %}
+                <div class="carousel">
+                    {% for publicacion in mis_publicaciones %}
+                        <div class="carousel-item">
+                            <h3>{{ publicacion[1] }}</h3>
+                            <p>{{ publicacion[2] }}</p>
+                            <p><strong>Precio:</strong> ${{ publicacion[3] }} {{ publicacion[4] }}</p>
+                            {% if publicacion[5] %}
+                                <img src="{{ url_for('static', filename='image/' + publicacion[5][0]) }}" alt="Imagen del departamento">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='image/aaa.png') }}" alt="Imagen predeterminada">
+                            {% endif %}
+                            <div class="btn-group">
+                                <a href="{{ url_for('view_property', property_id=publicacion[0]) }}" class="btn btn-primary">Ver Publicación</a>
+                                <form method="POST" action="{{ url_for('delete_publication', publication_id=publicacion[0]) }}" style="display:inline;">
+                                    {{ form.hidden_tag() }}
+                                    <button type="submit" class="btn btn-danger">Eliminar Publicación</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No tienes publicaciones.</p>
+            {% endif %}
+        </div>
+    </div>
+    <footer>
+        <div class="footer-content">
+            <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
+            <div class="social-media">
+                <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
+                <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
+            </div>
+            <div class="navigation-links">
+                <a href="/about">Sobre Nosotros</a>
+            </div>
+        </div>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $('.carousel').slick({
+                dots: true,
+                infinite: true,
+                speed: 300,
+                slidesToShow: 1,
+                adaptiveHeight: true,
+                prevArrow: '<button type="button" class="slick-prev"><i class="fas fa-chevron-left"></i></button>',
+                nextArrow: '<button type="button" class="slick-next"><i class="fas fa-chevron-right"></i></button>'
+            });
+        });
+    </script>
+</body>
+</html>

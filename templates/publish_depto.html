@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publicar Departamento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
+</head>
+<body class="publish-depto-page">
+    <header>
+        <nav>
+            <div class="logo">MyDeptos</div>
+            <ul class="menu">
+                <li><a href="{{ url_for('home') }}">Inicio</a></li>
+                <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
+                <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container">
+        <h2 class="form-title">Publicar Departamento</h2>
+        <!-- Mostrar mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="card">
+            <form method="POST" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    <label for="title">Título</label>
+                    {{ form.title(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="description">Descripción</label>
+                    {{ form.description(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="tipo_publicacion">Tipo de Publicación</label>
+                    {{ form.tipo_publicacion(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="price">Precio</label>
+                    {{ form.price(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="moneda">Moneda</label>
+                    {{ form.moneda(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="ambientes">Ambientes</label>
+                    {{ form.ambientes(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="dormitorios">Dormitorios</label>
+                    {{ form.dormitorios(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="banos">Baños</label>
+                    {{ form.banos(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="superficie">Superficie (m²)</label>
+                    {{ form.superficie(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="direccion">Dirección</label>
+                    {{ form.direccion(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="localidad">Localidad</label>
+                    {{ form.localidad(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="photos">Fotos del Departamento</label>
+                    {{ form.photos(class="form-control") }}
+                    <div id="preview"></div>
+                </div>
+                <button type="submit" class="btn btn-primary">Publicar Departamento</button>
+            </form>
+        </div>
+    </div>
+    <footer>
+        <div class="footer-content">
+            <div>&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
+            <div class="social-media">
+                <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
+                <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
+            </div>
+            <div class="navigation-links">
+                <a href="/about">Sobre Nosotros</a>
+            </div>
+        </div>
+    </footer>
+    <script>
+        // Ocultar mensajes flash después de 5 segundos
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                alert.style.display = 'none';
+            });
+        }, 5000);
+
+        // Mostrar vista previa de las imágenes seleccionadas
+        var selectedFiles = [];
+        document.getElementById('photos').addEventListener('change', function(event) {
+            var files = event.target.files;
+            if (selectedFiles.length + files.length > 5) {
+                alert('Solo puedes seleccionar un máximo de 5 imágenes.');
+                return;
+            }
+            var preview = document.getElementById('preview');
+            for (var i = 0; i < files.length; i++) {
+                selectedFiles.push(files[i]);
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '100px';
+                    img.style.height = '100px';
+                    img.style.margin = '5px';
+                    preview.appendChild(img);
+                }
+                reader.readAsDataURL(files[i]);
+            }
+            // Actualizar el input de archivos con los archivos seleccionados
+            var dataTransfer = new DataTransfer();
+            selectedFiles.forEach(function(file) {
+                dataTransfer.items.add(file);
+            });
+            document.getElementById('photos').files = dataTransfer.files;
+        });
+    </script>
+</body>
+</html>

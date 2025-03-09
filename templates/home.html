@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyDeptos - Búsqueda de Departamentos en Misiones</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
+    <script>
+        function toggleFavorite(element, propertyId) {
+            const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
+            if (!isAuthenticated) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            const isFavorite = element.classList.contains('selected');
+            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
+            const formData = new FormData();
+            formData.append('property_id', propertyId);
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    element.classList.toggle('selected');
+                    element.textContent = isFavorite ? 'Añadir a Favoritos' : 'Eliminar de Favoritos';
+                } else {
+                    alert('Error al actualizar favorito');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">MyDeptos</div>
+            <ul class="menu">
+                {% if is_authenticated %}
+                <li><a href="{{ url_for('user_panel') }}">Mi Perfil</a></li>
+                <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
+                <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
+                <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+                {% else %}
+                <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
+                <li><a href="{{ url_for('register') }}">Registrarse</a></li>
+                <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    <div class="main-content">
+        <div class="intro">
+            <h1>Encuentra tu próximo hogar en Oberá</h1>
+            {% if is_authenticated %}
+                <p>Esperamos que encuentres pronto lo que buscas, {{ user_name }}.</p>
+            {% endif %}
+        </div>
+        <div class="search-box">
+            <h2>Filtro de búsqueda</h2>
+            <form action="{{ url_for('search') }}" method="get">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label for="tipo_publicacion">Tipo de publicación:</label>
+                    <select name="tipo_publicacion" id="tipo_publicacion">
+                        <option value="">--Seleccionar--</option>
+                        <option value="venta">Venta</option>
+                        <option value="alquiler">Alquiler</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="precio_min">Precio mínimo:</label>
+                    <input type="number" name="precio_min" id="precio_min" placeholder="Ej: 100000">
+                </div>
+                <div class="form-group">
+                    <label for="precio_max">Precio máximo:</label>
+                    <input type="number" name="precio_max" id="precio_max" placeholder="Ej: 500000">
+                </div>
+                <div class="form-group">
+                    <label for="localidad">Localidad:</label>
+                    <select name="localidad" id="localidad">
+                        <option value="">--Seleccionar--</option>
+                        {% for id, nombre in localidades %}
+                            <option value="{{ id }}">{{ nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ambientes">Ambientes:</label>
+                    <input type="number" name="ambientes" id="ambientes" placeholder="Número de ambientes">
+                </div>
+                <button type="submit">Buscar</button>
+            </form>
+        </div>
+        <div class="summary-section">
+            <div class="summary-box">
+                <h3>Variedad de Propiedades</h3>
+                <p>Encuentra departamentos y casas en diferentes ubicaciones y precios.</p>
+            </div>
+            <div class="summary-box">
+                <h3>Filtros de Búsqueda</h3>
+                <p>Utiliza nuestros filtros para encontrar la propiedad que mejor se adapte a tus necesidades.</p>
+            </div>
+            <div class="summary-box">
+                <h3>Fácil Navegación</h3>
+                <p>Navega fácilmente por nuestra lista de propiedades y encuentra tu hogar ideal.</p>
+            </div>
+        </div>
+        <h2 class="listings-header">Últimos Departamentos</h2>
+        <div class="listings home-listings">
+            {% for depto in ultimos_departamentos %}
+            <div class="listing">
+                <div class="carousel">
+                    <div class="carousel-inner">
+                        {% if depto[10] %}
+                            {% for image in depto[10] %}
+                                <img src="{{ url_for('static', filename='image/' ~ image) }}" alt="Imagen del departamento">
+                            {% endfor %}
+                        {% else %}
+                            <img src="{{ url_for('static', filename='image/aaa.png') }}" alt="Imagen predeterminada">
+                        {% endif %}
+                    </div>
+                    <button class="prev" onclick="prevImage(this)">&#10094;</button>
+                    <button class="next" onclick="nextImage(this)">&#10095;</button>
+                </div>
+                <div class="listing-info">
+                    <h3>{{ depto[1] }} - {{ depto[9] }}</h3>
+                    <p>{{ depto[2] }}</p>
+                    <p>Precio: ${{ depto[3] }} {{ depto[4] }}</p>
+                    <p>Ambientes: {{ depto[5] }}</p>
+                    <p>Dormitorios: {{ depto[6] }}</p>
+                    <p>Baños: {{ depto[7] }}</p>
+                    <p>Superficie: {{ depto[8] }} m²</p>
+                    <button 
+                        class="favorite-button {% if depto[0] in favoritos %}selected{% endif %}"
+                        onclick="toggleFavorite(this, '{{ depto[0] }}')">
+                        {% if depto[0] in favoritos %}
+                            Eliminar de Favoritos
+                        {% else %}
+                            Añadir a Favoritos
+                        {% endif %}
+                    </button>
+                    <button onclick="window.location.href='/viewProperty/{{ depto[0] }}'">Ver propiedad</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="view-listing-container">
+            <button class="view-listing-button" onclick="window.location.href='/listings'">Ver listado</button>
+        </div>
+    </div>
+    <div style="height: 50px;"></div>
+    <footer>
+        <div class="footer-content">
+            <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
+            <div class="social-media">
+                <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
+                <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
+            </div>
+            <div class="navigation-links">
+                <a href="/about">Sobre Nosotros</a>
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('.carousel-inner img');
+            const dots = document.querySelectorAll('.carousel-dots .dot');
+            const scrollbarThumb = document.querySelector('.scrollbar-thumb');
+            let currentIndex = 0;
+
+            function showImage(index) {
+                images.forEach((img, i) => {
+                    img.style.display = i === index ? 'block' : 'none';
+                    dots[i].classList.toggle('active', i === index);
+                });
+                updateScrollbar(index);
+            }
+
+            function nextImage() {
+                currentIndex = (currentIndex + 1) % images.length;
+                showImage(currentIndex);
+            }
+
+            function updateScrollbar(index) {
+                const percentage = (index / (images.length - 1)) * 100;
+                scrollbarThumb.style.width = `${percentage}%`;
+            }
+
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    currentIndex = index;
+                    showImage(currentIndex);
+                });
+            });
+
+            setInterval(nextImage, 3000); // Cambia la imagen cada 3 segundos
+            showImage(currentIndex);
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const carousels = document.querySelectorAll('.carousel');
+            carousels.forEach(carousel => {
+                const images = carousel.querySelectorAll('.carousel-inner img');
+                let currentIndex = 0;
+
+                function showImage(index) {
+                    images.forEach((img, i) => {
+                        img.style.display = i === index ? 'block' : 'none';
+                    });
+                }
+
+                function nextImage() {
+                    currentIndex = (currentIndex + 1) % images.length;
+                    showImage(currentIndex);
+                }
+
+                function prevImage() {
+                    currentIndex = (currentIndex - 1 + images.length) % images.length;
+                    showImage(currentIndex);
+                }
+
+                carousel.querySelector('.next').addEventListener('click', nextImage);
+                carousel.querySelector('.prev').addEventListener('click', prevImage);
+
+                showImage(currentIndex);
+            });
+        });
+    </script>
+</body>
+</html>

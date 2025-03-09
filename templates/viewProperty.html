@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles de la Propiedad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
+</head>
+<body class="view-property-page">
+    <header>
+        <nav>
+            <div class="logo">MyDeptos</div>
+            <ul class="menu">
+                <li><a href="/">Inicio</a></li>
+                <li><a href="/listings">Lista de departamentos</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="property-details">
+            <h1>{{ departamento[1] }}</h1>
+            {% if departamento[10] %}
+                <img src="{{ url_for('static', filename='image/' + departamento[10][0]) }}" alt="Imagen del departamento">
+            {% endif %}
+            <p>{{ departamento[2] }}</p>
+            <p class="price">Precio: ${{ departamento[3] }} {{ departamento[4] }}</p>
+            <p>Ambientes: {{ departamento[5] }}</p>
+            <p>Dormitorios: {{ departamento[6] }}</p>
+            <p>Baños: {{ departamento[7] }}</p>
+            <p>Superficie: {{ departamento[8] }} m²</p>
+            <div class="publisher-info">
+                <h3>Publicado por:</h3>
+                <p>Nombre: {{ publicador.nombre }}</p>
+                <p>Email: {{ publicador.email }}</p>
+                <p>Teléfono: {{ publicador.telefono }}</p>
+            </div>
+            {% if user %}
+                <button class="favorite-button {% if departamento[0] in favoritos %}selected{% endif %}" onclick="toggleFavorite(this, '{{ departamento[0] }}')"
+                >
+                    {% if departamento[0] in favoritos %}Eliminar de Favoritos{% else %}Añadir a Favoritos{% endif %}
+                </button>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        function toggleFavorite(element, propertyId) {
+            const isFavorite = element.classList.contains('selected');
+            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
+            const formData = new FormData();
+            formData.append('property_id', propertyId);
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'  // Asegúrate de tener CSRF token habilitado
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    element.classList.toggle('selected');
+                    element.textContent = isFavorite ? 'Añadir a Favoritos' : 'Eliminar de Favoritos';
+                } else {
+                    alert('Error al actualizar favorito');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

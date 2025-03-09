@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Perfil</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
+</head>
+<body>
+    <div class="container edit-profile-container">
+        <h2>Editar Perfil</h2>
+        <!-- Mostrar mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                <label for="username">Nuevo Usuario</label>
+                {{ form.username(class="form-control") }}
+            </div>
+            <div class="form-group">
+                <label for="email">Nuevo Email</label>
+                {{ form.email(class="form-control") }}
+            </div>
+            <div class="form-group">
+                <label for="password">Nueva Contraseña</label>
+                {{ form.password(class="form-control") }}
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">Actualizar Perfil</button>
+                <button id="cancelBtn" class="btn btn-cancel">Cancelar</button>
+
+                <script>
+                    document.getElementById("cancelBtn").addEventListener("click", function() {
+                        window.location.href = "{{ url_for('home') }}";
+                    });
+                </script>
+                
+            </div>
+        </form>
+        <a href="{{ url_for('generate_password') }}" class="btn btn-secondary">Generar Contraseña Segura</a>
+    </div>
+    <script>
+        // Ocultar mensajes flash después de 5 segundos
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                alert.style.display = 'none';
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

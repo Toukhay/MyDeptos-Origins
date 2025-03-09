@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favoritos - MyDeptos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
+    <script>
+        function scrollCarousel(button, direction) {
+            const container = button.parentElement.querySelector(".image-carousel");
+            const scrollAmount = container.clientWidth; // Mover el ancho de la imagen
+            container.scrollBy({
+                left: direction * scrollAmount,
+                behavior: "smooth"
+            });
+        }
+    </script>    
+    <script>
+        function toggleFavorite(element, propertyId) {
+            const isFavorite = element.classList.contains('selected');
+            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
+            const formData = new FormData();
+            formData.append('property_id', propertyId);
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    element.classList.toggle('selected');
+                    element.textContent = isFavorite ? 'Añadir a Favoritos' : 'Eliminar de Favoritos';
+                    if (isFavorite) {
+                        element.closest('.listing').remove(); // Eliminar el elemento de la lista
+                    }
+                } else {
+                    alert('Error al actualizar favorito');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</head>
+<body class="favorites-page">
+    <header>
+        <nav>
+            <div class="logo">MyDeptos</div>
+            <ul class="menu">
+                <li><a href="/">Inicio</a></li>
+                <li><a href="/listings">Lista de departamentos</a></li>
+                <li><a href="/publish_depto">Publicar departamento</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="intro">
+            <h1>Mis Favoritos</h1>
+        </div>
+        <div class="listings">
+            {% for departamento in favoritos %}
+                <div class="listing">
+                    <div class="carousel">
+                        {% if departamento[10] %}
+                            {% for foto in departamento[10] %}
+                                <img src="{{ url_for('static', filename='image/' + foto) }}" alt="Imagen del departamento">
+                            {% endfor %}
+                        {% else %}
+                            <img src="{{ url_for('static', filename='image/aaa.png') }}" alt="Imagen predeterminada">
+                        {% endif %}
+                        <div class="carousel-dots">
+                            {% for foto in departamento[10] %}
+                            <span class="dot" onclick="currentSlide(parseInt('{{ loop.index }}', 10))"></span>
+                            {% endfor %}
+                        </div>
+                        <button class="prev" onclick="plusSlides(-1)">&#10094;</button>
+                        <button class="next" onclick="plusSlides(1)">&#10095;</button>
+                    </div>                    
+                    <div class="listing-info">
+                        <h3>{{ departamento[1] }} - {{ departamento[9] }}</h3>
+                        <p>{{ departamento[2] }}</p>
+                        <p>Precio: ${{ departamento[3] }} {{ departamento[4] }}</p>
+                        <p>Ambientes: {{ departamento[5] }}</p>
+                        <p>Dormitorios: {{ departamento[6] }}</p>
+                        <p>Baños: {{ departamento[7] }}</p>
+                        <p>Superficie: {{ departamento[8] }} m²</p>
+                        <button class="favorite-button selected" onclick="toggleFavorite(this, '{{ departamento[0] }}')">
+                            Eliminar de Favoritos
+                        </button>
+                        <button onclick="window.location.href='/viewProperty/{{ departamento[0] }}'">Ver propiedad</button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <footer>
+        <div class="footer-content">
+            <div>&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
+        </div>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const carousels = document.querySelectorAll('.carousel');
+            carousels.forEach(carousel => {
+                const dots = carousel.querySelectorAll('.dot');
+                const images = carousel.querySelectorAll('img');
+                let currentIndex = 0;
+
+                function showSlide(index) {
+                    images.forEach((img, i) => {
+                        img.style.display = i === index ? 'block' : 'none';
+                    });
+                    dots.forEach((dot, i) => {
+                        dot.classList.toggle('active', i === index);
+                    });
+                    currentIndex = index;
+                }
+
+                function plusSlides(n) {
+                    showSlide((currentIndex + n + images.length) % images.length);
+                }
+
+                dots.forEach((dot, index) => {
+                    dot.addEventListener('click', () => {
+                        showSlide(index);
+                    });
+                });
+
+                carousel.querySelector('.prev').addEventListener('click', () => {
+                    plusSlides(-1);
+                });
+
+                carousel.querySelector('.next').addEventListener('click', () => {
+                    plusSlides(1);
+                });
+
+                showSlide(currentIndex);
+            });
+        });
+    </script>
+</body>
+</html>

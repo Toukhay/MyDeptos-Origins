@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Departamentos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
+    <script>
+        function toggleFavorite(element, propertyId) {
+            const isAuthenticated = JSON.parse('{{ is_authenticated | tojson }}'); // 🔹 Convierte bien el valor
+            if (!isAuthenticated) {
+                window.location.href = '/login';
+                return;
+            }
+    
+            const isFavorite = element.classList.contains('active');
+            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
+            const formData = new FormData();
+            formData.append('property_id', propertyId);
+    
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    element.classList.toggle('active');
+                } else {
+                    alert('Error al actualizar favorito');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>    
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">MyDeptos</div>
+            <ul class="menu">
+                <li><a href="/">Inicio</a></li>
+                <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
+                <li><a href="/publish_depto">Publicar departamento</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container">
+        <h2>Lista de Departamentos</h2>
+        <div class="listings">
+            {% for depto in departamentos %}
+                <div class="listing">
+                    <div class="carousel">
+                        {% for foto in depto[11] %}
+                            <div><img src="{{ url_for('static', filename='image/' ~ foto) }}" alt="Foto del Departamento"></div>
+                        {% endfor %}
+                    </div>
+                    <div class="listing-info">
+                        <i class="fas fa-heart favorite {% if depto[0] in favoritos %}active{% endif %}" onclick="toggleFavorite(this, '{{ depto[0] }}')"></i>
+                        <h3>{{ depto[1] }}</h3>
+                        <p>{{ depto[2] }}</p>
+                        <p><strong>Tipo de Publicación:</strong> {{ depto[3] }}</p>
+                        <p class="price"><strong>Precio:</strong> {{ depto[4] }} {{ depto[5] }}</p>
+                        <p><strong>Ambientes:</strong> {{ depto[6] }}</p>
+                        <p><strong>Dormitorios:</strong> {{ depto[7] }}</p>
+                        <p><strong>Baños:</strong> {{ depto[8] }}</p>
+                        <p><strong>Superficie:</strong> {{ depto[9] }} m²</p>
+                        <p><strong>Dirección:</strong> {{ depto[10] }}</p>
+                        <button class="btn btn-primary" onclick="window.location.href='/viewProperty/{{ depto[0] }}'">Ver propiedad</button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <footer>
+        <div class="footer-content">
+            <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
+            <div class="social-media">
+                <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
+                <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
+            </div>
+            <div class="navigation-links">
+                <a href="/about">Sobre Nosotros</a>
+            </div>
+        </div>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $('.carousel').slick({
+                dots: true,
+                infinite: true,
+                speed: 300,
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                prevArrow: '<button type="button" class="slick-prev"><i class="fas fa-chevron-left"></i></button>',
+                nextArrow: '<button type="button" class="slick-next"><i class="fas fa-chevron-right"></i></button>'
+            });
+        });
+    </script>
+</body>
+</html>
