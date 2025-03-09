@@ -1,2 +1,0 @@
-# MyDeptosFinal
-MyDeptos origins
