@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Publicar Departamento</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body class="publish-depto-page">
     <header>
@@ -21,16 +21,8 @@
     </header>
     <div class="container">
         <h2 class="form-title">Publicar Departamento</h2>
-        <!-- Mostrar mensajes flash -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
         <div class="card">
-            <form method="POST" enctype="multipart/form-data">
+            <form id="publishForm" method="POST" enctype="multipart/form-data">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
                     <label for="title">Título</label>
@@ -78,7 +70,7 @@
                 </div>
                 <div class="form-group">
                     <label for="photos">Fotos del Departamento</label>
-                    {{ form.photos(class="form-control") }}
+                    {{ form.photos(class="form-control", id="photos") }}
                     <div id="preview"></div>
                 </div>
                 <button type="submit" class="btn btn-primary">Publicar Departamento</button>
@@ -93,19 +85,11 @@
                 <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
             </div>
             <div class="navigation-links">
-                <a href="/about">Sobre Nosotros</a>
+                <a href="{{ url_for('about') }}">Sobre Nosotros</a>
             </div>
         </div>
     </footer>
     <script>
-        // Ocultar mensajes flash después de 5 segundos
-        setTimeout(function() {
-            var alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                alert.style.display = 'none';
-            });
-        }, 5000);
-
         // Mostrar vista previa de las imágenes seleccionadas
         var selectedFiles = [];
         document.getElementById('photos').addEventListener('change', function(event) {
@@ -124,6 +108,7 @@
                     img.style.width = '100px';
                     img.style.height = '100px';
                     img.style.margin = '5px';
+                    img.style.objectFit = 'cover';
                     preview.appendChild(img);
                 }
                 reader.readAsDataURL(files[i]);
@@ -135,6 +120,16 @@
             });
             document.getElementById('photos').files = dataTransfer.files;
         });
+
+        // Mantener las imágenes seleccionadas al enviar el formulario
+        document.getElementById('publishForm').addEventListener('submit', function(event) {
+            var dataTransfer = new DataTransfer();
+            selectedFiles.forEach(function(file) {
+                dataTransfer.items.add(file);
+            });
+            document.getElementById('photos').files = dataTransfer.files;
+        });
+        
     </script>
 </body>
 </html>

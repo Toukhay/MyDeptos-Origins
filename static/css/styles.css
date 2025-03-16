@@ -238,28 +238,37 @@ button:hover {
     background-color: #357ABD; /* Azul más oscuro */
 }
 
+
+/* UBICAR CORRECTAMENTE LOS ESTILOS, YA QUE LA CLASS RESULTS EN SEARCH_RESULTS.HTML NO ESTA DANDO BOLA*/
 .search-box {
     background-color: white;
     padding: 2rem;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    max-width: 600px;
+    max-width: 100%;
     margin: 0 auto;
+    box-sizing: border-box; /* Asegura que el padding y el borde se incluyan en el tamaño total */
+    overflow: hidden; /* Evita que el contenido se desborde */
+    
 }
 
 .search-box h2 {
     margin-top: 0;
     color: var(--primary-color);
+    word-wrap: break-word; /* Permite que el texto se ajuste en varias líneas si es necesario */
 }
 
 .search-box .form-group {
     margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .search-box label {
     display: block;
     margin: 0.5rem 0 0.2rem;
     color: var(--text-color);
+    word-wrap: break-word; /* Permite que el texto se ajuste en varias líneas si es necesario */
 }
 
 .search-box input, .search-box select {
@@ -268,6 +277,7 @@ button:hover {
     margin-bottom: 1rem;
     border: 1px solid #ccc;
     border-radius: var(--border-radius);
+    box-sizing: border-box; /* Asegura que el padding y el borde se incluyan en el tamaño total */
 }
 
 .search-box button {
@@ -279,10 +289,28 @@ button:hover {
     cursor: pointer;
     width: 100%;
     font-size: 1rem;
+    box-sizing: border-box; /* Asegura que el padding y el borde se incluyan en el tamaño total */
 }
 
 .search-box button:hover {
     background-color: #357ABD; /* Azul más oscuro */
+}
+
+.results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem; /* Reducir el espacio entre las tarjetas */
+    margin-top: 2rem;
+    padding: 1rem; /* Reducir el padding */
+}
+
+.results-details {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 1rem;
+    width: 100%;
+    margin-bottom: 1rem;
 }
 
 .summary-section {
@@ -422,10 +450,23 @@ button:hover {
 
 .btn-group {
     display: flex;
-    justify-content: flex-start; /* Alinear botones a la izquierda */
-    align-items: center; /* Asegurar que estén alineados verticalmente */
-    gap: 10px; /* Espacio entre botones */
+    justify-content: space-between;
     margin-top: 10px;
+}
+
+.btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.btn-group-vertical .btn:last-child {
+    margin-bottom: 0;
+}
+
+.btn-group-vertical .btn {
+    margin-bottom: 10px;
 }
 
 .btn-group a {
@@ -465,6 +506,17 @@ button:hover {
 
 .profile-info, .my-publications {
     width: 100%; /* Asegurar que ambas tarjetas ocupen el 100% del ancho */
+    max-width: 500;
+    max-height: 500;
+    width: 1200;
+    height: 1200;
+
+}
+.publication-image {
+    width: 100%;
+    height: auto;
+    border-radius: var(--border-radius);
+    object-fit: cover;
 }
 
 .alert {
@@ -561,8 +613,13 @@ button:hover {
 .carousel-item .btn-primary {
     background-color: var(--primary-color);
     color: white;
-    border: 1px solid #357ABD;
-    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color var (--transition-duration);
+    margin-top: 1rem;
 }
 
 .carousel-item .btn-primary:hover {
@@ -574,6 +631,9 @@ button:hover {
     color: white;
     border: 1px solid #dc3545;
     text-decoration: none;
+    padding: 0.5rem 1rem; /* Ajustar el padding */
+    border-radius: var(--border-radius); /* Añadir border-radius */
+    transition: background-color var(--transition-duration); /* Añadir transición */
 }
 
 .carousel-item .btn-danger:hover {

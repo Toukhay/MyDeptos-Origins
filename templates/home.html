@@ -128,7 +128,7 @@
                                 <img src="{{ url_for('static', filename='image/' ~ image) }}" alt="Imagen del departamento">
                             {% endfor %}
                         {% else %}
-                            <img src="{{ url_for('static', filename='image/aaa.png') }}" alt="Imagen predeterminada">
+                            <img src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada">
                         {% endif %}
                     </div>
                     <button class="prev" onclick="prevImage(this)">&#10094;</button>
@@ -173,70 +173,3 @@
             </div>
         </div>
     </footer>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const images = document.querySelectorAll('.carousel-inner img');
-            const dots = document.querySelectorAll('.carousel-dots .dot');
-            const scrollbarThumb = document.querySelector('.scrollbar-thumb');
-            let currentIndex = 0;
-
-            function showImage(index) {
-                images.forEach((img, i) => {
-                    img.style.display = i === index ? 'block' : 'none';
-                    dots[i].classList.toggle('active', i === index);
-                });
-                updateScrollbar(index);
-            }
-
-            function nextImage() {
-                currentIndex = (currentIndex + 1) % images.length;
-                showImage(currentIndex);
-            }
-
-            function updateScrollbar(index) {
-                const percentage = (index / (images.length - 1)) * 100;
-                scrollbarThumb.style.width = `${percentage}%`;
-            }
-
-            dots.forEach((dot, index) => {
-                dot.addEventListener('click', () => {
-                    currentIndex = index;
-                    showImage(currentIndex);
-                });
-            });
-
-            setInterval(nextImage, 3000); // Cambia la imagen cada 3 segundos
-            showImage(currentIndex);
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const carousels = document.querySelectorAll('.carousel');
-            carousels.forEach(carousel => {
-                const images = carousel.querySelectorAll('.carousel-inner img');
-                let currentIndex = 0;
-
-                function showImage(index) {
-                    images.forEach((img, i) => {
-                        img.style.display = i === index ? 'block' : 'none';
-                    });
-                }
-
-                function nextImage() {
-                    currentIndex = (currentIndex + 1) % images.length;
-                    showImage(currentIndex);
-                }
-
-                function prevImage() {
-                    currentIndex = (currentIndex - 1 + images.length) % images.length;
-                    showImage(currentIndex);
-                }
-
-                carousel.querySelector('.next').addEventListener('click', nextImage);
-                carousel.querySelector('.prev').addEventListener('click', prevImage);
-
-                showImage(currentIndex);
-            });
-        });
-    </script>
-</body>
-</html>

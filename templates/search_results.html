@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados de Búsqueda</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <header>
@@ -59,26 +59,28 @@
             <hr>
         {% endif %}
         {% if resultados %}
-            {% for depto in resultados %}
-                <div class="result">
-                    {% if depto[10] %}
-                        <img src="{{ url_for('static', filename='image/' + depto[10][0]) }}" alt="Imagen del departamento">
-                    {% else %}
-                        <img src="{{ url_for('static', filename='image/aaa.png') }}" alt="Imagen predeterminada">
-                    {% endif %}
-                    <div class="result-details">
-                        <h3>{{ depto[1] }} - {{ depto[9] }}</h3>
-                        <div class="info">
-                            <p><strong>Descripción:</strong> {{ depto[2] }}</p>
-                            <p><strong>Precio:</strong> ${{ depto[3] }} {{ depto[4] }}</p>
-                            <p><strong>Ambientes:</strong> {{ depto[5] }}</p>
-                            <p><strong>Dormitorios:</strong> {{ depto[6] }}</p>
-                            <p><strong>Baños:</strong> {{ depto[7] }}</p>
-                            <p><strong>Superficie:</strong> {{ depto[8] }} m²</p>
+            <div class="results">
+                {% for depto in resultados %}
+                    <div class="result">
+                        {% if depto[10] %}
+                            <img src="{{ url_for('static', filename='image/' + depto[10][0]) }}" alt="Imagen del departamento">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada">
+                        {% endif %}
+                        <div class="result-details">
+                            <h3>{{ depto[1] }} - {{ depto[9] }}</h3>
+                            <div class="info">
+                                <p><strong>Descripción:</strong> {{ depto[2] }}</p>
+                                <p><strong>Precio:</strong> ${{ depto[3] }} {{ depto[4] }}</p>
+                                <p><strong>Ambientes:</strong> {{ depto[5] }}</p>
+                                <p><strong>Dormitorios:</strong> {{ depto[6] }}</p>
+                                <p><strong>Baños:</strong> {{ depto[7] }}</p>
+                                <p><strong>Superficie:</strong> {{ depto[8] }} m²</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         {% else %}
             <p>No se encontraron resultados.</p>
         {% endif %}

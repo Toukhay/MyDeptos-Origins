@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Usuario</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <!-- El primero es para tus propios estilos.
-    El segundo es necesario para que Slick Carousel funcione bien.
-    El tercero agrega un diseño más atractivo al carrusel. -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
+
 </head>
 <body>
     <header>
@@ -35,36 +33,36 @@
         <div class="card my-publications">
             <h2>Mis Publicaciones</h2>
             {% if mis_publicaciones %}
-                <div class="carousel">
-                    {% for publicacion in mis_publicaciones %}
-                        <div class="carousel-item">
-                            <h3>{{ publicacion[1] }}</h3>
-                            <p>{{ publicacion[2] }}</p>
-                            <p><strong>Precio:</strong> ${{ publicacion[3] }} {{ publicacion[4] }}</p>
-                            {% if publicacion[5] %}
-                                <img src="{{ url_for('static', filename='image/' + publicacion[5][0]) }}" alt="Imagen del departamento">
-                            {% else %}
-                                <img src="{{ url_for('static', filename='image/aaa.png') }}" alt="Imagen predeterminada">
-                            {% endif %}
-                            <div class="btn-group">
-                                <a href="{{ url_for('view_property', property_id=publicacion[0]) }}" class="btn btn-primary">Ver Publicación</a>
-                                <form method="POST" action="{{ url_for('delete_publication', publication_id=publicacion[0]) }}" style="display:inline;">
-                                    {{ form.hidden_tag() }}
-                                    <button type="submit" class="btn btn-danger">Eliminar Publicación</button>
-                                </form>
-                            </div>
-                        </div>
-                    {% endfor %}
+            <div class="carousel"></div>
+                {% for publicacion in mis_publicaciones %}
+                <div class="carousel-item"></div>
+                    <h3>{{ publicacion[1] }}</h3>
+                    <p>{{ publicacion[2] }}</p>
+                    <p><strong>Precio:</strong> ${{ publicacion[3] }} {{ publicacion[4] }}</p>
+                    {% if publicacion[5] %}
+                    <img src="{{ url_for('static', filename='image/' + publicacion[5][0]) }}" alt="Imagen del departamento" class="publication-image">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada" class="publication-image">
+                    {% endif %}
+                    <div class="btn-group"></div>
+                        <a href="{{ url_for('view_property', property_id=publicacion[0]) }}" class="btn btn-primary">Ver Publicación</a>
+                        <form method="POST" action="{{ url_for('delete_publication', publication_id=publicacion[0]) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger">Eliminar Publicación</button>
+                        </form>
+                    </div>
                 </div>
+                {% endfor %}
+            </div>
             {% else %}
-                <p>No tienes publicaciones.</p>
+            <p>No tienes publicaciones.</p>
             {% endif %}
         </div>
     </div>
     <footer>
         <div class="footer-content">
             <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
-            <div class="social-media">
+            <div class="social-media"></div>
                 <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
                 <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
             </div>
@@ -87,6 +85,45 @@
                 nextArrow: '<button type="button" class="slick-next"><i class="fas fa-chevron-right"></i></button>'
             });
         });
+        
+        // Ocultar mensajes flash después de 5 segundos
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                alert.style.display = 'none';
+            });
+        }, 5000);
+
+        // Mostrar vista previa de las imágenes seleccionadas
+        var selectedFiles = [];
+        document.getElementById('photos').addEventListener('change', function(event) {
+            var files = event.target.files;
+            if (selectedFiles.length + files.length > 5) {
+                alert('Solo puedes seleccionar un máximo de 5 imágenes.');
+                return;
+            }
+            var preview = document.getElementById('preview');
+            for (var i = 0; i < files.length; i++) {
+                selectedFiles.push(files[i]);
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '100px';
+                    img.style.height = '100px';
+                    img.style.margin = '5px';
+                    preview.appendChild(img);
+                }
+                reader.readAsDataURL(files[i]);
+            }
+            // Actualizar el input de archivos con los archivos seleccionados
+            var dataTransfer = new DataTransfer();
+            selectedFiles.forEach(function(file) {
+                dataTransfer.items.add(file);
+            });
+            document.getElementById('photos').files = dataTransfer.files;
+        });
+    
     </script>
 </body>
 </html>

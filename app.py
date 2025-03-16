@@ -71,7 +71,7 @@ class PublishDeptoForm(FlaskForm):
     superficie = DecimalField('Superficie (m²)', validators=[DataRequired(), NumberRange(min=0)])
     direccion = StringField('Dirección', validators=[DataRequired(), Length(min=5, max=200)])
     localidad = SelectField('Localidad', choices=[], validators=[DataRequired()])
-    photos = MultipleFileField('Fotos del Departamento', validators=[FileAllowed(['jpg', 'png'], 'Solo se permiten imágenes'), Length(max=5)])
+    photos = MultipleFileField('Fotos del Departamento', validators=[FileAllowed(['jpg', 'png','webp'], 'Solo se permiten imágenes')])
     submit = SubmitField('Publicar Departamento')
 
 class ForgotPasswordForm(FlaskForm):
@@ -321,7 +321,7 @@ def user_panel():
 
         cur.execute('''
             SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda,
-                   GROUP_CONCAT(f.url_foto) AS fotos
+                GROUP_CONCAT(f.url_foto) AS fotos
             FROM departamento d
             LEFT JOIN foto f ON d.id_departamento = f.id_departamento
             WHERE d.id_usuario = %s
