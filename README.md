@@ -1,6 +1,6 @@
 # MyDeptosFinal
 
-**MyDeptosFinal** es un proyecto de gestión de departamentos desarrollado utilizando HTML, CSS, JavaScript, y Flask como backend, con MySQL como base de datos. Este sistema permite gestionar el inventario de departamentos de manera eficiente, permitiendo agregar, editar y eliminar registros.
+**MyDeptosFinal** es un proyecto *WEB-APP* que trata de una página de departamentos desarrollado utilizando HTML, CSS, JavaScript, y Flask como backend, con MySQL como base de datos. El proposito surgio en el intentar siendo un estudiante junto con mi compañera poder lograr resolver la famosa pregunta cuando estas en una ciudad siendo trabajador, estudiante, ¿Donde puedo encontrar un departamento disponible cerca de la zona? 
 
 ## Tecnologías Utilizadas
 
@@ -11,15 +11,6 @@
 - **MySQL**: Base de datos relacional para almacenar la información de los departamentos.
 - **XAMPP**: Herramienta utilizada para crear un servidor local que facilita la ejecución de MySQL y PHP.
 
-## Instalación
-
-Sigue estos pasos para instalar y ejecutar el proyecto en tu máquina local:
-
-### Requisitos previos
-
-- [Instalar XAMPP](https://www.apachefriends.org/es/index.html) para ejecutar el servidor local de MySQL.
-- [Instalar Python](https://www.python.org/downloads/) si aún no lo tienes.
-- [Instalar MySQL](https://dev.mysql.com/downloads/installer/) si no tienes la base de datos instalada.
 
 ### Pasos para ejecutar el proyecto
 
@@ -55,12 +46,6 @@ Sigue estos pasos para instalar y ejecutar el proyecto en tu máquina local:
        venv\Scripts\activate
        ```
 
-     - En macOS/Linux:
-
-       ```bash
-       source venv/bin/activate
-       ```
-
    - Instala las dependencias necesarias:
 
      ```bash
@@ -78,12 +63,6 @@ Sigue estos pasos para instalar y ejecutar el proyecto en tu máquina local:
     ```
     http://localhost:5000
     ```
-
-## Funcionalidades
-
-- Gestión de departamentos: agregar, editar y eliminar departamentos.
-- Ver detalles de cada departamento.
-- [Cualquier otra funcionalidad que tenga el proyecto]
 
 ## Contribuciones
 
