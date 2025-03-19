@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/listings.css') }}">
     <script>
         function toggleFavorite(element, propertyId) {
             const isAuthenticated = JSON.parse('{{ is_authenticated | tojson }}'); // 🔹 Convierte bien el valor
@@ -43,7 +44,7 @@
         }
     </script>    
 </head>
-<body>
+<body class="listings-page">
     <header>
         <nav>
             <div class="logo">MyDeptos</div>

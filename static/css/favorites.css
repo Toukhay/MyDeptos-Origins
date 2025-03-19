@@ -1,0 +1,215 @@
+.favorites-page .container {
+    flex: 1; /* Permite que el contenedor principal ocupe el espacio disponible */
+}
+
+.favorites-page header, .favorites-page footer {
+    background-color: var(--header-footer-bg);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem; /* Aumentar el padding */
+    text-align: center;
+    width: 100%;
+    box-shadow: var(--box-shadow);
+}
+
+.favorites-page header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    margin-bottom: 2rem; /* Espacio entre el header y el contenido */
+}
+
+.favorites-page footer {
+    background-color: var(--header-footer-bg);
+    border-top: 1px solid var(--border-color);
+    padding: 1.5rem; /* Aumentar el padding */
+    text-align: center;
+    width: 100%;
+    box-shadow: var(--box-shadow);
+    position: relative;
+    margin-top: auto; /* Hace que el footer se empuje hacia abajo */
+}
+
+.favorites-page nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.favorites-page .logo {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.favorites-page .menu {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.favorites-page .menu li {
+    margin-left: 20px;
+    position: relative;
+}
+
+.favorites-page .menu a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 5px 0;
+    display: block;
+    transition: color var(--transition-duration);
+}
+
+.favorites-page .menu a::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background-color: white;
+    bottom: -5px;
+    left: 0;
+    transform: scaleX(0);
+    transform-origin: bottom right;
+    transition: transform 0.25s ease-out;
+}
+
+.favorites-page .menu a:hover::before {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
+.favorites-page .main-content {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 4rem auto 2rem; /* Ajustar el margen inferior para crear espacio entre el contenido y el footer */
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.favorites-page .intro, .favorites-page .listings-header {
+    text-align: center; /* Centrar textos específicos */
+}
+
+.favorites-page h1, .favorites-page h2, .favorites-page h3 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: var(--primary-color);
+}
+
+.favorites-page h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.favorites-page h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.favorites-page h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.favorites-page p {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.favorites-page button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color var(--transition-duration);
+}
+
+.favorites-page button:hover {
+    background-color: #357ABD; /* Azul más oscuro */
+}
+
+.favorites-page .listings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem; /* Reducir el espacio entre las tarjetas */
+    margin-top: 2rem;
+    padding: 1rem; /* Reducir el padding */
+}
+
+.favorites-page .listing {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    width: calc(25% - 1rem); /* Ajustar el ancho de las tarjetas */
+    box-sizing: border-box;
+    transition: transform 0.3s ease;
+    margin-bottom: 1rem; /* Reducir el margen inferior */
+    position: relative;
+}
+
+.favorites-page .listing:hover {
+    transform: translateY(-5px); /* Reducir la elevación al pasar el cursor */
+}
+
+.favorites-page .listing img {
+    width: 100%;
+    height: 150px; /* Ajustar la altura de la imagen */
+    object-fit: cover;
+}
+
+.favorites-page .favorite {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem; /* Ajustar el tamaño del corazón */
+    cursor: pointer;
+}
+
+.favorites-page .favorite.active {
+    color: red; /* Cambiar el color del corazón a rojo cuando se selecciona */
+}
+
+.favorites-page .listing-info {
+    padding: 0.5rem; /* Reducir el padding */
+    position: relative;
+}
+
+.favorites-page .listing-info h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem; /* Reducir el tamaño de la fuente */
+    color: var(--primary-color);
+}
+
+.favorites-page .listing-info p {
+    margin: 0.5rem 0;
+    font-size: 0.875rem; /* Reducir el tamaño de la fuente */
+    color: var (--text-color);
+}
+
+.favorites-page .listing-info button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.5rem 0.75rem; /* Reducir el padding */
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-top: 0.5rem;
+    width: 100%;
+    font-size: 0.875rem; /* Reducir el tamaño de la fuente */
+}
+
+.favorites-page .listing-info button:hover {
+    background-color: #357ABD; /* Azul más oscuro */
+}

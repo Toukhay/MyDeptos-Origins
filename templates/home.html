@@ -6,6 +6,7 @@
     <title>MyDeptos - Búsqueda de Departamentos en Misiones</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
     <script>
         function toggleFavorite(element, propertyId) {
             const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
@@ -41,7 +42,7 @@
         }
     </script>
 </head>
-<body>
+<body class="home-page">
     <header>
         <nav>
             <div class="logo">MyDeptos</div>
@@ -173,3 +174,5 @@
             </div>
         </div>
     </footer>
+</body>
+</html>

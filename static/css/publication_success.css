@@ -1,0 +1,43 @@
+.container {
+    flex: 1; /* Permite que el contenedor principal ocupe el espacio disponible */
+}
+
+.card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin: var(--margin);
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 600px;
+    transition: background-color 0.3s ease;
+    position: relative;
+    margin: 6rem auto 2rem; /* Ajusta el margen superior para no chocar con el header */
+    box-sizing: border-box; /* Asegura que el padding y el borde se incluyan en el tamaño total */
+}
+
+.card h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+}
+
+.card p, .card ul {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.card .highlight {
+    font-weight: bold;
+    color: #007BFF;
+    margin-bottom: 1rem;
+}
+
+.card .more-info {
+    display: block;
+    margin-top: 1rem;
+}
+
+.card:hover {
+    background-color: #f0f8ff;
+}

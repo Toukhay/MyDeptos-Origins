@@ -1,0 +1,54 @@
+.delete-confirmation-page .container {
+    max-width: 600px;
+    margin: 4rem auto;
+    padding: 2rem;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+}
+
+.delete-confirmation-page h1 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.delete-confirmation-page p {
+    font-size: 1.25rem;
+    color: var(--text-color);
+    margin-bottom: 2rem;
+}
+
+.delete-confirmation-page .btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.delete-confirmation-page .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color var(--transition-duration);
+}
+
+.delete-confirmation-page .btn-confirm {
+    background-color: #dc3545;
+    color: white;
+}
+
+.delete-confirmation-page .btn-confirm:hover {
+    background-color: #c82333;
+}
+
+.delete-confirmation-page .btn-cancel {
+    background-color: #6c757d;
+    color: white;
+}
+
+.delete-confirmation-page .btn-cancel:hover {
+    background-color: #5a6268;
+}

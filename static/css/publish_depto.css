@@ -1,0 +1,87 @@
+.publish-depto-page .card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 2rem;
+    margin: 2rem auto;
+    max-width: 600px;
+}
+
+.publish-depto-page .form-group {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.publish-depto-page .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-weight: bold;
+    font-size: 0.9rem; /* Hacer los labels más pequeños */
+}
+
+.publish-depto-page .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: border-color var(--transition-duration);
+    font-size: 1rem;
+    box-sizing: border-box; /* Asegura que el padding y el borde se incluyan en el tamaño total */
+}
+
+.publish-depto-page .form-control:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.publish-depto-page select.form-control {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 10px center;
+    background-size: 12px;
+    padding-right: 30px; /* Espacio para el icono de la flecha */
+}
+
+.publish-depto-page .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color var (--transition-duration);
+    margin-top: 1rem;
+}
+
+.publish-depto-page .btn-primary:hover {
+    background-color: #357ABD;
+}
+
+.publish-depto-page .alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+}
+
+.publish-depto-page .alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.publish-depto-page .alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.publish-depto-page .form-title {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    font-size: 2rem;
+}
