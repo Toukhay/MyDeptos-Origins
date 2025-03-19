@@ -1,5 +1,35 @@
+:root {
+    --primary-color: #4A90E2;
+    --secondary-color: #333;
+    --background-color: #E6F0FA;
+    --text-color: #333;
+    --header-footer-bg: #4A90E2;
+    --border-color: #4A90E2;
+    --box-shadow: 0 2px 5px rgba(74, 144, 226, 0.5);
+    --transition-duration: 0.3s;
+    --border-radius: 10px;
+    --padding: 1rem;
+    --margin: 1rem;
+}
+
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 70px 0 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
 .favorites-page .container {
     flex: 1; /* Permite que el contenedor principal ocupe el espacio disponible */
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 4rem auto 2rem; /* Ajustar el margen inferior para crear espacio entre el contenido y el footer */
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
 }
 
 .favorites-page header, .favorites-page footer {
@@ -152,7 +182,7 @@
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     overflow: hidden;
-    width: calc(25% - 1rem); /* Ajustar el ancho de las tarjetas */
+    width: calc(105% - 1rem); /* Ajustar el ancho de las tarjetas */
     box-sizing: border-box;
     transition: transform 0.3s ease;
     margin-bottom: 1rem; /* Reducir el margen inferior */

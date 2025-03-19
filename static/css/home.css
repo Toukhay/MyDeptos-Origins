@@ -84,3 +84,356 @@
 .home-page .listing-info button:hover {
     background-color: #357ABD;
 }
+
+/* Agregar estilos adicionales de styles.css */
+.home-page .additional-style {
+    font-size: 1rem;
+    color: var(--secondary-color);
+    margin-top: 1rem;
+    text-align: left;
+}
+
+/* Estilos para el header */
+.home-page header {
+    background-color: var(--header-footer-bg);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    text-align: center;
+    width: 100%;
+    box-shadow: var(--box-shadow);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    margin-bottom: 2rem;
+}
+
+.home-page header nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.home-page header .logo {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.home-page header .menu {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.home-page header .menu li {
+    margin-left: 20px;
+    position: relative;
+}
+
+.home-page header .menu a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 5px 0;
+    display: block;
+    transition: color var(--transition-duration);
+}
+
+.home-page header .menu a::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background-color: white;
+    bottom: -5px;
+    left: 0;
+    transform: scaleX(0);
+    transform-origin: bottom right;
+    transition: transform 0.25s ease-out;
+}
+
+.home-page header .menu a:hover::before {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
+/* Estilos para el footer */
+.home-page footer {
+    background-color: var(--header-footer-bg);
+    border-top: 1px solid var(--border-color);
+    padding: 1.5rem;
+    text-align: center;
+    width: 100%;
+    box-shadow: var(--box-shadow);
+    position: relative;
+    margin-top: auto;
+}
+
+.home-page footer .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    text-align: center;
+}
+
+.home-page footer .footer-content div {
+    flex: 1;
+    margin: 10px 0;
+}
+
+.home-page footer .footer-content .social-media {
+    text-align: center;
+}
+
+.home-page footer .footer-content .navigation-links {
+    text-align: right;
+}
+
+.home-page footer .footer-content .reserved-rights {
+    text-align: left;
+}
+
+.home-page footer .footer-content a {
+    color: white;
+    font-size: 1.1rem;
+    text-decoration: none;
+}
+
+/* Estilos para el root */
+:root {
+    --primary-color: #4A90E2;
+    --secondary-color: #333;
+    --background-color: #E6F0FA;
+    --text-color: #333;
+    --header-footer-bg: #4A90E2;
+    --border-color: #4A90E2;
+    --box-shadow: 0 2px 5px rgba(74, 144, 226, 0.5);
+    --transition-duration: 0.3s;
+    --border-radius: 10px;
+    --padding: 1rem;
+    --margin: 1rem;
+}
+
+/* Estilos para el carrusel */
+.home-page .carousel {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    margin: 2rem auto;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.home-page .carousel-inner {
+    display: flex;
+    transition: transform 0.5s ease;
+}
+
+.home-page .carousel img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.home-page .carousel button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.home-page .carousel .prev {
+    left: 10px;
+}
+
+.home-page .carousel .next {
+    right: 10px;
+}
+
+.home-page .carousel-dots {
+    text-align: center;
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+}
+
+.home-page .carousel-dots .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin: 0 5px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.home-page .carousel-dots .dot.active {
+    background-color: rgba(255, 255, 255, 1);
+}
+
+.home-page .carousel-scrollbar {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.home-page .scrollbar-thumb {
+    height: 100%;
+    background-color: rgba(255, 255, 255, 1);
+    width: 0;
+    transition: width 0.3s ease;
+}
+
+/* Estilos adicionales para home.html */
+.home-page .main-content {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 4rem auto 2rem;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.home-page .intro, .home-page .listings-header {
+    text-align: center;
+}
+
+.home-page .search-box {
+    background-color: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    max-width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.home-page .search-box h2 {
+    margin-top: 0;
+    color: var(--primary-color);
+    word-wrap: break-word;
+}
+
+.home-page .search-box .form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.home-page .search-box label {
+    display: block;
+    margin: 0.5rem 0 0.2rem;
+    color: var(--text-color);
+    word-wrap: break-word;
+}
+
+.home-page .search-box input, .home-page .search-box select {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    box-sizing: border-box;
+}
+
+.home-page .search-box button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.home-page .search-box button:hover {
+    background-color: #357ABD;
+}
+
+.home-page .summary-section {
+    display: flex;
+    justify-content: space-around;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.home-page .summary-box {
+    background-color: white;
+    padding: var(--padding);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    width: 30%;
+    text-align: center;
+    margin-bottom: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.home-page .summary-box:hover {
+    transform: translateY(-10px);
+}
+
+.home-page .summary-box h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+.home-page .view-listing-container {
+    text-align: center;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.home-page .view-listing-button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color var(--transition-duration);
+}
+
+.home-page .view-listing-button:hover {
+    background-color: #357ABD;
+}
+
+.home-page .favorite-button {
+    background-color: #ff0000;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-top: 0.5rem;
+    width: 100%;
+    font-size: 1rem;
+}
+
+.home-page .favorite-button.selected {
+    background-color: #ff6666;
+}

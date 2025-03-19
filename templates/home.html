@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyDeptos - Búsqueda de Departamentos en Misiones</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
     <script>
         function toggleFavorite(element, propertyId) {
@@ -40,6 +39,44 @@
                 console.error('Error:', error);
             });
         }
+
+        function showImage(carousel, index) {
+            const carouselInner = carousel.querySelector('.carousel-inner');
+            const images = carousel.querySelectorAll('img');
+            const dots = carousel.querySelectorAll('.dot');
+            const width = images[0].clientWidth;
+            carouselInner.style.transform = `translateX(${-index * width}px)`;
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+        }
+
+        function prevImage(button) {
+            const carousel = button.closest('.carousel');
+            const images = carousel.querySelectorAll('img');
+            let activeIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+            activeIndex = (activeIndex > 0) ? activeIndex - 1 : images.length - 1;
+            showImage(carousel, activeIndex);
+        }
+
+        function nextImage(button) {
+            const carousel = button.closest('.carousel');
+            const images = carousel.querySelectorAll('img');
+            let activeIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+            activeIndex = (activeIndex < images.length - 1) ? activeIndex + 1 : 0;
+            showImage(carousel, activeIndex);
+        }
+
+        function goToImage(dot, index) {
+            const carousel = dot.closest('.carousel');
+            showImage(carousel, index);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.carousel').forEach(carousel => {
+                showImage(carousel, 0); // Mostrar la primera imagen al cargar la página
+            });
+        });
     </script>
 </head>
 <body class="home-page">
@@ -134,6 +171,11 @@
                     </div>
                     <button class="prev" onclick="prevImage(this)">&#10094;</button>
                     <button class="next" onclick="nextImage(this)">&#10095;</button>
+                    <div class="carousel-dots">
+                        {% for i in range(depto[10]|length) %}
+                        <span class="dot" onclick="goToImage(this, 1)"></span>
+                        {% endfor %}
+                    </div>
                 </div>
                 <div class="listing-info">
                     <h3>{{ depto[1] }} - {{ depto[9] }}</h3>
