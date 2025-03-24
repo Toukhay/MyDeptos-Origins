@@ -69,9 +69,13 @@
                     {{ form.localidad(class="form-control") }}
                 </div>
                 <div class="form-group">
-                    <label for="photos">Fotos del Departamento</label>
-                    {{ form.photos(class="form-control", id="photos") }}
-                    <div id="preview"></div>
+                    <label for="rol_inmo_dir">Rol Inmobiliario</label>
+                    {{ form.rol_inmo_dir(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="photos">Fotos del Departamento (máximo 5)</label>
+                    <input type="file" id="photos" name="photos" multiple>
+                    <div id="preview-container" style="display: flex; flex-wrap: wrap; margin-top: 10px;"></div>                    
                 </div>
                 <button type="submit" class="btn btn-primary">Publicar Departamento</button>
             </form>
@@ -90,46 +94,33 @@
         </div>
     </footer>
     <script>
-        // Mostrar vista previa de las imágenes seleccionadas
-        var selectedFiles = [];
         document.getElementById('photos').addEventListener('change', function(event) {
-            var files = event.target.files;
-            if (selectedFiles.length + files.length > 5) {
-                alert('Solo puedes seleccionar un máximo de 5 imágenes.');
+            const previewContainer = document.getElementById('preview-container');
+            previewContainer.innerHTML = '';  // Limpia las imágenes previas
+    
+            const files = event.target.files;
+    
+            if (files.length > 5) {
+                alert('Solo puedes subir un máximo de 5 imágenes.');
+                event.target.value = '';  // Resetea el input si se seleccionan más de 5
                 return;
             }
-            var preview = document.getElementById('preview');
-            for (var i = 0; i < files.length; i++) {
-                selectedFiles.push(files[i]);
-                var reader = new FileReader();
+    
+            for (let file of files) {
+                const reader = new FileReader();
                 reader.onload = function(e) {
-                    var img = document.createElement('img');
+                    const img = document.createElement('img');
                     img.src = e.target.result;
                     img.style.width = '100px';
-                    img.style.height = '100px';
                     img.style.margin = '5px';
-                    img.style.objectFit = 'cover';
-                    preview.appendChild(img);
-                }
-                reader.readAsDataURL(files[i]);
+                    img.style.borderRadius = '8px';
+                    img.style.border = '2px solid #ddd';
+                    img.style.boxShadow = '2px 2px 8px rgba(0, 0, 0, 0.1)';
+                    previewContainer.appendChild(img);
+                };
+                reader.readAsDataURL(file);
             }
-            // Actualizar el input de archivos con los archivos seleccionados
-            var dataTransfer = new DataTransfer();
-            selectedFiles.forEach(function(file) {
-                dataTransfer.items.add(file);
-            });
-            document.getElementById('photos').files = dataTransfer.files;
         });
-
-        // Mantener las imágenes seleccionadas al enviar el formulario
-        document.getElementById('publishForm').addEventListener('submit', function(event) {
-            var dataTransfer = new DataTransfer();
-            selectedFiles.forEach(function(file) {
-                dataTransfer.items.add(file);
-            });
-            document.getElementById('photos').files = dataTransfer.files;
-        });
-        
     </script>
 </body>
 </html>

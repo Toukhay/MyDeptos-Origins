@@ -46,6 +46,9 @@
             const dots = carousel.querySelectorAll('.dot');
             const width = images[0].clientWidth;
             carouselInner.style.transform = `translateX(${-index * width}px)`;
+            images.forEach((img, i) => {
+                img.classList.toggle('active', i === index);
+            });
             dots.forEach((dot, i) => {
                 dot.classList.toggle('active', i === index);
             });
@@ -55,16 +58,20 @@
             const carousel = button.closest('.carousel');
             const images = carousel.querySelectorAll('img');
             let activeIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
-            activeIndex = (activeIndex > 0) ? activeIndex - 1 : images.length - 1;
-            showImage(carousel, activeIndex);
+            if (activeIndex > 0) {
+                activeIndex -= 1;
+                showImage(carousel, activeIndex);
+            }
         }
 
         function nextImage(button) {
             const carousel = button.closest('.carousel');
             const images = carousel.querySelectorAll('img');
             let activeIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
-            activeIndex = (activeIndex < images.length - 1) ? activeIndex + 1 : 0;
-            showImage(carousel, activeIndex);
+            if (activeIndex < images.length - 1) {
+                activeIndex += 1;
+                showImage(carousel, activeIndex);
+            }
         }
 
         function goToImage(dot, index) {
@@ -116,6 +123,12 @@
                         <option value="venta">Venta</option>
                         <option value="alquiler">Alquiler</option>
                     </select>
+                    <label for="rol_inmobiliario">Tipo de Rol:</label>
+                    <select name="rol_inmobiliario" id="rol_inmobiliario">
+                        <option value="">--Seleccionar--</option>
+                        <option value="dueno_directo">dueño directo</option>
+                        <option value="inmobiliaria">inmobiliaria</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="precio_min">Precio mínimo:</label>
@@ -161,8 +174,8 @@
             <div class="listing">
                 <div class="carousel">
                     <div class="carousel-inner">
-                        {% if depto[10] %}
-                            {% for image in depto[10] %}
+                        {% if depto[11] %}
+                            {% for image in depto[11] %}
                                 <img src="{{ url_for('static', filename='image/' ~ image) }}" alt="Imagen del departamento">
                             {% endfor %}
                         {% else %}
@@ -172,8 +185,8 @@
                     <button class="prev" onclick="prevImage(this)">&#10094;</button>
                     <button class="next" onclick="nextImage(this)">&#10095;</button>
                     <div class="carousel-dots">
-                        {% for i in range(depto[10]|length) %}
-                        <span class="dot" onclick="goToImage(this, 1)"></span>
+                        {% for i in range(depto[11]|length) %}
+                        <span class="dot" onclick="goToImage(this, '{{ i }}')"></span>
                         {% endfor %}
                     </div>
                 </div>
@@ -185,6 +198,8 @@
                     <p>Dormitorios: {{ depto[6] }}</p>
                     <p>Baños: {{ depto[7] }}</p>
                     <p>Superficie: {{ depto[8] }} m²</p>
+                    <p>Rol Inmobiliario: {{ depto[10] }}</p>
+                    <p>Dirección: {{ depto[9] }}</p>
                     <button 
                         class="favorite-button {% if depto[0] in favoritos %}selected{% endif %}"
                         onclick="toggleFavorite(this, '{{ depto[0] }}')">

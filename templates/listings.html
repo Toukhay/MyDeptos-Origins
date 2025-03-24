@@ -60,7 +60,7 @@
             {% for depto in departamentos %}
                 <div class="listing">
                     <div class="carousel">
-                        {% for foto in depto[11] %}
+                        {% for foto in depto[12] %}
                             <div><img src="{{ url_for('static', filename='image/' ~ foto) }}" alt="Foto del Departamento"></div>
                         {% endfor %}
                     </div>
@@ -69,12 +69,13 @@
                         <h3>{{ depto[1] }}</h3>
                         <p>{{ depto[2] }}</p>
                         <p><strong>Tipo de Publicación:</strong> {{ depto[3] }}</p>
-                        <p class="price"><strong>Precio:</strong> {{ depto[4] }} {{ depto[5] }}</p>
+                        <p class="price"><strong>Precio:</strong> {{ depto[4] }}</p>
                         <p><strong>Ambientes:</strong> {{ depto[6] }}</p>
                         <p><strong>Dormitorios:</strong> {{ depto[7] }}</p>
                         <p><strong>Baños:</strong> {{ depto[8] }}</p>
                         <p><strong>Superficie:</strong> {{ depto[9] }} m²</p>
-                        <p><strong>Dirección:</strong> {{ depto[10] }}</p>
+                        <p><strong>Dirección: </strong> {{ depto[10] }}</p>
+                        <p><strong>Publicado por: </strong> {{ depto[11] }}</p>
                         <button class="btn btn-primary" onclick="window.location.href='/viewProperty/{{ depto[0] }}'">Ver propiedad</button>
                     </div>
                 </div>

@@ -62,11 +62,23 @@
             <div class="results">
                 {% for depto in resultados %}
                     <div class="result">
-                        {% if depto[10] %}
-                            <img src="{{ url_for('static', filename='image/' + depto[10][0]) }}" alt="Imagen del departamento">
-                        {% else %}
-                            <img src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada">
-                        {% endif %}
+                        <div id="carousel{{ loop.index }}" class="carousel slide" data-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for imagen in depto[11] %}
+                                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                        <img src="{{ url_for('static', filename='image/' + imagen) }}" class="d-block w-100" alt="Imagen del departamento">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <a class="carousel-control-prev" href="#carousel{{ loop.index }}" role="button" data-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Anterior</span>
+                            </a>
+                            <a class="carousel-control-next" href="#carousel{{ loop.index }}" role="button" data-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Siguiente</span>
+                            </a>
+                        </div>
                         <div class="result-details">
                             <h3>{{ depto[1] }} - {{ depto[9] }}</h3>
                             <div class="info">
@@ -76,6 +88,8 @@
                                 <p><strong>Dormitorios:</strong> {{ depto[6] }}</p>
                                 <p><strong>Baños:</strong> {{ depto[7] }}</p>
                                 <p><strong>Superficie:</strong> {{ depto[8] }} m²</p>
+                                <p><strong>Rol Inmobiliario:</strong> {{ depto[10] }}</p>
+                                <a href="{{ url_for('view_property', property_id=depto[0]) }}" class="btn btn-secondary">Ver Propiedad</a>
                             </div>
                         </div>
                     </div>

@@ -6,6 +6,7 @@
     <title>Panel de Usuario</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/user_panel.css') }}">
+    <!-- Eliminar Slick si no lo estás usando realmente -->
 </head>
 <body class="user-panel-page">
     <header>
@@ -28,39 +29,46 @@
             </div>
         </div>
     </div>
-    <div class="container">
-        <div class="card my-publications">
-            <h2>Mis Publicaciones</h2>
+    <div class="container full-width">
+        <h2>Mis Publicaciones</h2>
+        <div class="listings">
             {% if mis_publicaciones %}
-                <div class="carousel-container">
-                    <div class="carousel">
-                        {% for publicacion in mis_publicaciones %}
-                            <div class="carousel-item">
-                                <h3>{{ publicacion[1] }}</h3>
-                                <p>{{ publicacion[2] }}</p>
-                                <p><strong>Precio:</strong> ${{ publicacion[3] }} {{ publicacion[4] }}</p>
-                                {% if publicacion[5] %}
-                                    <div class="carousel-images">
-                                        {% for image in publicacion[5] %}
-                                            <img src="{{ url_for('static', filename='image/' + image) }}" alt="Imagen del departamento" class="publication-image">
-                                        {% endfor %}
-                                    </div>
+                {% for publicacion in mis_publicaciones %}
+                    <div class="listing">
+                        <div class="carousel-container">
+                            <div class="carousel">
+                                {% if publicacion[12] %}
+                                    {% for image in publicacion[12] %}
+                                        <div class="carousel-item"><img src="{{ url_for('static', filename='image/' + image) }}" alt="Imagen del departamento"></div>
+                                    {% endfor %}
                                 {% else %}
-                                    <img src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada" class="publication-image">
+                                    <div class="carousel-item"><img src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada"></div>
                                 {% endif %}
-                                <div class="btn-group-vertical">
-                                    <a href="{{ url_for('view_property', property_id=publicacion[0]) }}" class="btn btn-primary">Ver Publicación</a>
-                                    <form method="POST" action="{{ url_for('delete_publication', publication_id=publicacion[0]) }}" style="display:inline;">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-danger">Eliminar Publicación</button>
-                                    </form>
-                                </div>
                             </div>
-                        {% endfor %}
+                            <button class="carousel-control prev" onclick="moveCarousel(this, -1)">&#10094;</button>
+                            <button class="carousel-control next" onclick="moveCarousel(this, 1)">&#10095;</button>
+                        </div>
+                        <div class="listing-info">
+                            <h3>{{ publicacion[1] }}</h3>
+                            <p>{{ publicacion[2] }}</p>
+                            <p><strong>Tipo de Publicación:</strong> {{ publicacion[3] }}</p>
+                            <p class="price"><strong>Precio:</strong> {{ publicacion[4] }}</p>
+                            <p><strong>Ambientes:</strong> {{ publicacion[6] }}</p>
+                            <p><strong>Dormitorios:</strong> {{ publicacion[7] }}</p>
+                            <p><strong>Baños:</strong> {{ publicacion[8] }}</p>
+                            <p><strong>Superficie:</strong> {{ publicacion[9] }} m²</p>
+                            <p><strong>Dirección: </strong> {{ publicacion[10] }}</p>
+                            <p><strong>Publicado por: </strong> {{ publicacion[11] }}</p>
+                            <div class="btn-group-vertical">
+                                <a href="{{ url_for('view_property', property_id=publicacion[0]) }}" class="btn btn-primary">Ver Publicación</a>
+                                <form method="POST" action="{{ url_for('delete_publication', publication_id=publicacion[0]) }}" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta publicación?');" style="display:inline-block; width:100%;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-danger" style="width:100%;">Eliminar Publicación</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                    <button class="carousel-control prev" onclick="moveCarousel(-1)">&#10094;</button>
-                    <button class="carousel-control next" onclick="moveCarousel(1)">&#10095;</button>
-                </div>
+                {% endfor %}
             {% else %}
                 <p>No tienes publicaciones.</p>
             {% endif %}
@@ -78,22 +86,26 @@
             </div>
         </div>
     </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
     <script>
-        let currentIndex = 0;
+        function moveCarousel(button, direction) {
+            const carousel = button.parentElement.querySelector('.carousel');
+            const items = carousel.querySelectorAll('.carousel-item');
+            const activeItem = carousel.querySelector('.carousel-item.active');
+            let newIndex = [...items].indexOf(activeItem) + direction;
 
-        function moveCarousel(direction) {
-            const items = document.querySelectorAll('.carousel-item');
-            const totalItems = items.length;
-            items[currentIndex].classList.remove('active');
-            currentIndex = (currentIndex + direction + totalItems) % totalItems;
-            items[currentIndex].classList.add('active');
+            if (newIndex < 0) newIndex = items.length - 1;
+            if (newIndex >= items.length) newIndex = 0;
+
+            activeItem.classList.remove('active');
+            items[newIndex].classList.add('active');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const items = document.querySelectorAll('.carousel-item');
-            if (items.length > 0) {
-                items[0].classList.add('active');
-            }
+            document.querySelectorAll('.carousel').forEach(carousel => {
+                carousel.querySelector('.carousel-item').classList.add('active');
+            });
         });
     </script>
 </body>

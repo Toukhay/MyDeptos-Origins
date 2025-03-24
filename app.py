@@ -60,8 +60,8 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Iniciar sesión')
 
 class PublishDeptoForm(FlaskForm):
-    title = StringField('Título', validators=[DataRequired(), Length(min=5, max=100)])
-    description = TextAreaField('Descripción', validators=[DataRequired(), Length(min=10)])
+    title = StringField('Título', validators=[DataRequired(), Length(min=5, max=200)])
+    description = TextAreaField('Descripción', validators=[DataRequired(), Length(min=10, max=500)])
     tipo_publicacion = SelectField('Tipo de Publicación', choices=[('venta', 'Venta'), ('alquiler', 'Alquiler')], validators=[DataRequired()])
     price = DecimalField('Precio', validators=[DataRequired(), NumberRange(min=0)])
     moneda = SelectField('Moneda', choices=[('ARS', 'Pesos'), ('USD', 'Dólares')], validators=[DataRequired()])
@@ -71,7 +71,8 @@ class PublishDeptoForm(FlaskForm):
     superficie = DecimalField('Superficie (m²)', validators=[DataRequired(), NumberRange(min=0)])
     direccion = StringField('Dirección', validators=[DataRequired(), Length(min=5, max=200)])
     localidad = SelectField('Localidad', choices=[], validators=[DataRequired()])
-    photos = MultipleFileField('Fotos del Departamento', validators=[FileAllowed(['jpg', 'png','webp'], 'Solo se permiten imágenes')])
+    photos = MultipleFileField('Fotos del Departamento (máximo 5)', validators=[FileAllowed(['jpg', 'png', 'webp', 'jpeg'], 'Solo se permiten imágenes')])
+    rol_inmo_dir = SelectField('Rol Inmobiliario', choices=[('Dueño directo', 'Dueño Directo'), ('Inmobiliaria', 'Inmobiliaria')], validators=[DataRequired()])
     submit = SubmitField('Publicar Departamento')
 
 class ForgotPasswordForm(FlaskForm):
@@ -87,7 +88,7 @@ def home():
     cursor = mysql.connection.cursor()
     cursor.execute('''
         SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, 
-                d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion,
+                d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir,
                 GROUP_CONCAT(f.url_foto) AS url_foto
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
@@ -103,9 +104,9 @@ def home():
 
     # Convertir las fotos en lista (si existen)
     ultimos_departamentos = [
-        (id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion,
+        (id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir,
         fotos.split(',') if fotos else [])
-        for id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, fotos in ultimos_departamentos
+        for id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos in ultimos_departamentos
     ]
 
     # Verificar sesión para favoritos
@@ -134,6 +135,7 @@ def static_files(filename):
 @app.route('/search', methods=['GET'])
 def search():
     tipo_publicacion = request.args.get('tipo_publicacion')
+    rol_inmobiliario = request.args.get('rol_inmobiliario')  
     precio_min = request.args.get('precio_min')
     precio_max = request.args.get('precio_max')
     localidad = request.args.get('localidad')
@@ -146,7 +148,7 @@ def search():
 
     query = '''
         SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, 
-            d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion,
+            d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir,
             GROUP_CONCAT(f.url_foto) AS url_foto
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
@@ -157,6 +159,9 @@ def search():
     if tipo_publicacion:
         query += " AND d.tipo_publicacion = %s"
         params.append(tipo_publicacion)
+    if rol_inmobiliario:
+        query += " AND d.rol_inmo_dir = %s"
+        params.append(rol_inmobiliario)
     if precio_min:
         query += " AND d.precio >= %s"
         params.append(precio_min)
@@ -179,9 +184,9 @@ def search():
 
     # Convertir las fotos en lista (si existen)
     resultados = [
-        (id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion,
+        (id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir,
         fotos.split(',') if fotos else [])
-        for id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, fotos in resultados
+        for id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos in resultados
     ]
 
     return render_template('search_results.html', resultados=resultados, localidades=localidades)
@@ -320,7 +325,7 @@ def user_panel():
         user_data = cur.fetchone()
 
         cur.execute('''
-            SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda,
+            SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir,
                 GROUP_CONCAT(f.url_foto) AS fotos
             FROM departamento d
             LEFT JOIN foto f ON d.id_departamento = f.id_departamento
@@ -336,8 +341,8 @@ def user_panel():
 
     # Convertir las fotos en lista (si existen)
     mis_publicaciones = [
-        (id_dep, titulo, descripcion, precio, moneda, fotos.split(',') if fotos else [])
-        for id_dep, titulo, descripcion, precio, moneda, fotos in mis_publicaciones
+        (id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos.split(',') if fotos else [])
+        for id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos in mis_publicaciones
     ]
 
     form = PublishDeptoForm()  # Crear una instancia del formulario para obtener el token CSRF
@@ -415,7 +420,7 @@ def about():
 def listings():
     cursor = mysql.connection.cursor()
     cursor.execute('''
-        SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, GROUP_CONCAT(f.url_foto) AS fotos
+        SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir, GROUP_CONCAT(f.url_foto) AS fotos
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
         GROUP BY d.id_departamento
@@ -425,8 +430,8 @@ def listings():
 
     # Convertir las fotos en una lista
     departamentos = [
-        (id_departamento, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, fotos.split(',') if fotos else [])
-        for id_departamento, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, fotos in departamentos
+        (id_departamento, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos.split(',') if fotos else [])
+        for id_departamento, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos in departamentos
     ]
 
     favoritos = []
@@ -466,28 +471,37 @@ def publish_depto():
         superficie = form.superficie.data
         direccion = form.direccion.data
         localidad = form.localidad.data
+        rol_inmo_dir = form.rol_inmo_dir.data
         user_id = session['user_id']
 
         cursor = mysql.connection.cursor()
         cursor.execute('''
-            INSERT INTO departamento (id_usuario, id_localidad, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, fecha_publicacion)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-        ''', (user_id, localidad, title, description, tipo_publicacion, price, moneda, ambientes, dormitorios, banos, superficie, direccion))
+            INSERT INTO departamento (id_usuario, id_localidad, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fecha_publicacion)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+        ''', (user_id, localidad, title, description, tipo_publicacion, price, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir))
         departamento_id = cursor.lastrowid
 
-        photos = form.photos.data
-        if photos:
+        # Guardar las fotos
+        photos = request.files.getlist('photos')  # Cambiado para obtener múltiples imágenes
+        if photos and len(photos) <= 5:  # Límite de 5 imágenes
             for photo in photos:
-                if photo:
+                if photo and photo.filename != '':
                     filename = secure_filename(photo.filename)
-                    photo.save(os.path.join('static/image', filename))
-                    cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', (departamento_id, filename))
+                    photo_path = os.path.join('static/image', filename)
+                    photo.save(photo_path)
+                    cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
+                                (departamento_id, filename))
+        else:
+            flash('Error: Debes subir entre 1 y 5 imágenes.', 'error')
+
         mysql.connection.commit()
         cursor.close()
 
         flash('Departamento publicado con éxito', 'success')
         return redirect(url_for('home'))
+    
     return render_template('publish_depto.html', form=form)
+
 
 # -----------------------
 # Rutas de Favoritos
@@ -536,7 +550,7 @@ def remove_favorite():
 def view_property(property_id):
     cursor = mysql.connection.cursor()
     cursor.execute('''
-        SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion,
+        SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir,
             IFNULL(f.url_foto, '') AS url_foto, u.name, u.email
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
@@ -549,12 +563,12 @@ def view_property(property_id):
     if departamento:
         departamento = (
             departamento[0], departamento[1], departamento[2], departamento[3], departamento[4],
-            departamento[5], departamento[6], departamento[7], departamento[8], departamento[9],
-            departamento[10].split(',') if departamento[10] else [], departamento[11], departamento[12]
+            departamento[5], departamento[6], departamento[7], departamento[8], departamento[9], departamento[10],
+            departamento[11].split(',') if departamento[11] else [], departamento[12], departamento[13]
         )
         publicador = {
-            'nombre': departamento[11],
-            'email': departamento[12]
+            'nombre': departamento[12],
+            'email': departamento[13]
         }
         user = session.get('user_id')
         return render_template('viewProperty.html', departamento=departamento, user=user, publicador=publicador)
@@ -569,29 +583,27 @@ def favorites():
     user_id = session['user_id']
     cursor = mysql.connection.cursor()
 
-    # Nueva consulta con GROUP_CONCAT para evitar duplicados
     cursor.execute('''
         SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes,
-            d.dormitorios, d.banos, d.superficie, d.direccion, 
+            d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir,
             GROUP_CONCAT(fo.url_foto SEPARATOR ',') AS fotos
         FROM favorito f
         JOIN departamento d ON f.id_departamento = d.id_departamento
         LEFT JOIN foto fo ON d.id_departamento = fo.id_departamento
         WHERE f.id_usuario = %s
         GROUP BY d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, 
-            d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion
+            d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir
     ''', (user_id,))
 
     favoritos = cursor.fetchall()
     cursor.close()
 
-    # Convertimos la cadena de imágenes en una lista
     favoritos = [
         (
-            id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion,
+            id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir,
             fotos.split(',') if fotos else []  # Si hay imágenes, las convierte en lista
         )
-        for id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, fotos in favoritos
+        for id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos in favoritos
     ]
 
     return render_template('favorites.html', favoritos=favoritos)

@@ -185,9 +185,19 @@ button:hover {
 }
 
 .delete-confirmation-page .container {
-    max-width: 600px;
-    margin: 4rem auto;
+    max-width: 400px; /* Ajusta el ancho máximo */
+    margin: 4rem auto; /* Centra el contenedor horizontalmente */
     padding: 2rem;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+}
+
+.delete-confirmation-page .card {
+    max-width: 300px; /* Ajusta el ancho máximo de la tarjeta */
+    margin: 0 auto; /* Centra la tarjeta dentro del contenedor */
+    padding: 1rem; /* Ajusta el relleno de la tarjeta */
     background-color: white;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
