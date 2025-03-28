@@ -52,6 +52,34 @@ header {
 footer {
     position: relative;
     margin-top: auto;
+    background-color: var(--header-footer-bg);
+    color: white;
+    padding: 1.5rem 0;
+    text-align: center;
+    margin-top: auto;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.footer-content .social-media a,
+.footer-content .navigation-links a {
+    color: white;
+    text-decoration: none;
+    margin: 0 0.5rem;
+    transition: color var(--transition-duration);
+}
+
+.footer-content .social-media a:hover,
+.footer-content .navigation-links a:hover {
+    color: #357ABD;
 }
 
 nav {
@@ -207,9 +235,9 @@ button:hover {
 .results {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 1.5rem;
+    justify-content: center;
     margin-top: 2rem;
-    padding: 1rem;
 }
 
 .results-details {
@@ -270,7 +298,7 @@ button:hover {
     color: var(--text-color);
     line-height: 1.6;
     margin-bottom: 1rem;
-    text-align: center;
+    text-align: start;
 }
 
 .search-results-page .results {
@@ -334,4 +362,278 @@ button:hover {
 
 .search-results-page .result-info button:hover {
     background-color: #357ABD;
+}
+
+.carousel-container {
+    width: 50%; /* Ajustar el ancho de la imagen */
+    height: auto; /* Permitir que la altura se ajuste automáticamente */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0; /* Eliminar padding innecesario */
+    box-sizing: border-box;
+}
+
+.carousel-container img {
+    width: 100%; /* Asegurar que la imagen ocupe todo el ancho del contenedor */
+    height: 100%; /* Asegurar que la imagen ocupe toda la altura del contenedor */
+    object-fit: fill; /* Ajustar la imagen para llenar todo el espacio */
+}
+
+.result-details {
+    padding: 1rem;
+    text-align: center;
+}
+
+.result-details h3 {
+    font-size: 1.25rem;
+    color: var (--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.result-details .info p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.result-details .btn {
+    margin-top: 1rem;
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    transition: background-color var(--transition-duration);
+}
+
+.result-details .btn:hover {
+    background-color: #357ABD;
+}
+
+.listing {
+    display: flex;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    width: 100%;
+    margin-bottom: 2rem;
+    transition: transform 0.3s ease;
+}
+
+.listing:hover {
+    transform: translateY(-5px);
+}
+
+.carousel {
+    width: 50%;
+    height: 200px;
+    overflow: hidden;
+}
+
+.carousel img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Contenedor del carrusel - columna izquierda */
+.listing .carousel-container {
+    flex: 0 0 50%;
+    max-width: 50%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Carrusel dentro del contenedor */
+.listing .carousel {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Imágenes del carrusel */
+.listing .carousel img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Contenedor de información - columna derecha */
+.listing .listing-info {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    box-sizing: border-box; /* Asegura que el padding no exceda el ancho */
+    overflow: hidden; /* Oculta cualquier contenido que sobresalga */
+    word-wrap: break-word; /* Permite que las palabras largas se ajusten */
+}
+
+/* Estilos para los párrafos dentro de .listing-info */
+.listing .listing-info p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    color: var(--text-color);
+    overflow: hidden; /* Oculta el contenido que sobresalga */
+    text-overflow: ellipsis; /* Agrega puntos suspensivos si el texto es demasiado largo */
+    white-space: normal; /* Permite que el texto se ajuste en varias líneas */
+    word-wrap: break-word; /* Ajusta las palabras largas */
+}
+
+/* Estilos para el texto */
+.listing .listing-info h3 {
+    margin: 0 0 1rem;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.listing .listing-info p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.listing .listing-info p strong {
+    font-weight: bold;
+}
+
+/* Botón */
+.listing .listing-info button {
+    align-self: flex-start;
+    margin-top: 1rem;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .listing {
+        flex-direction: column;
+    }
+    
+    .listing .carousel-container,
+    .listing .listing-info {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .listing .carousel-container {
+        height: 250px; /* Altura fija para móviles */
+    }
+}
+
+/* Estilos para la galería */
+.gallery-container {
+    flex: 0 0 50%;
+    max-width: 50%;
+    position: relative;
+}
+
+.main-carousel {
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.main-carousel .gallery-item {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.main-carousel .gallery-item.active {
+    opacity: 1;
+}
+
+.main-carousel img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: zoom-in;
+}
+
+.thumbnails {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+.thumbnail {
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.thumbnail:hover, .thumbnail.active {
+    border-color: var(--primary-color);
+}
+
+/* Estilos para el lightbox */
+.lightbox {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    overflow: auto;
+}
+
+.lightbox-content {
+    display: block;
+    max-width: 90%;
+    max-height: 80%;
+    margin: 60px auto;
+}
+
+.close-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: white;
+    font-size: 35px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.lightbox-caption {
+    color: white;
+    text-align: center;
+    padding: 10px;
+    max-width: 80%;
+    margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .gallery-container {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .main-carousel {
+        height: 250px;
+    }
+    
+    .lightbox-content {
+        max-width: 95%;
+        max-height: 70%;
+    }
 }
