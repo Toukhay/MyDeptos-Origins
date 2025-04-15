@@ -459,46 +459,62 @@ def publish_depto():
     cursor.close()
     form.localidad.choices = [(str(id), nombre) for id, nombre in localidades]
 
+    print("Formulario enviado:", form.validate_on_submit())
+    print("Datos del formulario:", form.data)
+
     if form.validate_on_submit():
-        title = form.title.data
-        description = form.description.data
-        tipo_publicacion = form.tipo_publicacion.data
-        price = form.price.data
-        moneda = form.moneda.data
-        ambientes = form.ambientes.data
-        dormitorios = form.dormitorios.data
-        banos = form.banos.data
-        superficie = form.superficie.data
-        direccion = form.direccion.data
-        localidad = form.localidad.data
-        rol_inmo_dir = form.rol_inmo_dir.data
-        user_id = session['user_id']
+        try:
+            # Datos del formulario
+            title = form.title.data
+            description = form.description.data
+            tipo_publicacion = form.tipo_publicacion.data
+            price = form.price.data
+            moneda = form.moneda.data
+            ambientes = form.ambientes.data
+            dormitorios = form.dormitorios.data
+            banos = form.banos.data
+            superficie = form.superficie.data
+            direccion = form.direccion.data
+            localidad = form.localidad.data
+            rol_inmo_dir = form.rol_inmo_dir.data
+            user_id = session['user_id']
 
-        cursor = mysql.connection.cursor()
-        cursor.execute('''
-            INSERT INTO departamento (id_usuario, id_localidad, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fecha_publicacion)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-        ''', (user_id, localidad, title, description, tipo_publicacion, price, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir))
-        departamento_id = cursor.lastrowid
+            # Insertar en la tabla `departamento`
+            cursor = mysql.connection.cursor()
+            cursor.execute('''
+                INSERT INTO departamento (id_usuario, id_localidad, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fecha_publicacion)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            ''', (user_id, localidad, title, description, tipo_publicacion, price, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir))
+            departamento_id = cursor.lastrowid
 
-        # Guardar las fotos
-        photos = request.files.getlist('photos')  # Cambiado para obtener múltiples imágenes
-        if photos and len(photos) <= 5:  # Límite de 5 imágenes
-            for photo in photos:
-                if photo and photo.filename != '':
-                    filename = secure_filename(photo.filename)
-                    photo_path = os.path.join('static/image', filename)
-                    photo.save(photo_path)
-                    cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
-                                (departamento_id, filename))
-        else:
-            flash('Error: Debes subir entre 1 y 5 imágenes.', 'error')
+            # Insertar coordenadas
+            latitud = request.form.get('latitud')
+            longitud = request.form.get('longitud')
+            cursor.execute('INSERT INTO coordenadas (id_departamento, latitud, longitud) VALUES (%s, %s, %s)', 
+                           (departamento_id, latitud, longitud))
 
-        mysql.connection.commit()
-        cursor.close()
+            # Guardar fotos
+            photos = request.files.getlist('photos')
+            if photos and len(photos) <= 5:
+                for photo in photos:
+                    if photo and photo.filename != '':
+                        filename = secure_filename(photo.filename)
+                        photo_path = os.path.join('static/image', filename)
+                        photo.save(photo_path)
+                        cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
+                                       (departamento_id, filename))
+            else:
+                flash('Error: Debes subir entre 1 y 5 imágenes.', 'error')
 
-        flash('Departamento publicado con éxito', 'success')
-        return redirect(url_for('home'))
+            mysql.connection.commit()
+            cursor.close()
+
+            flash('Departamento publicado con éxito', 'success')
+            return redirect(url_for('home'))
+        except Exception as e:
+            mysql.connection.rollback()
+            flash(f'Error al publicar el departamento: {e}', 'danger')
+            return redirect(url_for('publish_depto'))
     
     return render_template('publish_depto.html', form=form)
 
@@ -550,25 +566,39 @@ def remove_favorite():
 def view_property(property_id):
     cursor = mysql.connection.cursor()
     cursor.execute('''
-        SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir,
-            IFNULL(f.url_foto, '') AS url_foto, u.name, u.email
+        SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, 
+               d.superficie, d.direccion, d.rol_inmo_dir, GROUP_CONCAT(f.url_foto) AS fotos, 
+               c.latitud, c.longitud, u.name, u.email
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
+        LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento
         LEFT JOIN usuario u ON d.id_usuario = u.id
         WHERE d.id_departamento = %s
     ''', (property_id,))
-    departamento = cursor.fetchone()
+    departamento_data = cursor.fetchone()
     cursor.close()
 
-    if departamento:
-        departamento = (
-            departamento[0], departamento[1], departamento[2], departamento[3], departamento[4],
-            departamento[5], departamento[6], departamento[7], departamento[8], departamento[9], departamento[10],
-            departamento[11].split(',') if departamento[11] else [], departamento[12], departamento[13]
-        )
+    if departamento_data:
+        print(f"Latitud: {departamento_data[12]}, Longitud: {departamento_data[13]}")
+        departamento = {
+            "id": departamento_data[0],
+            "titulo": departamento_data[1],
+            "descripcion": departamento_data[2],
+            "precio": departamento_data[3],
+            "moneda": departamento_data[4],
+            "ambientes": departamento_data[5],
+            "dormitorios": departamento_data[6],
+            "banos": departamento_data[7],
+            "superficie": departamento_data[8],
+            "direccion": departamento_data[9],
+            "rol_inmo_dir": departamento_data[10],
+            "fotos": departamento_data[11].split(',') if departamento_data[11] else [],
+            "latitud": float(departamento_data[12]) if departamento_data[12] else 0.0,
+            "longitud": float(departamento_data[13]) if departamento_data[13] else 0.0
+        }
         publicador = {
-            'nombre': departamento[12],
-            'email': departamento[13]
+            "nombre": departamento_data[14],  # name del usuario
+            "email": departamento_data[15]    # email del usuario
         }
         user = session.get('user_id')
         return render_template('viewProperty.html', departamento=departamento, user=user, publicador=publicador)

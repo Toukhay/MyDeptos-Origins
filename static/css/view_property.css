@@ -302,3 +302,9 @@ button:hover {
     color: var(--text-color);
     margin: 0.5rem 0;
 }
+
+#map {
+    height: 400px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+}

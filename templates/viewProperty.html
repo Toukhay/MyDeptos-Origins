@@ -6,6 +6,8 @@
     <title>Detalles de la Propiedad</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/view_property.css') }}">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
 </head>
 <body class="view-property-page">
     <header>
@@ -19,31 +21,65 @@
     </header>
     <div class="container">
         <div class="property-details">
-            <h1>{{ departamento[1] }}</h1>
-            {% if departamento[10] %}
-                <img src="{{ url_for('static', filename='image/' + departamento[10][0]) }}" alt="Imagen del departamento">
+            <h1>{{ departamento['titulo'] }}</h1>
+            {% if departamento['fotos'] %}
+                <img src="{{ url_for('static', filename='image/' + departamento['fotos'][0]) }}" alt="Imagen del departamento">
             {% endif %}
-            <p>{{ departamento[2] }}</p>
-            <p class="price">Precio: ${{ departamento[3] }} {{ departamento[4] }}</p>
-            <p>Ambientes: {{ departamento[5] }}</p>
-            <p>Dormitorios: {{ departamento[6] }}</p>
-            <p>Baños: {{ departamento[7] }}</p>
-            <p>Superficie: {{ departamento[8] }} m²</p>
+            <p>{{ departamento['descripcion'] }}</p>
+            <p class="price">Precio: ${{ departamento['precio'] }} {{ departamento['moneda'] }}</p>
+            <p>Ambientes: {{ departamento['ambientes'] }}</p>
+            <p>Dormitorios: {{ departamento['dormitorios'] }}</p>
+            <p>Baños: {{ departamento['banos'] }}</p>
+            <p>Superficie: {{ departamento['superficie'] }} m²</p>
+            <p>Dirección: {{ departamento['direccion'] }}</p>
+            <p>Latitud: {{ departamento['latitud'] }}</p>
+            <p>Longitud: {{ departamento['longitud'] }}</p>
             <div class="publisher-info">
                 <h3>Publicado por:</h3>
-                <p>Nombre: {{ publicador.nombre }}</p>
-                <p>Email: {{ publicador.email }}</p>
-                <p>Teléfono: {{ publicador.telefono }}</p>
+                <p>Nombre: {{ publicador['nombre'] }}</p>
+                <p>Email: {{ publicador['email'] }}</p>
             </div>
             {% if user %}
-                <button class="favorite-button {% if departamento[0] in favoritos %}selected{% endif %}" onclick="toggleFavorite(this, '{{ departamento[0] }}')"
+                <button class="favorite-button {% if departamento['id'] in favoritos %}selected{% endif %}" onclick="toggleFavorite(this, '{{ departamento['id'] }}')"
                 >
-                    {% if departamento[0] in favoritos %}Eliminar de Favoritos{% else %}Añadir a Favoritos{% endif %}
+                    {% if departamento['id'] in favoritos %}Eliminar de Favoritos{% else %}Añadir a Favoritos{% endif %}
                 </button>
             {% endif %}
         </div>
+
+        <!-- Contenedor del mapa -->
+        <div id="map" style="height: 400px; margin-top: 20px;"></div>
     </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Coordenadas del departamento
+            const lat = parseFloat({{ departamento['latitud'] }});
+            const lng = parseFloat({{ departamento['longitud'] }});
+
+            // Verifica si las coordenadas son válidas
+            if (isNaN(lat) || isNaN(lng)) {
+                console.error('Coordenadas no válidas:', lat, lng);
+                alert('No se encontraron coordenadas válidas para este departamento.');
+                return;
+            }
+
+            // Inicializar el mapa
+            const map = L.map('map').setView([lat, lng], 13);
+
+            // Agregar capa de mapa base
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Agregar marcador en la ubicación del departamento
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup('Ubicación del departamento')
+                .openPopup();
+        });
+
         function toggleFavorite(element, propertyId) {
             const isFavorite = element.classList.contains('selected');
             const url = isFavorite ? '/remove_favorite' : '/add_favorite';

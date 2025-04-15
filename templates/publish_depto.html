@@ -6,6 +6,8 @@
     <title>Publicar Departamento</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/publish_depto.css') }}">
+    <!-- Leaflet JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="publish-depto-page">
     <header>
@@ -22,7 +24,7 @@
     <div class="container">
         <h2 class="form-title">Publicar Departamento</h2>
         <div class="card">
-            <form id="publishForm" method="POST" enctype="multipart/form-data">
+            <form id="publishForm" method="POST" enctype="multipart/form-data" action="{{ url_for('publish_depto') }}">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
                     <label for="title">Título</label>
@@ -73,6 +75,16 @@
                     {{ form.rol_inmo_dir(class="form-control") }}
                 </div>
                 <div class="form-group">
+                    <label for="latitud">Latitud</label>
+                    <input type="text" id="latitud" name="latitud" class="form-control" placeholder="Ejemplo: -34.603722" required>
+                </div>
+                <div class="form-group">
+                    <label for="longitud">Longitud</label>
+                    <input type="text" id="longitud" name="longitud" class="form-control" placeholder="Ejemplo: -58.381592" required>
+                </div>
+                <!-- Contenedor del mapa -->
+                <div id="map" style="height: 400px; margin-top: 20px;"></div>
+                <div class="form-group">
                     <label for="photos">Fotos del Departamento (máximo 5)</label>
                     <input type="file" id="photos" name="photos" multiple>
                     <div id="preview-container" style="display: flex; flex-wrap: wrap; margin-top: 10px;"></div>                    
@@ -93,6 +105,7 @@
             </div>
         </div>
     </footer>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         document.getElementById('photos').addEventListener('change', function(event) {
             const previewContainer = document.getElementById('preview-container');
@@ -120,6 +133,34 @@
                 };
                 reader.readAsDataURL(file);
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Inicializar el mapa
+            const map = L.map('map').setView([-34.603722, -58.381592], 13); // Coordenadas iniciales (ejemplo: Buenos Aires)
+
+            // Agregar capa de mapa base
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Marcador inicial
+            let marker = L.marker([-34.603722, -58.381592], { draggable: true }).addTo(map);
+
+            // Actualizar campos de latitud y longitud al mover el marcador
+            marker.on('dragend', function (e) {
+                const position = marker.getLatLng();
+                document.getElementById('latitud').value = position.lat.toFixed(6);
+                document.getElementById('longitud').value = position.lng.toFixed(6);
+            });
+
+            // Permitir clic en el mapa para mover el marcador
+            map.on('click', function (e) {
+                const position = e.latlng;
+                marker.setLatLng(position);
+                document.getElementById('latitud').value = position.lat.toFixed(6);
+                document.getElementById('longitud').value = position.lng.toFixed(6);
+            });
         });
     </script>
 </body>
