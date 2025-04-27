@@ -164,47 +164,23 @@
 
 /* Estilos para el footer */
 .home-page footer {
-    background-color: var(--header-footer-bg);
-    border-top: 1px solid var(--border-color);
-    padding: 1.5rem;
+    background-color: #4A90E2; /* Fondo del footer */
+    color: white; /* Color de las fuentes */
     text-align: center;
-    width: 100%;
-    box-shadow: var(--box-shadow);
-    position: relative;
+    padding: 1rem;
     margin-top: auto;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.home-page footer .footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    text-align: center;
-}
-
-.home-page footer .footer-content div {
-    flex: 1;
-    margin: 10px 0;
-}
-
-.home-page footer .footer-content .social-media {
-    text-align: center;
-}
-
-.home-page footer .footer-content .navigation-links {
-    text-align: right;
-}
-
-.home-page footer .footer-content .reserved-rights {
-    text-align: left;
-}
-
-.home-page footer .footer-content a {
-    color: white;
-    font-size: 1.1rem;
+.footer-content a {
+    color: white; /* Color de los enlaces */
     text-decoration: none;
+    margin: 0 0.5rem;
+    font-size: 1rem;
+}
+
+.footer-content a:hover {
+    text-decoration: underline;
 }
 
 /* Estilos para el root */
@@ -436,4 +412,29 @@
 
 .home-page .favorite-button.selected {
     background-color: #ff6666;
+}
+
+.popup-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #28a745; /* Fondo verde */
+    color: white; /* Texto blanco */
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    font-size: 1rem;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

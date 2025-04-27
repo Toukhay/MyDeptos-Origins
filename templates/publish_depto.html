@@ -21,140 +21,147 @@
             </ul>
         </nav>
     </header>
-    <div class="container">
-        <h2 class="form-title">Publicar Departamento</h2>
-        <div class="card">
-            <form id="publishForm" method="POST" enctype="multipart/form-data" action="{{ url_for('publish_depto') }}">
-                {{ form.hidden_tag() }}
-                <div class="form-group">
-                    <label for="title">Título</label>
-                    {{ form.title(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="description">Descripción</label>
-                    {{ form.description(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="tipo_publicacion">Tipo de Publicación</label>
-                    {{ form.tipo_publicacion(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="price">Precio</label>
-                    {{ form.price(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="moneda">Moneda</label>
-                    {{ form.moneda(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="ambientes">Ambientes</label>
-                    {{ form.ambientes(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="dormitorios">Dormitorios</label>
-                    {{ form.dormitorios(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="banos">Baños</label>
-                    {{ form.banos(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="superficie">Superficie (m²)</label>
-                    {{ form.superficie(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="direccion">Dirección</label>
-                    {{ form.direccion(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="localidad">Localidad</label>
-                    {{ form.localidad(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="rol_inmo_dir">Rol Inmobiliario</label>
-                    {{ form.rol_inmo_dir(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    <label for="latitud">Latitud</label>
-                    <input type="text" id="latitud" name="latitud" class="form-control" placeholder="Ejemplo: -34.603722" required>
-                </div>
-                <div class="form-group">
-                    <label for="longitud">Longitud</label>
-                    <input type="text" id="longitud" name="longitud" class="form-control" placeholder="Ejemplo: -58.381592" required>
-                </div>
-                <!-- Contenedor del mapa -->
-                <div id="map" style="height: 400px; margin-top: 20px;"></div>
-                <div class="form-group">
-                    <label for="photos">Fotos del Departamento (máximo 5)</label>
-                    <input type="file" id="photos" name="photos" multiple>
-                    <div id="preview-container" style="display: flex; flex-wrap: wrap; margin-top: 10px;"></div>                    
-                </div>
-                <button type="submit" class="btn btn-primary">Publicar Departamento</button>
-            </form>
+
+    <main>
+        <!-- Banner Superior -->
+        <div class="banner-container">
+            <img src="{{ url_for('static', filename='image/PublicaDepto.png') }}" alt="Publica tu Departamento" class="banner-image">
+            <h1 class="banner-title">Publica tu departamento</h1>
         </div>
-    </div>
-    <footer>
+
+        <!-- Formulario Compacto -->
+        <div class="compact-form-container">
+            <div class="card compact-form">
+                <form id="publishForm" method="POST" enctype="multipart/form-data" action="{{ url_for('publish_depto') }}">
+                    {{ form.hidden_tag() }}
+                    <!-- Primera Fila -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="title">Título</label>
+                            {{ form.title(class="form-control", id="title", placeholder="Ej: Acogedor departamento en el centro") }}
+                        </div>
+                        <div class="form-group">
+                            <label for="price">Precio</label>
+                            <div class="price-input-group">
+                                {{ form.price(class="form-control", id="price", placeholder="Ej: 150000") }}
+                                {{ form.moneda(class="form-control", id="moneda") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Segunda Fila -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tipo_publicacion">Tipo</label>
+                            {{ form.tipo_publicacion(class="form-control", id="tipo_publicacion") }}
+                        </div>
+                        <div class="form-group">
+                            <label for="ambientes">Ambientes</label>
+                            {{ form.ambientes(class="form-control", id="ambientes") }}
+                        </div>
+                        <div class="form-group">
+                            <label for="dormitorios">Dormitorios</label>
+                            {{ form.dormitorios(class="form-control", id="dormitorios") }}
+                        </div>
+                    </div>
+
+                    <!-- Tercera Fila -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="banos">Baños</label>
+                            {{ form.banos(class="form-control") }}
+                        </div>
+                        <div class="form-group">
+                            <label for="superficie">Superficie (m²)</label>
+                            {{ form.superficie(class="form-control", placeholder="Ej: 65") }}
+                        </div>
+                        <div class="form-group">
+                            <label for="localidad">Localidad</label>
+                            {{ form.localidad(class="form-control", placeholder="Ej: Buenos Aires") }}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rol_inmo_dir">Rol Inmobiliario</label>
+                            {{ form.rol_inmo_dir(class="form-control", id="rol_inmo_dir") }}
+                        </div>
+                    </div>
+
+                    <!-- Descripción (ancho completo) -->
+                    <div class="form-group full-width">
+                        <label for="description">Descripción</label>
+                        {{ form.description(class="form-control", rows="3", placeholder="Describe las características principales...") }}
+                    </div>
+
+                    <!-- Ubicación -->
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="direccion">Dirección</label>
+                            {{ form.direccion(class="form-control", placeholder="Av. Corrientes 1234") }}
+                        </div>
+                    </div>
+
+                    <!-- Mapa y Coordenadas -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="latitud">Latitud</label>
+                            <input type="text" id="latitud" name="latitud" class="form-control" placeholder="-27.484989" value="{{ request.form.get('latitud', '') }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="longitud">Longitud</label>
+                            <input type="text" id="longitud" name="longitud" class="form-control" placeholder="-55.119830" value="{{ request.form.get('longitud', '') }}" required>
+                        </div>
+                    </div>
+                    <div id="map" class="interactive-map"></div>
+                    <p class="map-help-text">Haz clic en el mapa para seleccionar la ubicación</p>
+
+                    <!-- Imágenes -->
+                    <div class="form-group full-width">
+                        <label for="photos">Fotos (máx. 5)</label>
+                        <label for="photos" class="custom-file-label">Seleccionar imágenes</label>
+                        <input type="file" id="photos" name="photos" multiple accept="image/*">
+                        <div id="preview-container"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Publicar Departamento</button>
+                </form>
+            </div>
+        </div>
+    </main>
+    <footer >
         <div class="footer-content">
             <div>&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
             <div class="social-media">
+                <a href="mailto:soporte@mydeptos.com">Contacto</a>
                 <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
                 <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
             </div>
-            <div class="navigation-links">
-                <a href="{{ url_for('about') }}">Sobre Nosotros</a>
-            </div>
         </div>
     </footer>
+    <div id="alert-message" class="alert-hidden"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        document.getElementById('photos').addEventListener('change', function(event) {
-            const previewContainer = document.getElementById('preview-container');
-            previewContainer.innerHTML = '';  // Limpia las imágenes previas
-    
-            const files = event.target.files;
-    
-            if (files.length > 5) {
-                alert('Solo puedes subir un máximo de 5 imágenes.');
-                event.target.value = '';  // Resetea el input si se seleccionan más de 5
-                return;
-            }
-    
-            for (let file of files) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.style.width = '100px';
-                    img.style.margin = '5px';
-                    img.style.borderRadius = '8px';
-                    img.style.border = '2px solid #ddd';
-                    img.style.boxShadow = '2px 2px 8px rgba(0, 0, 0, 0.1)';
-                    previewContainer.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
+        // Mapa interactivo
         document.addEventListener('DOMContentLoaded', function () {
-            // Inicializar el mapa
-            const map = L.map('map').setView([-34.603722, -58.381592], 13); // Coordenadas iniciales (ejemplo: Buenos Aires)
-
-            // Agregar capa de mapa base
+            const map = L.map('map').setView([-27.485104, -55.119835], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            // Marcador inicial
-            let marker = L.marker([-34.603722, -58.381592], { draggable: true }).addTo(map);
+            const marker = L.marker([-27.485104, -55.119835], {
+                draggable: true,
+                icon: L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+                    iconSize: [32, 32],
+                })
+            }).addTo(map);
 
-            // Actualizar campos de latitud y longitud al mover el marcador
             marker.on('dragend', function (e) {
                 const position = marker.getLatLng();
                 document.getElementById('latitud').value = position.lat.toFixed(6);
                 document.getElementById('longitud').value = position.lng.toFixed(6);
             });
 
-            // Permitir clic en el mapa para mover el marcador
             map.on('click', function (e) {
                 const position = e.latlng;
                 marker.setLatLng(position);
@@ -162,6 +169,51 @@
                 document.getElementById('longitud').value = position.lng.toFixed(6);
             });
         });
+
+        // Subida de imágenes
+        document.getElementById('photos').addEventListener('change', function(e) {
+            const preview = document.getElementById('preview-container');
+            preview.innerHTML = ''; // Limpiar previsualizaciones anteriores
+            
+            Array.from(e.target.files).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('preview-thumbnail');
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Animación de carga
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '1';
+        });
+
+        // Feedback al enviar el formulario
+        document.getElementById('publishForm').addEventListener('submit', function(event) {
+            const latitud = document.getElementById('latitud').value;
+            const longitud = document.getElementById('longitud').value;
+
+            if (!latitud || !longitud) {
+                event.preventDefault();
+                showAlert('Por favor, selecciona una ubicación en el mapa.', 'error');
+            }
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert-message');
+            alert.textContent = message;
+            alert.className = `alert-${type}`;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 3000);
+        }
     </script>
 </body>
 </html>

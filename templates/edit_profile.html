@@ -7,53 +7,37 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}">
 </head>
-<body class="edit-profile-page">
-    <div class="container edit-profile-container">
-        <h2>Editar Perfil</h2>
-        <!-- Mostrar mensajes flash -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        <form method="POST">
+<body>
+    <div class="container">
+        <h1>Editar Perfil</h1>
+        <form action="{{ url_for('edit_profile') }}" method="POST" class="edit-profile-form">
             {{ form.hidden_tag() }}
             <div class="form-group">
                 <label for="username">Nuevo Usuario</label>
                 {{ form.username(class="form-control") }}
+                {% if form.username.errors %}
+                    <span class="error-message">{{ form.username.errors[0] }}</span>
+                {% endif %}
             </div>
             <div class="form-group">
                 <label for="email">Nuevo Email</label>
                 {{ form.email(class="form-control") }}
+                {% if form.email.errors %}
+                    <span class="error-message">{{ form.email.errors[0] }}</span>
+                {% endif %}
             </div>
             <div class="form-group">
                 <label for="password">Nueva Contraseña</label>
                 {{ form.password(class="form-control") }}
+                {% if form.password.errors %}
+                    <span class="error-message">{{ form.password.errors[0] }}</span>
+                {% endif %}
             </div>
-            <div class="btn-group">
-                <button type="submit" class="btn btn-primary">Actualizar Perfil</button>
-                <button id="cancelBtn" class="btn btn-cancel">Cancelar</button>
-
-                <script>
-                    document.getElementById("cancelBtn").addEventListener("click", function() {
-                        window.location.href = "{{ url_for('home') }}";
-                    });
-                </script>
-                
+            <div class="button-group">
+                <button type="submit" class="btn-submit">Guardar Cambios</button>
+                <a href="{{ url_for('user_panel') }}" class="btn-cancel">Cancelar</a>
             </div>
         </form>
-        <a href="{{ url_for('generate_password') }}" class="btn btn-secondary">Generar Contraseña Segura</a>
     </div>
-    <script>
-        // Ocultar mensajes flash después de 5 segundos
-        setTimeout(function() {
-            var alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                alert.style.display = 'none';
-            });
-        }, 5000);
-    </script>
 </body>
 </html>

@@ -8,15 +8,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/publication_success.css') }}">
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <h2>Departamento publicado con éxito</h2>
-            <p>Serás redirigido al inicio en unos segundos...</p>
-        </div>
+    <div class="card">
+        <h2>Departamento publicado con éxito</h2>
+        <p>Serás redirigido al inicio en unos segundos...</p>
     </div>
     <script>
         setTimeout(function() {
-            window.location.href = "{{ url_for('index') }}";
+            window.location.href = "{{ url_for('home') }}";
         }, 3000); // Redirigir después de 3 segundos
     </script>
 </body>

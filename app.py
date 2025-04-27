@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash, send_from_directory, jsonify
-from flask_wtf import FlaskForm, CSRFProtect
+from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DecimalField, SelectField, IntegerField
 from flask_wtf.file import MultipleFileField, FileAllowed
 from wtforms.validators import DataRequired, Email, Length, NumberRange
@@ -11,16 +11,44 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from werkzeug.utils import secure_filename
+from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__, static_folder="static")
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'bdmydeptos'
-app.config['SECRET_KEY'] = 'tu_contra_segura_para_la_app'
+app.config['SECRET_KEY'] = 'tu_clave_secreta'
 
 mysql = MySQL(app)
-csrf = CSRFProtect(app)
+csrf = CSRFProtect(app)  # Habilitar CSRF
+
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Configuración básica de logs
+def setup_logger():
+    # Crea el directorio de logs si no existe
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
+    
+    # Configura el archivo de log (rotativo para no ocupar mucho espacio)
+    file_handler = RotatingFileHandler(
+        'logs/mydeptos.log', 
+        maxBytes=10240,  # 10KB por archivo
+        backupCount=10   # Mantiene 10 archivos antiguos
+    )
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.INFO)
+    
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('MyDeptos iniciado')
+
+# Llama a la función de configuración
+setup_logger()
 
 # -----------------------
 # Función para enviar correos
@@ -209,8 +237,8 @@ def login():
         if user and bcrypt.checkpw(password, user[1].encode('utf-8')):
             session['user_id'] = user[0]
             session['user_name'] = username
-            flash('Inicio de sesión exitoso', 'success')
-            return redirect(url_for('home'))  # Cambiado de 'dashboard' a 'home'
+            flash('Inicio de sesión exitoso', 'popup')  # Mensaje estilo pop-up
+            return redirect(url_for('home'))  # Redirige al home.html
         else:
             flash('Nombre de usuario o contraseña incorrectos', 'danger')
 
@@ -220,8 +248,7 @@ def login():
 def logout():
     session.pop('user_id', None)
     session.pop('user_name', None)
-    flash('Has cerrado sesión', 'success')
-    return redirect(url_for('login'))
+    return render_template('logout.html')  # Renderiza logout.html con temporizador
 
 # -----------------------
 # Recuperación y reseteo de contraseña
@@ -316,7 +343,7 @@ def user_panel():
     if 'user_id' not in session:
         flash('Debes iniciar sesión primero', 'warning')
         return redirect(url_for('login'))
-
+    
     user_id = session['user_id']
     conn = get_db_connection()
     cur = conn.cursor()
@@ -325,10 +352,12 @@ def user_panel():
         user_data = cur.fetchone()
 
         cur.execute('''
-            SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir,
-                GROUP_CONCAT(f.url_foto) AS fotos
+            SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, 
+                d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir, 
+                GROUP_CONCAT(f.url_foto) AS fotos, c.latitud, c.longitud
             FROM departamento d
             LEFT JOIN foto f ON d.id_departamento = f.id_departamento
+            LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento
             WHERE d.id_usuario = %s
             GROUP BY d.id_departamento
         ''', (user_id,))
@@ -341,8 +370,8 @@ def user_panel():
 
     # Convertir las fotos en lista (si existen)
     mis_publicaciones = [
-        (id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos.split(',') if fotos else [])
-        for id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos in mis_publicaciones
+        (id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos.split(',') if fotos else [], latitud, longitud)
+        for id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos, latitud, longitud in mis_publicaciones
     ]
 
     form = PublishDeptoForm()  # Crear una instancia del formulario para obtener el token CSRF
@@ -402,8 +431,8 @@ def edit_profile():
         cursor.close()
         
         session['user_name'] = new_username
-        flash('Perfil actualizado con éxito', 'success')
-        return redirect(url_for('home'))  # Cambiado de 'dashboard' a 'home'
+        flash('Perfil actualizado con éxito', 'success')  # Mensaje flash
+        return redirect(url_for('home'))  # Redirige al home.html
     
     return render_template('edit_profile.html', form=form)
 
@@ -459,9 +488,6 @@ def publish_depto():
     cursor.close()
     form.localidad.choices = [(str(id), nombre) for id, nombre in localidades]
 
-    print("Formulario enviado:", form.validate_on_submit())
-    print("Datos del formulario:", form.data)
-
     if form.validate_on_submit():
         try:
             # Datos del formulario
@@ -479,8 +505,23 @@ def publish_depto():
             rol_inmo_dir = form.rol_inmo_dir.data
             user_id = session['user_id']
 
-            # Insertar en la tabla `departamento`
+            # Validación de coordenadas
+            latitud = request.form.get('latitud')
+            longitud = request.form.get('longitud')
+            if not latitud or not longitud:
+                flash('Por favor, selecciona una ubicación en el mapa.', 'danger')
+                return redirect(url_for('publish_depto'))
+
+            # Validación de imágenes
+            photos = request.files.getlist(form.photos.name)
+            if len(photos) < 1 or len(photos) > 5:
+                flash('Debes subir entre 1 y 5 imágenes.', 'error')
+                return redirect(url_for('publish_depto'))
+
+            # Iniciar transacción
             cursor = mysql.connection.cursor()
+
+            # Insertar departamento
             cursor.execute('''
                 INSERT INTO departamento (id_usuario, id_localidad, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fecha_publicacion)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
@@ -488,34 +529,37 @@ def publish_depto():
             departamento_id = cursor.lastrowid
 
             # Insertar coordenadas
-            latitud = request.form.get('latitud')
-            longitud = request.form.get('longitud')
             cursor.execute('INSERT INTO coordenadas (id_departamento, latitud, longitud) VALUES (%s, %s, %s)', 
-                           (departamento_id, latitud, longitud))
+                        (departamento_id, latitud, longitud))
 
-            # Guardar fotos
-            photos = request.files.getlist('photos')
-            if photos and len(photos) <= 5:
-                for photo in photos:
-                    if photo and photo.filename != '':
-                        filename = secure_filename(photo.filename)
-                        photo_path = os.path.join('static/image', filename)
-                        photo.save(photo_path)
-                        cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
-                                       (departamento_id, filename))
-            else:
-                flash('Error: Debes subir entre 1 y 5 imágenes.', 'error')
+            # Procesar cada imagen
+            for photo in photos:
+                if photo.filename == '':  # Saltar si no hay archivo
+                    continue
+                    
+                filename = secure_filename(photo.filename)
+                photo_path = os.path.join(app.root_path, 'static', 'image', filename)
+                
+                try:
+                    photo.save(photo_path)
+                    cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
+                                (departamento_id, filename))
+                except Exception as e:
+                    mysql.connection.rollback()
+                    flash(f'Error al guardar las imágenes: {str(e)}', 'danger')
+                    return redirect(url_for('publish_depto'))
 
             mysql.connection.commit()
             cursor.close()
 
             flash('Departamento publicado con éxito', 'success')
             return redirect(url_for('home'))
+            
         except Exception as e:
             mysql.connection.rollback()
-            flash(f'Error al publicar el departamento: {e}', 'danger')
+            flash(f'Error al publicar el departamento: {str(e)}', 'danger')
             return redirect(url_for('publish_depto'))
-    
+
     return render_template('publish_depto.html', form=form)
 
 
@@ -653,19 +697,34 @@ def delete_publication(publication_id):
         flash('Debes iniciar sesión primero', 'warning')
         return redirect(url_for('login'))
 
-    user_id = session['user_id']
-    cursor = mysql.connection.cursor()
-    cursor.execute('DELETE FROM foto WHERE id_departamento = %s', (publication_id,))
-    cursor.execute('DELETE FROM departamento WHERE id_departamento = %s AND id_usuario = %s', (publication_id, user_id))
-    mysql.connection.commit()
-    cursor.close()
+    try:
+        user_id = session['user_id']
+        cursor = mysql.connection.cursor()
 
-    flash('Publicación eliminada con éxito', 'success')
-    return redirect(url_for('delete_confirmation'))
+        # Eliminar coordenadas relacionadas
+        cursor.execute('DELETE FROM coordenadas WHERE id_departamento = %s', (publication_id,))
+        # Eliminar fotos relacionadas
+        cursor.execute('DELETE FROM foto WHERE id_departamento = %s', (publication_id,))
+        # Eliminar el departamento
+        cursor.execute('DELETE FROM departamento WHERE id_departamento = %s AND id_usuario = %s', (publication_id, user_id))
+        
+        mysql.connection.commit()
+        cursor.close()
+
+        flash('Publicación eliminada con éxito', 'success')
+        return redirect(url_for('delete_confirmation'))
+    except Exception as e:
+        mysql.connection.rollback()
+        flash(f'Error al eliminar la publicación: {e}', 'danger')
+        return redirect(url_for('user_panel'))
 
 @app.route('/delete_confirmation')
 def delete_confirmation():
     return render_template('delete_confirmation.html')
+
+@app.route('/publication_success')
+def publication_success():
+    return render_template('publication_success.html')
 
 print(app.url_map)
 

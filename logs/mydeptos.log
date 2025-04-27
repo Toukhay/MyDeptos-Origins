@@ -1,0 +1,38 @@
+2025-04-27 20:39:10,845 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:49]
+2025-04-27 20:39:16,160 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:48]
+2025-04-27 20:40:53,022 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:48]
+2025-04-27 20:40:53,261 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:48]
+2025-04-27 20:42:02,872 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:48]
+2025-04-27 20:42:04,158 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:48]
+2025-04-27 20:42:20,524 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:48]
+2025-04-27 20:43:05,005 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:48]
+2025-04-27 20:43:48,254 INFO: Inicio de publicación de departamento [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:494]
+2025-04-27 20:43:48,254 INFO: Número de imágenes recibidas: 3 [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:521]
+2025-04-27 20:43:48,255 ERROR: Error al publicar departamento: not all arguments converted during bytes formatting [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:573]
+Traceback (most recent call last):
+  File "C:\Users\facu-\Desktop\MyDeptosFlask\venv\Lib\site-packages\MySQLdb\cursors.py", line 200, in _mogrify
+    query = query % args
+            ~~~~~~^~~~~~
+TypeError: not all arguments converted during bytes formatting
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\facu-\Desktop\MyDeptosFlask\app.py", line 534, in publish_depto
+    cursor.execute('''
+    ~~~~~~~~~~~~~~^^^^
+        INSERT INTO departamento (...) VALUES (...)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ''', (user_id, localidad, title, description, tipo_publicacion, price,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+             moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\facu-\Desktop\MyDeptosFlask\venv\Lib\site-packages\MySQLdb\cursors.py", line 176, in execute
+    mogrified_query = self._mogrify(query, args)
+  File "C:\Users\facu-\Desktop\MyDeptosFlask\venv\Lib\site-packages\MySQLdb\cursors.py", line 202, in _mogrify
+    raise ProgrammingError(str(m))
+MySQLdb.ProgrammingError: not all arguments converted during bytes formatting
+2025-04-27 20:44:07,552 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:48]
+2025-04-27 20:44:09,841 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:48]
+2025-04-27 20:45:53,101 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:48]
+2025-04-27 20:45:53,350 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:48]

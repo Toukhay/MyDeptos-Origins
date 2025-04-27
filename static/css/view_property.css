@@ -235,12 +235,19 @@ button:hover {
 }
 
 .view-property-page .property-details {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1.5rem;
     background-color: white;
-    padding: 2rem;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    max-width: 800px;
-    margin: 4rem auto 2rem;
+    overflow: hidden;
+}
+
+.carousel img {
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
 }
 
 .view-property-page .property-details h1 {
@@ -268,7 +275,7 @@ button:hover {
 }
 
 .view-property-page .property-details .favorite-button {
-    background-color: #ff0000;
+    background-color: var(--primary-color);
     color: white;
     padding: 0.5rem 1rem;
     border: none;
@@ -277,10 +284,11 @@ button:hover {
     margin-top: 0.5rem;
     width: 100%;
     font-size: 1rem;
+    transition: background-color var(--transition-duration);
 }
 
 .view-property-page .property-details .favorite-button.selected {
-    background-color: #ff6666;
+    background-color: #357ABD;
 }
 
 .view-property-page .publisher-info {

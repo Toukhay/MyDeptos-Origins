@@ -84,50 +84,29 @@ nav {
 }
 
 /* Contenedores principales */
-.container {
-    flex: 1;
-    padding: 2rem;
-    max-width: 1200px;
+.container-wrapper {
+    display: flex;
+    gap: 2rem;
     margin: 2rem auto;
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+    max-width: 1200px;
+}
+
+.container.profile-container {
+    flex: 0 0 25%; /* Fijo al 25% del ancho */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 }
 
 .container.full-width {
-    width: 100%;
-    padding: 2rem;
-}
-
-/* Información de perfil */
-.profile-info {
-    text-align: center;
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
-
-.profile-info h2 {
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-}
-
-.profile-info p {
-    margin: 0.5rem 0;
-}
-
-.btn-group {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-/* Listado de publicaciones */
-.listings {
+    flex: 0 0 70%; /* Fijo al 70% del ancho */
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
+    grid-template-columns: repeat(3, 1fr); /* 3 columnas */
+    grid-gap: 2rem; /* Espaciado entre filas y columnas */
+}
+
+.listings {
+    display: contents; /* Permite que las cards se adapten al grid */
 }
 
 .listing {
@@ -292,26 +271,25 @@ footer {
     opacity: 0.8;
 }
 
+.listings-header {
+    margin-bottom: 1.5rem;
+    text-align: left;
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
-    .container {
-        padding: 1rem;
-        margin: 1rem auto;
+    .container-wrapper {
+        flex-direction: column;
     }
-    
-    .listings {
-        grid-template-columns: 1fr;
+
+    .container.profile-container {
+        flex: 1;
+        margin-bottom: 2rem;
     }
-    
-    .carousel-container {
-        height: 200px;
-    }
-    
-    nav {
-        padding: 0 1rem;
-    }
-    
-    .menu li {
-        margin-left: 1rem;
+
+    .container.full-width {
+        grid-template-columns: 1fr; /* Una columna en pantallas pequeñas */
     }
 }
