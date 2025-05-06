@@ -12,16 +12,6 @@
     <div class="right-section">
         <div class="container">
             <h1>Iniciar Sesión</h1>
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages(category_filter=["danger"]) %}
-                {% if messages %}
-                    <div class="flash-messages">
-                        {% for message in messages %}
-                            <p>{{ message }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
             <form action="{{ url_for('login') }}" method="POST" novalidate class="login-form">
                 {{ form.hidden_tag() }}  <!-- Asegura la protección CSRF -->
                 <div class="form-group">

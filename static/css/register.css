@@ -16,20 +16,26 @@ body {
     font-family: 'Roboto', Arial, sans-serif;
     background-color: var(--background-color);
     margin: 0;
-    padding: 70px 0 0;
+    padding: 0; /* Eliminado el padding superior */
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow: hidden; /* Evita el desplazamiento */
 }
 
 .container {
     flex: 1;
     padding: 2rem;
-    max-width: 600px;
-    margin: 4rem auto 2rem;
+    max-width: 400px; /* Contenedor más compacto */
+    margin: 5rem auto; /* Separación del header y footer */
     background: white;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centra verticalmente */
+    align-items: center; /* Centra horizontalmente */
+    text-align: center; /* Centra el contenido */
 }
 
 header, footer {
@@ -39,19 +45,20 @@ header, footer {
     text-align: center;
     width: 100%;
     box-shadow: var(--box-shadow);
+    flex-shrink: 0; /* Evita que el header/footer se reduzcan */
 }
 
 header {
-    position: fixed;
+    position: relative; /* Cambiado para evitar desplazamiento */
     top: 0;
     left: 0;
     z-index: 1000;
-    margin-bottom: 2rem;
 }
 
 footer {
     position: relative;
-    margin-top: auto;
+    bottom: 0;
+    left: 0;
 }
 
 nav {
@@ -109,14 +116,15 @@ nav {
 }
 
 h1 {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
+    font-size: 2rem; /* Tamaño ajustado */
+    margin-bottom: 1.5rem; /* Más espacio debajo del título */
     color: var(--primary-color);
     text-align: center;
 }
 
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem; /* Más espacio entre los campos */
+    width: 100%; /* Asegura que los campos ocupen todo el ancho */
 }
 
 label {
@@ -142,20 +150,22 @@ label {
 }
 
 button {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 0.75rem 1.5rem;
+    background-color: #4A90E2; /* Azul sólido */
+    color: white; /* Texto blanco */
+    padding: 0.75rem 1.5rem; /* Tamaño ajustado */
     border: none;
-    border-radius: var(--border-radius);
+    border-radius: 20px; /* Bordes redondeados */
     cursor: pointer;
-    font-size: 1.1rem;
-    transition: background-color var(--transition-duration);
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease; /* Transición suave */
+    text-align: center;
+    width: 100%; /* Botón ocupa todo el ancho */
     margin-top: 1rem;
-    width: 100%;
 }
 
 button:hover {
-    background-color: #357ABD;
+    background-color: #357ABD; /* Azul más oscuro al pasar el mouse */
 }
 
 .flash-messages {

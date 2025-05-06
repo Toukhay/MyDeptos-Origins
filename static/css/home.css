@@ -1,3 +1,14 @@
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.home-page {
+    flex: 1; /* Permite que el contenido principal ocupe el espacio disponible */
+}
+
 .home-page .container {
     max-width: 1200px;
     margin: 4rem auto;
@@ -168,7 +179,7 @@
     color: white; /* Color de las fuentes */
     text-align: center;
     padding: 1rem;
-    margin-top: auto;
+    margin-top: auto; /* Empuja el footer hacia abajo */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 

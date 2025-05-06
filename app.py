@@ -163,7 +163,7 @@ def static_files(filename):
 @app.route('/search', methods=['GET'])
 def search():
     tipo_publicacion = request.args.get('tipo_publicacion')
-    rol_inmobiliario = request.args.get('rol_inmobiliario')  
+    rol_inmobiliario = request.args.get('rol_inmobiliario')
     precio_min = request.args.get('precio_min')
     precio_max = request.args.get('precio_max')
     localidad = request.args.get('localidad')
@@ -172,7 +172,6 @@ def search():
     cursor = mysql.connection.cursor()
     cursor.execute('SELECT id_localidad, nombre FROM localidad')
     localidades = cursor.fetchall()
-    cursor.close()
 
     query = '''
         SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, 
@@ -205,7 +204,6 @@ def search():
 
     query += " GROUP BY d.id_departamento"
 
-    cursor = mysql.connection.cursor()
     cursor.execute(query, params)
     resultados = cursor.fetchall()
     cursor.close()

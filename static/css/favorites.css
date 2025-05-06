@@ -59,6 +59,16 @@ body {
     box-shadow: var(--box-shadow);
     position: relative;
     margin-top: auto;
+    color: white; /* Agregado para igualar el color de fuente */
+}
+
+.favorites-page footer a {
+    color: white; /* Agregado para igualar el color de los enlaces */
+    text-decoration: none;
+}
+
+.favorites-page footer a:hover {
+    text-decoration: underline; /* Agregado para igualar el hover de los enlaces */
 }
 
 .favorites-page nav {

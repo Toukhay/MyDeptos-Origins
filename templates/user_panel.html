@@ -7,6 +7,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/user_panel.css') }}">
     <!-- Eliminar Slick si no lo estás usando realmente -->
+    <style>
+        .flash-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            animation: fadeOut 4s forwards;
+        }
+        .flash-popup.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flash-popup.danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; display: none; }
+        }
+    </style>
 </head>
 <body class="user-panel-page">
     <header>
@@ -77,6 +104,15 @@
             </div>
         </div>
     </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-popup {{ category }}">
+                    <p>{{ message }}</p>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     <footer>
         <div class="footer-content">
             <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>

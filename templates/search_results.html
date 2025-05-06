@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados de Búsqueda</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/search_results.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
+    <!-- Añadir Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="search-results-page">
     <header>
         <nav>
-            <div class="logo">My Deptos</div>
+            <div class="logo">MyDeptos</div>
             <ul class="menu">
                 <li><a href="/">Inicio</a></li>
                 <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
@@ -19,140 +19,173 @@
             </ul>
         </nav>
     </header>
-
+    
     <div class="container">
         <h1>Resultados de Búsqueda</h1>
-        {% if not resultados %}
-            <div class="search-box">
-                <h2>Filtro de búsqueda</h2>
-                <form method="GET" action="{{ url_for('search') }}">
-                    <div class="form-group">
-                        <label for="tipo_publicacion">Tipo de Publicación</label>
-                        <select name="tipo_publicacion" class="form-control">
-                            <option value="">Cualquiera</option>
-                            <option value="venta">Venta</option>
-                            <option value="alquiler">Alquiler</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="precio_min">Precio Mínimo</label>
-                        <input type="number" name="precio_min" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="precio_max">Precio Máximo</label>
-                        <input type="number" name="precio_max" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="localidad">Localidad</label>
-                        <select name="localidad" class="form-control">
-                            <option value="">Cualquiera</option>
-                            {% for id, nombre in localidades %}
-                                <option value="{{ id }}">{{ nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="ambientes">Ambientes</label>
-                        <input type="number" name="ambientes" class="form-control">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Buscar</button>
-                </form>
-            </div>
-            <hr>
-        {% endif %}
+        
         {% if resultados %}
-            <div class="results">
-                {% for depto in resultados %}
-                    <div class="listing">
-                        <div class="gallery-container">
-                            <!-- Carrusel principal -->
-                            <div class="main-carousel">
-                                {% for imagen in depto[11] %}
-                                    <div class="gallery-item {% if loop.first %}active{% endif %}">
-                                        <img src="{{ url_for('static', filename='image/' + imagen) }}" 
-                                            alt="Imagen del departamento"
-                                            onclick="openLightbox(this)">
-                                    </div>
-                                {% endfor %}
+        <div class="results">
+            {% for depto in resultados %}
+            <div class="listing">
+                <!-- Tipo de publicación -->
+                <!-- <span class="listing-type">
+                    {{ 'Venta' if depto[10] == 'venta' else 'Alquiler' }}
+                </span> -->
+                
+                <!-- Carrusel de imágenes -->
+                <div class="carousel">
+                    <div class="carousel-inner">
+                        {% if depto[11] %}
+                            {% for image in depto[11] %}
+                            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                <img loading="lazy" src="{{ url_for('static', filename='image/' ~ image) }}" alt="Imagen del departamento">
                             </div>
-                            
-                            <!-- Miniaturas -->
-                            <div class="thumbnails">
-                                {% for imagen in depto[11] %}
-                                    <img src="{{ url_for('static', filename='image/' + imagen) }}" 
-                                        alt="Miniatura"
-                                        class="thumbnail {% if loop.first %}active{% endif %}"
-                                        onclick="changeMainImage(this, `{{ url_for('static', filename='image/' + imagen) }}`)">
-                                {% endfor %}
-                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <div class="carousel-item active">
+                            <img loading="lazy" src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada">
                         </div>
-                        
-                        <div class="listing-info">
-                            <h3>{{ depto[1] }}</h3>
-                            <p><strong>Descripción:</strong> {{ depto[2] }}</p>
-                            <p><strong>Precio:</strong> ${{ depto[3] }} {{ depto[4] }}</p>
-                            <p><strong>Ambientes:</strong> {{ depto[5] }}</p>
-                            <p><strong>Dormitorios:</strong> {{ depto[6] }}</p>
-                            <p><strong>Baños:</strong> {{ depto[7] }}</p>
-                            <p><strong>Superficie:</strong> {{ depto[8] }} m²</p>
-                            <p><strong>Dirección:</strong> {{ depto[9] }}</p>
-                            <p><strong>Rol Inmobiliario:</strong> {{ depto[10] }}</p>
-                            <button class="btn btn-primary" onclick="window.location.href=`{{ url_for('view_property', property_id=depto[0]) }}`">Ver Propiedad</button>
-                        </div>
+                        {% endif %}
                     </div>
-                {% endfor %}
+                    
+                    <!-- Indicadores -->
+                    <div class="carousel-indicators">
+                        {% if depto[11] %}
+                            {% for image in depto[11] %}
+                            <span class="carousel-indicator {% if loop.first %}active{% endif %}" 
+                                onclick="goToImage(this, '{{ loop.index0 }}')"></span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="carousel-indicator active"></span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Botones de navegación -->
+                    <button class="carousel-nav-btn prev" onclick="prevImage(this)">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="carousel-nav-btn next" onclick="nextImage(this)">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <!-- Información del departamento -->
+                <div class="listing-info">
+                    <h3>{{ depto[1] }}</h3>
+                    
+                    <div class="listing-price">
+                        ${{ "{:,.0f}".format(depto[3]) }} 
+                        <span class="currency">{{ depto[4] }}</span>
+                    </div>
+                    
+                    <div class="listing-address">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{ depto[9] }}
+                    </div>
+                    
+                    <div class="listing-details">
+                        <span class="listing-detail">
+                            <i class="fas fa-door-open"></i> {{ depto[5] }} amb.
+                        </span>
+                        <span class="listing-detail">
+                            <i class="fas fa-bed"></i> {{ depto[6] }} dorm.
+                        </span>
+                        <span class="listing-detail">
+                            <i class="fas fa-bath"></i> {{ depto[7] }} baños
+                        </span>
+                        <span class="listing-detail">
+                            <i class="fas fa-ruler-combined"></i> {{ depto[8] }} m²
+                        </span>
+                    </div>
+                    
+                    <div class="listing-action">
+                        <button onclick="window.location.href='/viewProperty/{{ depto[0] }}'" class="btn">
+                            <i class="fas fa-eye"></i> Ver Detalles
+                        </button>
+                    </div>
+                </div>
             </div>
+            {% endfor %}
+        </div>
         {% else %}
-            <p>No se encontraron resultados.</p>
+        <div class="no-results">
+            <img src="{{ url_for('static', filename='image/no-results.svg') }}" alt="No se encontraron resultados">
+            <h2>No encontramos propiedades con esos filtros</h2>
+            <p>Intenta ajustar tus criterios de búsqueda o <a href="/">volver al inicio</a></p>
+        </div>
         {% endif %}
     </div>
-
-    <!-- Lightbox -->
-    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
-        <span class="close-btn">&times;</span>
-        <img id="lightbox-img" class="lightbox-content">
-        <div class="lightbox-caption"></div>
-    </div>
-
+    
     <footer>
         <div class="footer-content">
-            <div class="social-media">
-                <a href="#">Facebook</a>
-                <a href="#">Twitter</a>
-                <a href="#">Instagram</a>
-            </div>
-            <div class="navigation-links">
-                <a href="#">Política de Privacidad</a>
-                <a href="#">Términos de Servicio</a>
-            </div>
+            <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
         </div>
     </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+
     <script>
-        function changeMainImage(clickedThumbnail) {
-            // Obtener el contenedor padre específico
-            const gallery = clickedThumbnail.closest('.gallery-container');
+        // Función para mostrar una imagen específica
+        function showImage(carousel, index) {
+            const carouselInner = carousel.querySelector('.carousel-inner');
+            const items = carousel.querySelectorAll('.carousel-item');
+            const indicators = carousel.querySelectorAll('.carousel-indicator');
             
-            // Actualizar miniaturas
-            gallery.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-            clickedThumbnail.classList.add('active');
+            // Actualizar posición
+            carouselInner.style.transform = `translateX(${-index * 100}%)`;
             
-            // Actualizar imagen principal
-            const index = Array.from(clickedThumbnail.parentElement.children).indexOf(clickedThumbnail);
-            gallery.querySelectorAll('.gallery-item').forEach((item, i) => {
+            // Actualizar clases activas
+            items.forEach((item, i) => {
                 item.classList.toggle('active', i === index);
             });
-        }
-
-        function openLightbox(clickedImage) {
-            const lightbox = document.getElementById('lightbox');
-            const lightboxImg = document.getElementById('lightbox-img');
             
-            lightboxImg.src = clickedImage.src;
-            lightbox.style.display = 'block';
-            document.body.style.overflow = 'hidden';
+            if (indicators) {
+                indicators.forEach((indicator, i) => {
+                    indicator.classList.toggle('active', i === index);
+                });
+            }
         }
+        
+        // Ir a imagen específica
+        function goToImage(indicator, index) {
+            const carousel = indicator.closest('.carousel');
+            showImage(carousel, index);
+        }
+        
+        // Imagen anterior
+        function prevImage(button) {
+            const carousel = button.closest('.carousel');
+            const items = carousel.querySelectorAll('.carousel-item');
+            let activeIndex = Array.from(items).findIndex(item => item.classList.contains('active'));
+            
+            if (activeIndex > 0) {
+                activeIndex -= 1;
+            } else {
+                activeIndex = items.length - 1;
+            }
+            
+            showImage(carousel, activeIndex);
+        }
+        
+        // Siguiente imagen
+        function nextImage(button) {
+            const carousel = button.closest('.carousel');
+            const items = carousel.querySelectorAll('.carousel-item');
+            let activeIndex = Array.from(items).findIndex(item => item.classList.contains('active'));
+            
+            if (activeIndex < items.length - 1) {
+                activeIndex += 1;
+            } else {
+                activeIndex = 0;
+            }
+            
+            showImage(carousel, activeIndex);
+        }
+        
+        // Inicializar carruseles al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.carousel').forEach(carousel => {
+                showImage(carousel, 0);
+            });
+        });
     </script>
 </body>
 </html>

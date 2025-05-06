@@ -414,12 +414,14 @@ button:hover {
 
 .listing {
     display: flex;
+    flex-direction: column;
     background-color: white;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     overflow: hidden;
     width: 100%;
-    margin-bottom: 2rem;
+    max-width: 300px;
+    margin: 1rem;
     transition: transform 0.3s ease;
 }
 
@@ -428,9 +430,55 @@ button:hover {
 }
 
 .carousel {
-    width: 50%;
-    height: 200px;
+    position: relative;
+    width: 100%;
+    height: 300px; /* Ajustar la altura del carrusel */
     overflow: hidden;
+}
+
+.carousel-inner {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+.carousel-item {
+    min-width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Mostrar la imagen completa dentro del contenedor */
+    background-color: #f0f0f0; /* Fondo para rellenar el espacio vacío */
+} 
+
+button.prev, button.next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 10;
+    border-radius: 50%;
+}
+
+button.prev {
+    left: 10px;
+}
+
+button.next {
+    right: 10px;
+}
+
+button.prev:hover, button.next:hover {
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
 .carousel img {
@@ -439,75 +487,48 @@ button:hover {
     object-fit: cover;
 }
 
-/* Contenedor del carrusel - columna izquierda */
-.listing .carousel-container {
-    flex: 0 0 50%;
-    max-width: 50%;
-    position: relative;
-    overflow: hidden;
-}
-
-/* Carrusel dentro del contenedor */
-.listing .carousel {
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
-/* Imágenes del carrusel */
-.listing .carousel img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-/* Contenedor de información - columna derecha */
-.listing .listing-info {
-    flex: 0 0 50%;
-    max-width: 50%;
-    padding: 1.5rem;
+.listing-info {
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    align-items: flex-start;
-    box-sizing: border-box; /* Asegura que el padding no exceda el ancho */
-    overflow: hidden; /* Oculta cualquier contenido que sobresalga */
-    word-wrap: break-word; /* Permite que las palabras largas se ajusten */
+    gap: 0.5rem;
 }
 
-/* Estilos para los párrafos dentro de .listing-info */
-.listing .listing-info p {
-    margin: 0.5rem 0;
-    font-size: 1rem;
-    color: var(--text-color);
-    overflow: hidden; /* Oculta el contenido que sobresalga */
-    text-overflow: ellipsis; /* Agrega puntos suspensivos si el texto es demasiado largo */
-    white-space: normal; /* Permite que el texto se ajuste en varias líneas */
-    word-wrap: break-word; /* Ajusta las palabras largas */
-}
-
-/* Estilos para el texto */
-.listing .listing-info h3 {
-    margin: 0 0 1rem;
-    font-size: 1.5rem;
+.listing-info h3 {
+    font-size: 1.2rem;
     color: var(--primary-color);
+    margin: 0;
 }
 
-.listing .listing-info p {
-    margin: 0.5rem 0;
-    font-size: 1rem;
+.listing-info p {
+    font-size: 0.9rem;
     color: var(--text-color);
+    margin: 0;
+    line-height: 1.4;
 }
 
-.listing .listing-info p strong {
-    font-weight: bold;
+.listing-info button {
+    margin-top: 0.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color var(--transition-duration);
 }
 
-/* Botón */
-.listing .listing-info button {
-    align-self: flex-start;
-    margin-top: 1rem;
+.listing-info button:hover {
+    background-color: #357ABD;
+}
+
+.results {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
 }
 
 /* Estilos responsivos */
@@ -635,5 +656,255 @@ button:hover {
     .lightbox-content {
         max-width: 95%;
         max-height: 70%;
+    }
+}
+
+/* Añade esto al final de tu archivo CSS */
+
+/* Estilo general para cada listing */
+.listing {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    margin-bottom: 1.5rem;
+    height: 100%; /* Para que todos tengan la misma altura */
+    display: flex;
+    flex-direction: column;
+}
+
+.listing:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+}
+
+/* Carrusel de imágenes mejorado */
+.carousel {
+    position: relative;
+    width: 100%;
+    height: 250px; /* Altura fija para uniformidad */
+    overflow: hidden;
+    background-color: #f5f5f5; /* Fondo mientras carga */
+}
+
+.carousel-inner {
+    display: flex;
+    height: 100%;
+    transition: transform 0.5s ease-in-out;
+}
+
+.carousel-item {
+    min-width: 100%;
+    height: 100%;
+}
+
+.carousel img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.carousel:hover img {
+    transform: scale(1.02);
+}
+
+/* Indicadores del carrusel */
+.carousel-indicators {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    z-index: 10;
+}
+
+.carousel-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-indicator.active {
+    background: white;
+    transform: scale(1.2);
+}
+
+/* Botones de navegación del carrusel */
+.carousel-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.3);
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease, background 0.3s ease;
+}
+
+.carousel:hover .carousel-nav-btn {
+    opacity: 1;
+}
+
+.carousel-nav-btn:hover {
+    background: rgba(0,0,0,0.7);
+}
+
+.carousel-nav-btn.prev {
+    left: 10px;
+}
+
+.carousel-nav-btn.next {
+    right: 10px;
+}
+
+/* Información del listing */
+.listing-info {
+    padding: 1.2rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.listing-info h3 {
+    font-size: 1.3rem;
+    color: var(--secondary-color);
+    margin: 0 0 0.5rem;
+    line-height: 1.3;
+}
+
+.listing-price {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 0.5rem 0;
+}
+
+.listing-price .currency {
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.listing-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin: 0.8rem 0;
+}
+
+.listing-detail {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.listing-detail i {
+    margin-right: 5px;
+    color: var(--primary-color);
+}
+
+.listing-address {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+}
+
+.listing-address i {
+    margin-right: 5px;
+}
+
+.listing-type {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    z-index: 5;
+}
+
+/* Botón de acción */
+.listing-action {
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+.listing-action .btn {
+    width: 100%;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.7rem;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-duration);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.listing-action .btn:hover {
+    background-color: #357ABD;
+}
+
+/* Badge de estado */
+.listing-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    z-index: 5;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .carousel {
+        height: 200px;
+    }
+    
+    .listing-info {
+        padding: 1rem;
+    }
+    
+    .listing-price {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .carousel {
+        height: 180px;
+    }
+    
+    .listing-info h3 {
+        font-size: 1.1rem;
     }
 }

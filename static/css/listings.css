@@ -52,6 +52,16 @@ header {
 footer {
     position: relative;
     margin-top: auto;
+    color: white;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
 }
 
 nav {
@@ -155,6 +165,7 @@ button:hover {
     gap: 1rem;
     margin-top: 2rem;
     padding: 1rem;
+    justify-content: flex-start;
 }
 
 .listing {
@@ -194,6 +205,7 @@ button:hover {
 .listing-info {
     padding: 0.5rem;
     position: relative;
+    text-align: left;
 }
 
 .listing-info h3 {
