@@ -40,8 +40,17 @@
         <nav>
             <div class="logo">MyDeptos</div>
             <ul class="menu">
-                <li><a href="/">Inicio</a></li>
-                <li><a href="/favorites">Favoritos</a></li>
+                <li><a href="{{ url_for('home') }}">Inicio</a></li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
+                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
+                    <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
+                    <li><a href="{{ url_for('register') }}">Registrarse</a></li>
+                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>

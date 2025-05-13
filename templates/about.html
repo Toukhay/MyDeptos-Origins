@@ -12,9 +12,18 @@
         <nav>
             <div class="logo">MyDeptos</div>
             <ul class="menu">
-                <li><a href="/">Inicio</a></li>
-                <li><a href="/about">Acerca de</a></li>
-                <li><a href="/contact">Contacto</a></li>
+                <li><a href="{{ url_for('home') }}">Inicio</a></li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('user_panel') }}">Mi Perfil</a></li>
+                    <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
+                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
+                    <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
+                    <li><a href="{{ url_for('register') }}">Registrarse</a></li>
+                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>
@@ -51,11 +60,15 @@
         </div>
     </main>
     <footer>
-        <p>&copy; 2023 MYDEPTOSFLASK. Todos los derechos reservados.</p>
-        <div class="social-media">
-            <a href="#">Facebook</a>
-            <a href="#">Twitter</a>
-            <a href="#">Instagram</a>
+        <div class="footer-content">
+            <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
+            <div class="social-media">
+                <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
+                <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
+            </div>
+            <div class="navigation-links">
+                <a href="/about">Sobre Nosotros</a>
+            </div>
         </div>
     </footer>
 </body>

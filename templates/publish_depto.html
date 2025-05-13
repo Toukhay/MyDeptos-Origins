@@ -15,9 +15,16 @@
             <div class="logo">MyDeptos</div>
             <ul class="menu">
                 <li><a href="{{ url_for('home') }}">Inicio</a></li>
-                <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
-                <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
-                <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('user_panel') }}">Mi Perfil</a></li>
+                    <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
+                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
+                    <li><a href="{{ url_for('register') }}">Registrarse</a></li>
+                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>
@@ -130,11 +137,13 @@
     </main>
     <footer >
         <div class="footer-content">
-            <div>&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
+            <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
             <div class="social-media">
-                <a href="mailto:soporte@mydeptos.com">Contacto</a>
                 <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
                 <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
+            </div>
+            <div class="navigation-links">
+                <a href="/about">Sobre Nosotros</a>
             </div>
         </div>
     </footer>

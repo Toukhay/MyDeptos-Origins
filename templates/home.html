@@ -30,7 +30,7 @@
             .then(data => {
                 if (data.success) {
                     element.classList.toggle('selected');
-                    element.textContent = isFavorite ? 'Añadir a Favoritos' : 'Eliminar de Favoritos';
+                    element.textContent = isFavorite ? 'Añadir a Favoritos' : '❤️ Quitar de Favoritos';
                 } else {
                     alert('Error al actualizar favorito');
                 }
@@ -84,6 +84,24 @@
                 showImage(carousel, 0); // Mostrar la primera imagen al cargar la página
             });
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.price').forEach(priceElement => {
+            let priceText = priceElement.textContent;
+            // Busca números en el texto
+            let priceValue = priceText.match(/\d+\.?\d*/);
+            if (priceValue) {
+                priceValue = priceValue[0];
+                // Formatea el número
+                let formatted = parseFloat(priceValue).toLocaleString('es-AR', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                });
+                // Reemplaza en el texto original
+                priceElement.textContent = priceElement.textContent.replace(priceValue, formatted);
+            }
+        });
+    });
     </script>
 </head>
 <body class="home-page">
@@ -91,16 +109,16 @@
         <nav>
             <div class="logo">MyDeptos</div>
             <ul class="menu">
-                {% if is_authenticated %}
-                <li><a href="{{ url_for('user_panel') }}">Mi Perfil</a></li>
-                <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
-                <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
-                <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
-                <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('user_panel') }}">Mi Perfil</a></li>
+                    <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
+                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
+                    <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
                 {% else %}
-                <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
-                <li><a href="{{ url_for('register') }}">Registrarse</a></li>
-                <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
+                    <li><a href="{{ url_for('register') }}">Registrarse</a></li>
+                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -171,7 +189,9 @@
         <h2 class="listings-header">Últimos Departamentos</h2>
         <div class="listings home-listings">
             {% for depto in ultimos_departamentos %}
-            <div class="listing">
+            <div class="listing-card"> <!-- Cambiado de 'listing' a 'listing-card' -->
+                <div class="property-badge">Nuevo</div> <!-- Badge opcional -->
+                
                 <div class="carousel">
                     <div class="carousel-inner">
                         {% if depto[11] %}
@@ -190,26 +210,29 @@
                         {% endfor %}
                     </div>
                 </div>
-                <div class="listing-info">
-                    <h3>{{ depto[1] }} - {{ depto[9] }}</h3>
-                    <p>{{ depto[2] }}</p>
-                    <p>Precio: ${{ depto[3] }} {{ depto[4] }}</p>
-                    <p>Ambientes: {{ depto[5] }}</p>
-                    <p>Dormitorios: {{ depto[6] }}</p>
-                    <p>Baños: {{ depto[7] }}</p>
-                    <p>Superficie: {{ depto[8] }} m²</p>
-                    <p>Rol Inmobiliario: {{ depto[10] }}</p>
-                    <p>Dirección: {{ depto[9] }}</p>
-                    <button 
-                        class="favorite-button {% if depto[0] in favoritos %}selected{% endif %}"
-                        onclick="toggleFavorite(this, '{{ depto[0] }}')">
-                        {% if depto[0] in favoritos %}
-                            Eliminar de Favoritos
-                        {% else %}
-                            Añadir a Favoritos
-                        {% endif %}
-                    </button>
-                    <button onclick="window.location.href='/viewProperty/{{ depto[0] }}'">Ver propiedad</button>
+
+                <div class="property-info"> <!-- Cambiado de 'listing-info' -->
+                    <div class="property-header">
+                        <h3>{{ depto[1] }}</h3>
+                        <span class="property-location">{{ depto[9] }}</span>
+                    </div>
+                    
+                    <p class="property-description">{{ depto[2][:150] }}{% if depto[2]|length > 150 %}...{% endif %}</p>
+                    
+                    <div class="property-details">
+                        <span class="price">${{ depto[3] }}</span>
+                        <span class="operation-type">{{ depto[4] }}</span>
+                    </div>
+                    
+                    <div class="property-actions">
+                        <button class="favorite-btn {% if depto[0] in favoritos %}selected{% endif %}" 
+                                onclick="toggleFavorite(this, '{{ depto[0] }}')">
+                            {% if depto[0] in favoritos %}❤️ Quitar de Favoritos{% else %}Añadir a Favoritos{% endif %}
+                        </button>
+                        <button class="view-btn" onclick="window.location.href='/viewProperty/{{ depto[0] }}'">
+                            👁️ Ver
+                        </button>
+                    </div>
                 </div>
             </div>
             {% endfor %}

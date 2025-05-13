@@ -12,6 +12,7 @@ from email.mime.multipart import MIMEMultipart
 import os
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
+from flask_login import LoginManager, current_user, UserMixin, login_user, logout_user
 
 app = Flask(__name__, static_folder="static")
 app.config['MYSQL_HOST'] = 'localhost'
@@ -22,6 +23,17 @@ app.config['SECRET_KEY'] = 'tu_clave_secreta'
 
 mysql = MySQL(app)
 csrf = CSRFProtect(app)  # Habilitar CSRF
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+# -----------------------
+# Clase User
+# -----------------------
+class User(UserMixin):
+    def __init__(self, id, username, email):
+        self.id = id
+        self.username = username
+        self.email = email
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -228,15 +240,15 @@ def login():
         password = form.password.data.encode('utf-8')
 
         cursor = mysql.connection.cursor()
-        cursor.execute('SELECT id, password FROM usuario WHERE name = %s', (username,))
+        cursor.execute('SELECT id, name, email, password FROM usuario WHERE name = %s', (username,))
         user = cursor.fetchone()
         cursor.close()
 
-        if user and bcrypt.checkpw(password, user[1].encode('utf-8')):
-            session['user_id'] = user[0]
-            session['user_name'] = username
-            flash('Inicio de sesión exitoso', 'popup')  # Mensaje estilo pop-up
-            return redirect(url_for('home'))  # Redirige al home.html
+        if user and bcrypt.checkpw(password, user[3].encode('utf-8')):
+            user_obj = User(id=user[0], username=user[1], email=user[2])
+            login_user(user_obj)  # Marca al usuario como autenticado
+            flash('Inicio de sesión exitoso', 'success')
+            return redirect(url_for('home'))
         else:
             flash('Nombre de usuario o contraseña incorrectos', 'danger')
 
@@ -244,9 +256,9 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('user_id', None)
-    session.pop('user_name', None)
-    return render_template('logout.html')  # Renderiza logout.html con temporizador
+    logout_user()  # Cierra la sesión del usuario
+    flash('Has cerrado sesión exitosamente.', 'success')
+    return redirect(url_for('home'))  # Redirige al inicio
 
 # -----------------------
 # Recuperación y reseteo de contraseña
@@ -725,6 +737,20 @@ def publication_success():
     return render_template('publication_success.html')
 
 print(app.url_map)
+
+@app.context_processor
+def inject_user():
+    return dict(current_user=current_user)
+
+@login_manager.user_loader
+def load_user(user_id):
+    cursor = mysql.connection.cursor()
+    cursor.execute('SELECT id, name, email FROM usuario WHERE id = %s', (user_id,))
+    user = cursor.fetchone()
+    cursor.close()
+    if user:
+        return User(id=user[0], username=user[1], email=user[2])
+    return None
 
 if __name__ == '__main__':
     app.run(debug=True)

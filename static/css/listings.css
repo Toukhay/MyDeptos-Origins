@@ -173,11 +173,14 @@ button:hover {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     overflow: hidden;
-    width: calc(25% - 1rem);
+    width: calc(33.333% - 1rem);
     box-sizing: border-box;
     transition: transform 0.3s ease;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Asegura que todas las tarjetas usen la misma altura */
 }
 
 .listing:hover {
@@ -203,15 +206,53 @@ button:hover {
 }
 
 .listing-info {
-    padding: 0.5rem;
+    padding: 1rem;
     position: relative;
-    text-align: left;
+    flex: 1; /* Hace que el contenido ocupe todo el espacio disponible */
+    display: flex;
+    flex-direction: column;
+}
+
+.description-container {
+    flex-grow: 1;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+/* Modificar el estilo del párrafo de descripción */
+.listing-info p:nth-of-type(1) { /* Selecciona el primer párrafo (descripción) */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3; /* Propiedad estándar para compatibilidad */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 4.5em; /* 3 líneas */
+    line-height: 1.5;
+    margin-bottom: 0;
+}
+
+/* Aseguramos que los datos fijos no rompan el diseño */
+.listing-info p:not(:nth-of-type(1)) {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .listing-info h3 {
     margin: 0 0 0.5rem;
-    font-size: 1rem;
+    font-size: 1.25rem;
     color: var(--primary-color);
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Máximo 2 líneas */
+    line-clamp: 2; /* Propiedad estándar para compatibilidad */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 3em; /* Altura para 2 líneas */
+    line-height: 1.5;
 }
 
 .listing-info p {
@@ -227,7 +268,7 @@ button:hover {
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    margin-top: 0.5rem;
+    margin-top: auto; /* Empuja el botón hacia abajo */
     width: 100%;
     font-size: 0.875rem;
 }
