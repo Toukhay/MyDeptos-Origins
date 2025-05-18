@@ -45,7 +45,6 @@
                     <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
                     <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
                     <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
-                    <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
                 {% else %}
                     <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
                     <li><a href="{{ url_for('register') }}">Registrarse</a></li>
@@ -60,6 +59,7 @@
                 <h2>Bienvenido, {{ user_data[0] }}</h2>
                 <p><strong>Email:</strong> {{ user_data[1] }}</p>
                 <p><strong>Fecha de Registro:</strong> {{ user_data[2] }}</p>
+                <p><strong>Teléfono:</strong> {{ user_data[3] }}</p>
                 <div class="btn-group">
                     <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Editar Perfil</a>
                     <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar Sesión</a>
@@ -113,15 +113,6 @@
             </div>
         </div>
     </div>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash-popup {{ category }}">
-                    <p>{{ message }}</p>
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
     <footer>
         <div class="footer-content">
             <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>

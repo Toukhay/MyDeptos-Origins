@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerrando Sesión</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cerrandosesion.css') }}">
+</head>
+<body>
+    <div class="redirect-card">
+        <h2>Cerrando sesión...</h2>
+        <p>Serás redirigido al inicio en <span id="timer">3</span> segundos.</p>
+    </div>
+    <script>
+        let seconds = 3;
+        const timer = document.getElementById('timer');
+        setInterval(function() {
+            seconds--;
+            if (seconds > 0) {
+                timer.textContent = seconds;
+            }
+        }, 1000);
+        setTimeout(function() {
+            window.location.href = "{{ url_for('home') }}";
+        }, 3000);
+    </script>
+</body>
+</html>

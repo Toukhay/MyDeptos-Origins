@@ -19,11 +19,11 @@
         </nav>
     </header>
     <div class="container">
-        <h1>Registro</h1>
+        <h1 style="text-align:center;">Registro</h1>
         <form action="{{ url_for('register') }}" method="POST">
             {{ form.hidden_tag() }}
             <div class="form-group">
-                {{ form.username.label(for="username") }} 
+                <label for="username" style="display:block; text-align:left;">{{ form.username.label.text }}</label>
                 {{ form.username(id="username", class="form-control") }}
                 {% if form.username.errors %}
                     <ul>
@@ -34,7 +34,7 @@
                 {% endif %}
             </div>
             <div class="form-group">
-                {{ form.email.label(for="email") }} 
+                <label for="email" style="display:block; text-align:left;">{{ form.email.label.text }}</label>
                 {{ form.email(id="email", class="form-control") }}
                 {% if form.email.errors %}
                     <ul>
@@ -45,11 +45,22 @@
                 {% endif %}
             </div>
             <div class="form-group">
-                {{ form.password.label }} 
+                <label for="password" style="display:block; text-align:left;">{{ form.password.label.text }}</label>
                 {{ form.password(id="password", class="form-control") }}
                 {% if form.password.errors %}
                     <ul>
                         {% for error in form.password.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="telefono" style="display:block; text-align:left;">Teléfono (Ej: 543755484848 sin el +)</label>
+                {{ form.telefono(id="telefono", class="form-control") }}
+                {% if form.telefono.errors %}
+                    <ul>
+                        {% for error in form.telefono.errors %}
                             <li>{{ error }}</li>
                         {% endfor %}
                     </ul>

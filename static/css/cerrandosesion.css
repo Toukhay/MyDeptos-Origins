@@ -1,0 +1,28 @@
+body {
+    background: #f5f6fa;
+    font-family: 'Roboto', Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+.redirect-card {
+    background: #fff;
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    text-align: center;
+}
+.redirect-card h2 {
+    color: #dc3545;
+    margin-bottom: 15px;
+}
+.redirect-card p {
+    color: #333;
+    font-size: 1.1em;
+}
+#timer {
+    font-weight: bold;
+    color: #dc3545;
+}
