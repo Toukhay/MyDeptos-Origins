@@ -267,6 +267,9 @@ nav {
     transition: all 0.3s ease;
     text-decoration: none;
     display: inline-block;
+    width: 100%;
+    font-weight: normal; /* Asegura que todos los botones tengan el mismo peso */
+    box-sizing: border-box; /* Evita desbordes */
 }
 
 .btn-primary {
@@ -285,6 +288,23 @@ nav {
 
 .btn-danger:hover {
     background-color: #c82333;
+}
+
+.btn-edit {
+    background-color: #8e44ad;
+    color: #fff !important;
+    border: none;
+    /* font-weight: bold;  Eliminado para que no esté en negrita */
+    transition: background 0.2s;
+    width: 100%;
+    text-align: center;
+    display: inline-block;
+    box-sizing: border-box; /* Evita desbordes */
+}
+
+.btn-edit:hover {
+    background-color: #6c3483;
+    color: #fff;
 }
 
 /* Footer */

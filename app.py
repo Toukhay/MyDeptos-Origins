@@ -408,12 +408,12 @@ def edit_profile():
     if request.method == 'GET':
         form.username.data = user[0]
         form.email.data = user[1]
-        form.telefono.data = user[2]
+        form.telefono.data = user[2] if user[2] is not None else ""
 
     if form.validate_on_submit():
         new_username = form.username.data if form.username.data else user[0]
         new_email = form.email.data if form.email.data else user[1]
-        new_telefono = form.telefono.data if form.telefono.data else user[2]
+        new_telefono = form.telefono.data if form.telefono.data else ""
         new_password = form.password.data
         
         cursor = mysql.connection.cursor()
@@ -442,7 +442,7 @@ def edit_profile():
         
         session['user_name'] = new_username
         flash('Perfil actualizado con éxito', 'success')
-        return redirect(url_for('home'))
+        return redirect(url_for('user_panel'))  # <-- Redirige al panel de usuario
     
     return render_template('edit_profile.html', form=form)
 
@@ -741,6 +741,74 @@ def load_user(user_id):
     if user:
         return User(id=user[0], username=user[1], email=user[2])
     return None
+
+@app.route('/modify_depto/<int:depto_id>', methods=['GET', 'POST'])
+def modify_depto(depto_id):
+    if 'user_id' not in session:
+        flash('Debes iniciar sesión primero', 'warning')
+        return redirect(url_for('login'))
+
+    cursor = mysql.connection.cursor()
+    cursor.execute('''
+        SELECT titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, id_localidad, rol_inmo_dir
+        FROM departamento WHERE id_departamento = %s AND id_usuario = %s
+    ''', (depto_id, session['user_id']))
+    depto = cursor.fetchone()
+
+    cursor.execute('SELECT id_localidad, nombre FROM localidad')
+    localidades = cursor.fetchall()
+
+    # Obtener latitud y longitud de la tabla coordenadas
+    cursor.execute('SELECT latitud, longitud FROM coordenadas WHERE id_departamento = %s', (depto_id,))
+    coords = cursor.fetchone()
+    cursor.close()
+
+    latitud = coords[0] if coords else ''
+    longitud = coords[1] if coords else ''
+
+    if not depto:
+        flash('Departamento no encontrado o no tienes permisos para editarlo.', 'danger')
+        return redirect(url_for('user_panel'))
+
+    form = PublishDeptoForm()
+    form.localidad.choices = [(str(id), nombre) for id, nombre in localidades]
+
+    if request.method == 'GET':
+        form.title.data = depto[0]
+        form.description.data = depto[1]
+        form.tipo_publicacion.data = depto[2]
+        form.price.data = depto[3]
+        form.moneda.data = depto[4]
+        form.ambientes.data = depto[5]
+        form.dormitorios.data = depto[6]
+        form.banos.data = depto[7]
+        form.superficie.data = depto[8]
+        form.direccion.data = depto[9]
+        form.localidad.data = str(depto[10])
+        form.rol_inmo_dir.data = depto[11]
+
+    if form.validate_on_submit():
+        # Actualizar los datos del departamento
+        cursor = mysql.connection.cursor()
+        cursor.execute('''
+            UPDATE departamento SET titulo=%s, descripcion=%s, tipo_publicacion=%s, precio=%s, moneda=%s,
+                ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, id_localidad=%s, rol_inmo_dir=%s
+            WHERE id_departamento=%s AND id_usuario=%s
+        ''', (
+            form.title.data, form.description.data, form.tipo_publicacion.data, form.price.data, form.moneda.data,
+            form.ambientes.data, form.dormitorios.data, form.banos.data, form.superficie.data, form.direccion.data,
+            form.localidad.data, form.rol_inmo_dir.data, depto_id, session['user_id']
+        ))
+        # Actualizar coordenadas
+        lat = request.form.get('latitud')
+        lon = request.form.get('longitud')
+        cursor.execute('UPDATE coordenadas SET latitud=%s, longitud=%s WHERE id_departamento=%s', (lat, lon, depto_id))
+        mysql.connection.commit()
+        cursor.close()
+        flash('Departamento actualizado correctamente.', 'success')
+        return redirect(url_for('user_panel'))
+
+    return render_template('modify_depto.html', form=form, depto_id=depto_id, latitud=latitud, longitud=longitud)
 
 if __name__ == '__main__':
     app.run(debug=True)

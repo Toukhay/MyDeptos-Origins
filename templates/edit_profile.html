@@ -9,33 +9,34 @@
 </head>
 <body>
     <div class="container">
-        <h1>Editar Perfil</h1>
-        <form action="{{ url_for('edit_profile') }}" method="POST" class="edit-profile-form">
+        
+        <img src="{{ url_for('static', filename='image/modify.png') }}" alt="Modificar perfil" class="edit-profile-img no-circle">
+        <form id="editProfileForm" action="{{ url_for('edit_profile') }}" method="POST" class="edit-profile-form" autocomplete="off">
             {{ form.hidden_tag() }}
             <div class="form-group">
                 <label for="username">Nuevo Usuario</label>
-                {{ form.username(class="form-control") }}
+                {{ form.username(class="form-control", id="username") }}
                 {% if form.username.errors %}
                     <span class="error-message">{{ form.username.errors[0] }}</span>
                 {% endif %}
             </div>
             <div class="form-group">
                 <label for="email">Nuevo Email</label>
-                {{ form.email(class="form-control") }}
+                {{ form.email(class="form-control", id="email") }}
                 {% if form.email.errors %}
                     <span class="error-message">{{ form.email.errors[0] }}</span>
                 {% endif %}
             </div>
             <div class="form-group">
                 <label for="password">Nueva Contraseña</label>
-                {{ form.password(class="form-control") }}
+                {{ form.password(class="form-control", id="password") }}
                 {% if form.password.errors %}
                     <span class="error-message">{{ form.password.errors[0] }}</span>
                 {% endif %}
             </div>
             <div class="form-group">
                 <label for="telefono">Nuevo Teléfono</label>
-                {{ form.telefono(class="form-control") }}
+                {{ form.telefono(class="form-control", id="telefono") }}
                 {% if form.telefono.errors %}
                     <span class="error-message">{{ form.telefono.errors[0] }}</span>
                 {% endif %}
@@ -45,6 +46,68 @@
                 <a href="{{ url_for('user_panel') }}" class="btn-cancel">Cancelar</a>
             </div>
         </form>
+        <!-- Modal de confirmación -->
+        <div id="confirm-modal-backdrop" class="modal-backdrop"></div>
+        <div id="confirm-modal" class="modal">
+            <div id="confirm-modal-msg"></div>
+            <button class="modal-btn" id="confirm-yes">Sí, guardar</button>
+            <button class="modal-btn cancel" id="confirm-no">No</button>
+        </div>
+        <!-- Modal de éxito (solo mostrar si hay mensaje flash Y NO en GET) -->
+        {% if request.method == 'POST' %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div id="flash-modal" class="flash-modal show">
+                    <div id="flash-modal-msg">
+                        {% for category, message in messages %}
+                            {{ message }}<br>
+                        {% endfor %}
+                    </div>
+                    <button class="modal-btn" onclick="window.location.href='{{ url_for('user_panel') }}'">Aceptar</button>
+                </div>
+            {% endif %}
+        {% endwith %}
+        {% endif %}
     </div>
+    <script>
+        // Modal de confirmación para edición de un solo campo
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('editProfileForm');
+            const initial = {
+                username: form.username.value,
+                email: form.email.value,
+                password: "",
+                telefono: form.telefono.value
+            };
+            form.addEventListener('submit', function(e) {
+                // Detectar cuántos campos cambiaron (ignora password si vacío)
+                let changed = [];
+                if (form.username.value !== initial.username) changed.push('usuario');
+                if (form.email.value !== initial.email) changed.push('email');
+                if (form.telefono.value !== initial.telefono) changed.push('teléfono');
+                if (form.password.value) changed.push('contraseña');
+                if (changed.length === 1) {
+                    e.preventDefault();
+                    showConfirmModal(changed[0]);
+                }
+            });
+
+            function showConfirmModal(field) {
+                document.getElementById('confirm-modal-msg').innerHTML =
+                    `Solo modificarás/editarás el campo <b>${field}</b>. ¿Deseas continuar?`;
+                document.getElementById('confirm-modal-backdrop').classList.add('show');
+                document.getElementById('confirm-modal').classList.add('show');
+            }
+            document.getElementById('confirm-yes').onclick = function() {
+                document.getElementById('confirm-modal-backdrop').classList.remove('show');
+                document.getElementById('confirm-modal').classList.remove('show');
+                document.getElementById('editProfileForm').submit();
+            };
+            document.getElementById('confirm-no').onclick = function() {
+                document.getElementById('confirm-modal-backdrop').classList.remove('show');
+                document.getElementById('confirm-modal').classList.remove('show');
+            };
+        });
+    </script>
 </body>
 </html>

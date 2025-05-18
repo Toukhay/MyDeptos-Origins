@@ -10,8 +10,8 @@
         function toggleFavorite(element, propertyId) {
             const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
             if (!isAuthenticated) {
-                window.location.href = '/login';
-                return;
+                showAuthModal();
+                return false;
             }
             
             const isFavorite = element.classList.contains('selected');
@@ -105,6 +105,15 @@
     </script>
 </head>
 <body class="home-page">
+    <!-- Modal solo se muestra si se intenta usar una acción restringida -->
+    <div id="auth-modal" class="auth-modal-hidden">
+        <div class="auth-modal-content">
+            <h2>Para usar estas opciones debe autenticarse y registrarse por seguridad</h2>
+            <button onclick="window.location.href='{{ url_for('register') }}'" class="register-btn">Registrarse</button>
+            <button onclick="window.location.href='{{ url_for('login') }}'" class="login-btn">Iniciar sesión</button>
+            <button onclick="closeAuthModal()" class="close-btn">Cerrar</button>
+        </div>
+    </div>
     <header>
         <nav>
             <div class="logo">MyDeptos</div>
@@ -118,6 +127,7 @@
                     <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
                     <li><a href="{{ url_for('register') }}">Registrarse</a></li>
                     <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="#" onclick="showAuthModal();return false;">Publicar</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -131,7 +141,7 @@
         </div>
         <div class="search-box">
             <h2>Filtro de búsqueda</h2>
-            <form action="{{ url_for('search') }}" method="get">
+            <form id="searchForm" action="{{ url_for('search') }}" method="get">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label for="tipo_publicacion">Tipo de publicación:</label>
@@ -168,7 +178,7 @@
                     <label for="ambientes">Ambientes:</label>
                     <input type="number" name="ambientes" id="ambientes" placeholder="Número de ambientes">
                 </div>
-                <button type="submit">Buscar</button>
+                <button type="submit" id="buscar-btn">Buscar</button>
             </form>
         </div>
         <div class="summary-section">
@@ -188,7 +198,7 @@
         <h2 class="listings-header">Últimos Departamentos</h2>
         <div class="listings home-listings">
             {% for depto in ultimos_departamentos %}
-            <div class="listing-card"> <!-- Cambiado de 'listing' a 'listing-card' -->
+            <div class="listing-card">
                 <div class="property-badge">Nuevo</div> <!-- Badge opcional -->
                 
                 <div class="carousel">
@@ -225,10 +235,10 @@
                     
                     <div class="property-actions">
                         <button class="favorite-btn {% if depto[0] in favoritos %}selected{% endif %}" 
-                                onclick="toggleFavorite(this, '{{ depto[0] }}')">
-                            {% if depto[0] in favoritos %}❤️ Quitar de Favoritos{% else %}Añadir a Favoritos{% endif %}
+                        onclick="toggleFavorite(this, '{{ depto[0] }}'); return false;">
+                        {% if depto[0] in favoritos %}❤️ Quitar de Favoritos{% else %}Añadir a Favoritos{% endif %}
                         </button>
-                        <button class="view-btn" onclick="window.location.href='/viewProperty/{{ depto[0] }}'">
+                        <button class="view-btn" onclick="viewProperty('{{ depto[0] }}'); return false;">
                             👁️ Ver
                         </button>
                     </div>
@@ -253,5 +263,113 @@
             </div>
         </div>
     </footer>
+    <script>
+        // Modal de autenticación
+        function showAuthModal() {
+            document.getElementById('auth-modal').classList.remove('auth-modal-hidden');
+        }
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('auth-modal-hidden');
+        }
+
+        // Bloquear acciones para no autenticados
+        function toggleFavorite(element, propertyId) {
+            const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
+            if (!isAuthenticated) {
+                showAuthModal();
+                return false;
+            }
+            const isFavorite = element.classList.contains('selected');
+            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
+            const formData = new FormData();
+            formData.append('property_id', propertyId);
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    element.classList.toggle('selected');
+                    element.textContent = isFavorite ? 'Añadir a Favoritos' : '❤️ Quitar de Favoritos';
+                } else {
+                    alert('Error al actualizar favorito');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function viewProperty(propertyId) {
+            const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
+            if (!isAuthenticated) {
+                showAuthModal();
+                return false;
+            }
+            window.location.href = '/viewProperty/' + propertyId;
+        }
+
+        // Interceptar el envío del formulario de búsqueda si no está autenticado
+        document.addEventListener('DOMContentLoaded', function() {
+            const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
+            const searchForm = document.getElementById('searchForm');
+            if (searchForm) {
+                searchForm.addEventListener('submit', function(e) {
+                    if (!isAuthenticated) {
+                        e.preventDefault();
+                        showAuthModal();
+                        return false;
+                    }
+                });
+            }
+        });
+    </script>
+    <style>
+    /* Modal styles */
+    .auth-modal-hidden { display: none; }
+    #auth-modal {
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: #fff;
+        z-index: 9999;
+        padding: 2rem 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+        min-width: 320px;
+        max-width: 90vw;
+        text-align: center;
+    }
+    .auth-modal-content h2 {
+        margin-top: 0;
+        color: #4A90E2;
+        font-size: 1.2rem;
+    }
+    .register-btn, .login-btn {
+        background: #4A90E2;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.7rem 1.5rem;
+        margin: 1rem 0.5rem 0 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    .close-btn {
+        background: #eee;
+        color: #333;
+        border: none;
+        border-radius: 8px;
+        padding: 0.7rem 1.5rem;
+        margin: 1rem 0.5rem 0 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    </style>
 </body>
 </html>

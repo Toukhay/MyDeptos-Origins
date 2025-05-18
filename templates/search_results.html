@@ -9,6 +9,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="search-results-page">
+    <!-- Modal para usuarios no autenticados -->
+    <div id="auth-modal" class="auth-modal-hidden">
+        <div class="auth-modal-content">
+            <h2>Para usar estas opciones debe autenticarse y registrarse por seguridad</h2>
+            <button onclick="window.location.href='{{ url_for('register') }}'" class="register-btn">Registrarse</button>
+            <button onclick="window.location.href='{{ url_for('login') }}'" class="login-btn">Iniciar sesión</button>
+            <button onclick="closeAuthModal()" class="close-btn">Cerrar</button>
+        </div>
+    </div>
     <header>
         <nav>
             <div class="logo">MyDeptos</div>
@@ -99,7 +108,7 @@
                     </div>
                     
                     <div class="listing-action">
-                        <button onclick="window.location.href='/viewProperty/{{ depto[0] }}'" class="btn">
+                        <button onclick="viewProperty('{{ depto[0] }}'); return false;" class="btn">
                             <i class="fas fa-eye"></i> Ver Detalles
                         </button>
                     </div>
@@ -109,7 +118,7 @@
         </div>
         {% else %}
         <div class="no-results">
-            <img src="{{ url_for('static', filename='image/no-results.svg') }}" alt="No se encontraron resultados">
+            <img src="{{ url_for('static', filename='image/no_data.png') }}" alt="No se encontraron resultados">
             <h2>No encontramos propiedades con esos filtros</h2>
             <p>Intenta ajustar tus criterios de búsqueda o <a href="/">volver al inicio</a></p>
         </div>
@@ -186,6 +195,62 @@
                 showImage(carousel, 0);
             });
         });
+        
+        function showAuthModal() {
+            document.getElementById('auth-modal').classList.remove('auth-modal-hidden');
+        }
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('auth-modal-hidden');
+        }
+        function viewProperty(propertyId) {
+            const isAuthenticated = JSON.parse("{{ current_user.is_authenticated | tojson | safe }}");
+            if (!isAuthenticated) {
+                showAuthModal();
+                return false;
+            }
+            window.location.href = '/viewProperty/' + propertyId;
+        }
     </script>
+    <style>
+    .auth-modal-hidden { display: none; }
+    #auth-modal {
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: #fff;
+        z-index: 9999;
+        padding: 2rem 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+        min-width: 320px;
+        max-width: 90vw;
+        text-align: center;
+    }
+    .auth-modal-content h2 {
+        margin-top: 0;
+        color: #4A90E2;
+        font-size: 1.2rem;
+    }
+    .register-btn, .login-btn {
+        background: #4A90E2;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.7rem 1.5rem;
+        margin: 1rem 0.5rem 0 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    .close-btn {
+        background: #eee;
+        color: #333;
+        border: none;
+        border-radius: 8px;
+        padding: 0.7rem 1.5rem;
+        margin: 1rem 0.5rem 0 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    </style>
 </body>
 </html>

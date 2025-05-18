@@ -62,6 +62,14 @@
     </script>    
 </head>
 <body class="listings-page">
+    <div id="auth-modal" class="auth-modal-hidden">
+        <div class="auth-modal-content">
+            <h2>Para usar estas opciones debe autenticarse y registrarse por seguridad</h2>
+            <button onclick="window.location.href='{{ url_for('register') }}'" class="register-btn">Registrarse</button>
+            <button onclick="window.location.href='{{ url_for('login') }}'" class="login-btn">Iniciar sesión</button>
+            <button onclick="closeAuthModal()" class="close-btn">Cerrar</button>
+        </div>
+    </div>
     <header>
         <nav>
             <div class="logo">MyDeptos</div>
@@ -75,6 +83,7 @@
                     <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
                     <li><a href="{{ url_for('register') }}">Registrarse</a></li>
                     <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="#" onclick="showAuthModal();return false;">Publicar</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -90,7 +99,7 @@
                         {% endfor %}
                     </div>
                     <div class="listing-info">
-                        <i class="fas fa-heart favorite {% if depto[0] in favoritos %}active{% endif %}" onclick="toggleFavorite(this, '{{ depto[0] }}')"></i>
+                        <i class="fas fa-heart favorite {% if depto[0] in favoritos %}active{% endif %}" onclick="toggleFavorite(this, '{{ depto[0] }}'); return false;"></i>
                         <h3>{{ depto[1] }}</h3>
                         <div class="description-container">
                             <p>{{ depto[2] }}</p>
@@ -102,7 +111,7 @@
                             <p><strong>🚿</strong> {{ depto[8] }} baños</p>
                             <p class="price"><strong>💰</strong> {{ depto[4] }}</p>
                         </div>
-                        <button class="btn btn-primary" onclick="window.location.href='/viewProperty/{{ depto[0] }}'">Ver propiedad</button>
+                        <button class="btn btn-primary" onclick="viewProperty('{{ depto[0] }}'); return false;">Ver propiedad</button>
                     </div>
                 </div>
             {% endfor %}
@@ -134,6 +143,95 @@
                 nextArrow: '<button type="button" class="slick-next"><i class="fas fa-chevron-right"></i></button>'
             });
         });
+
+        // Modal de autenticación
+        function showAuthModal() {
+            document.getElementById('auth-modal').classList.remove('auth-modal-hidden');
+        }
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('auth-modal-hidden');
+        }
+
+        function toggleFavorite(element, propertyId) {
+            const isAuthenticated = JSON.parse('{{ is_authenticated | tojson }}');
+            if (!isAuthenticated) {
+                showAuthModal();
+                return false;
+            }
+            const isFavorite = element.classList.contains('active');
+            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
+            const formData = new FormData();
+            formData.append('property_id', propertyId);
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    element.classList.toggle('active');
+                } else {
+                    alert('Error al actualizar favorito');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function viewProperty(propertyId) {
+            const isAuthenticated = JSON.parse('{{ is_authenticated | tojson }}');
+            if (!isAuthenticated) {
+                showAuthModal();
+                return false;
+            }
+            window.location.href = '/viewProperty/' + propertyId;
+        }
     </script>
+    <style>
+    .auth-modal-hidden { display: none; }
+    #auth-modal {
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: #fff;
+        z-index: 9999;
+        padding: 2rem 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+        min-width: 320px;
+        max-width: 90vw;
+        text-align: center;
+    }
+    .auth-modal-content h2 {
+        margin-top: 0;
+        color: #4A90E2;
+        font-size: 1.2rem;
+    }
+    .register-btn, .login-btn {
+        background: #4A90E2;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.7rem 1.5rem;
+        margin: 1rem 0.5rem 0 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    .close-btn {
+        background: #eee;
+        color: #333;
+        border: none;
+        border-radius: 8px;
+        padding: 0.7rem 1.5rem;
+        margin: 1rem 0.5rem 0 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    </style>
 </body>
 </html>

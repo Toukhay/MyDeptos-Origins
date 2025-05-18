@@ -103,7 +103,7 @@
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label for="direccion">Dirección</label>
-                            {{ form.direccion(class="form-control", placeholder="Av. Corrientes 1234") }}
+                            {{ form.direccion(class="form-control", placeholder="Av. Corrientes 1234", readonly=True) }}
                         </div>
                     </div>
 
@@ -111,11 +111,11 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="latitud">Latitud</label>
-                            <input type="text" id="latitud" name="latitud" class="form-control" placeholder="-27.484989" value="{{ request.form.get('latitud', '') }}" required>
+                            <input type="text" id="latitud" name="latitud" class="form-control" placeholder="-27.484989" value="{{ request.form.get('latitud', '') }}" required readonly>
                         </div>
                         <div class="form-group">
                             <label for="longitud">Longitud</label>
-                            <input type="text" id="longitud" name="longitud" class="form-control" placeholder="-55.119830" value="{{ request.form.get('longitud', '') }}" required>
+                            <input type="text" id="longitud" name="longitud" class="form-control" placeholder="-55.119830" value="{{ request.form.get('longitud', '') }}" required readonly>
                         </div>
                     </div>
                     <div id="map" class="interactive-map"></div>
@@ -164,10 +164,35 @@
                 })
             }).addTo(map);
 
+            function reverseGeocode(lat, lon) {
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.address) {
+                            const addr = data.address;
+                            // Construir dirección personalizada
+                            let direccion = '';
+                            if (addr.road) direccion += addr.road;
+                            if (addr.house_number) direccion += ' ' + addr.house_number;
+                            if (addr.city) direccion += ', ' + addr.city;
+                            else if (addr.town) direccion += ', ' + addr.town;
+                            else if (addr.village) direccion += ', ' + addr.village;
+                            if (addr.municipality) direccion += ', ' + addr.municipality;
+                            if (addr.state) direccion += ', ' + addr.state;
+                            if (addr.country) direccion += ', ' + addr.country;
+                            document.getElementById('direccion').value = direccion.trim();
+                        }
+                    })
+                    .catch(() => {
+                        // Si falla, no actualiza la dirección
+                    });
+            }
+
             marker.on('dragend', function (e) {
                 const position = marker.getLatLng();
                 document.getElementById('latitud').value = position.lat.toFixed(6);
                 document.getElementById('longitud').value = position.lng.toFixed(6);
+                reverseGeocode(position.lat, position.lng);
             });
 
             map.on('click', function (e) {
@@ -175,6 +200,7 @@
                 marker.setLatLng(position);
                 document.getElementById('latitud').value = position.lat.toFixed(6);
                 document.getElementById('longitud').value = position.lng.toFixed(6);
+                reverseGeocode(position.lat, position.lng);
             });
         });
 

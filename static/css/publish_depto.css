@@ -538,3 +538,9 @@ social-media a:hover {
         flex-direction: column;
     }
 }
+
+.form-group input[type="text"]#direccion {
+    /* Opcional: mejora la visibilidad del campo dirección autocompletado */
+    background-color: #f8fafc;
+    font-style: italic;
+}

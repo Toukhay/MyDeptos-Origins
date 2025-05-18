@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modificar Departamento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modify_depto.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            min-height: 100vh;
+            background: var(--background-color);
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #4A90E2 !important;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(74, 144, 226, 0.2);
+        }
+        .background-img-overlay {
+            position: absolute;
+            top: 70px; /* Altura del header fijo */
+            left: 0;
+            width: 100%;
+            height: 320px;
+            z-index: 0;
+            background: linear-gradient(rgba(44,62,80,0.55), rgba(44,62,80,0.55)), url("{{ url_for('static', filename='image/modify_panel.png') }}") no-repeat center top;
+            background-size: cover;
+            pointer-events: none;
+        }
+        .container {
+            position: relative;
+            z-index: 1;
+            margin-top: 110px;
+            margin-bottom: 40px;
+        }
+        footer {
+            position: static;
+            width: 100%;
+            background-color: #4A90E2 !important;
+            box-shadow: 0 -2px 5px rgba(74, 144, 226, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">MyDeptos</div>
+            <ul class="menu">
+                <li><a href="{{ url_for('home') }}">Inicio</a></li>
+                <li><a href="{{ url_for('user_panel') }}">Mi Perfil</a></li>
+                <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="background-img-overlay"></div>
+    <div class="container">
+        <h1>Modificar Departamento</h1>
+        <form method="POST" action="{{ url_for('modify_depto', depto_id=depto_id) }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                <label for="title">Título</label>
+                {{ form.title(class="form-control", id="title") }}
+                {% if form.title.errors %}
+                    <span class="error-message">{{ form.title.errors[0] }}</span>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="description">Descripción</label>
+                {{ form.description(class="form-control", id="description") }}
+                {% if form.description.errors %}
+                    <span class="error-message">{{ form.description.errors[0] }}</span>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="tipo_publicacion">Tipo de Publicación</label>
+                {{ form.tipo_publicacion(class="form-control", id="tipo_publicacion") }}
+            </div>
+            <div class="form-group">
+                <label for="price">Precio</label>
+                {{ form.price(class="form-control", id="price") }}
+            </div>
+            <div class="form-group">
+                <label for="moneda">Moneda</label>
+                {{ form.moneda(class="form-control", id="moneda") }}
+            </div>
+            <div class="form-group">
+                <label for="ambientes">Ambientes</label>
+                {{ form.ambientes(class="form-control", id="ambientes") }}
+            </div>
+            <div class="form-group">
+                <label for="dormitorios">Dormitorios</label>
+                {{ form.dormitorios(class="form-control", id="dormitorios") }}
+            </div>
+            <div class="form-group">
+                <label for="banos">Baños</label>
+                {{ form.banos(class="form-control", id="banos") }}
+            </div>
+            <div class="form-group">
+                <label for="superficie">Superficie (m²)</label>
+                {{ form.superficie(class="form-control", id="superficie") }}
+            </div>
+            <div class="form-group">
+                <label for="direccion">Dirección</label>
+                {{ form.direccion(class="form-control", id="direccion", readonly=True) }}
+            </div>
+            <div class="form-group">
+                <label for="localidad">Localidad</label>
+                {{ form.localidad(class="form-control", id="localidad") }}
+            </div>
+            <div class="form-group">
+                <label for="rol_inmo_dir">Rol Inmobiliario</label>
+                {{ form.rol_inmo_dir(class="form-control", id="rol_inmo_dir") }}
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="latitud">Latitud</label>
+                    <input type="text" id="latitud" name="latitud" class="form-control"
+                        value="{{ request.form.get('latitud', latitud if latitud is defined else '') }}" required readonly>
+                </div>
+                <div class="form-group">
+                    <label for="longitud">Longitud</label>
+                    <input type="text" id="longitud" name="longitud" class="form-control"
+                        value="{{ request.form.get('longitud', longitud if longitud is defined else '') }}" required readonly>
+                </div>
+            </div>
+            <div id="map" class="interactive-map"></div>
+            <p class="map-help-text">Haz clic en el mapa para seleccionar la ubicación</p>
+            <div class="button-group">
+                <button type="submit" class="btn-submit">Guardar Cambios</button>
+                <a href="{{ url_for('user_panel') }}" class="btn-cancel">Cancelar</a>
+            </div>
+        </form>
+    </div>
+    <footer>
+        <div class="footer-content">
+            <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
+            <div class="social-media">
+                <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
+                <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
+            </div>
+            <div class="navigation-links">
+                <a href="/about">Sobre Nosotros</a>
+            </div>
+        </div>
+    </footer>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Obtener valores iniciales de lat/lon
+            let lat = parseFloat(document.getElementById('latitud').value) || -27.485104;
+            let lon = parseFloat(document.getElementById('longitud').value) || -55.119835;
+            const map = L.map('map').setView([lat, lon], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            const marker = L.marker([lat, lon], {
+                draggable: true,
+                icon: L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+                    iconSize: [32, 32],
+                })
+            }).addTo(map);
+
+            function reverseGeocode(lat, lon) {
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.address) {
+                            const addr = data.address;
+                            let direccion = '';
+                            if (addr.road) direccion += addr.road;
+                            if (addr.house_number) direccion += ' ' + addr.house_number;
+                            if (addr.city) direccion += ', ' + addr.city;
+                            else if (addr.town) direccion += ', ' + addr.town;
+                            else if (addr.village) direccion += ', ' + addr.village;
+                            if (addr.municipality) direccion += ', ' + addr.municipality;
+                            if (addr.state) direccion += ', ' + addr.state;
+                            if (addr.country) direccion += ', ' + addr.country;
+                            document.getElementById('direccion').value = direccion.trim();
+                        }
+                    })
+                    .catch(() => {});
+            }
+
+            marker.on('dragend', function (e) {
+                const position = marker.getLatLng();
+                document.getElementById('latitud').value = position.lat.toFixed(6);
+                document.getElementById('longitud').value = position.lng.toFixed(6);
+                reverseGeocode(position.lat, position.lng);
+            });
+
+            map.on('click', function (e) {
+                const position = e.latlng;
+                marker.setLatLng(position);
+                document.getElementById('latitud').value = position.lat.toFixed(6);
+                document.getElementById('longitud').value = position.lng.toFixed(6);
+                reverseGeocode(position.lat, position.lng);
+            });
+        });
+    </script>
+</body>
+</html>
