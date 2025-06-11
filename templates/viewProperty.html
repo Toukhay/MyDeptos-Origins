@@ -68,13 +68,13 @@
                 <!-- Botón WhatsApp -->
                 <a href="https://wa.me/{{ publicador['telefono'] }}?text=Hola, estoy interesado en tu departamento publicado en MyDeptos: {{ departamento['titulo'] }}" 
                     target="_blank" class="whatsapp-btn" title="Contactar por WhatsApp">
-                    <img src="{{ url_for('static', filename='image/whatsapp.png') }}" alt="WhatsApp" class="whatsapp-icon" style="width:20px; height:20px;">
-                    Contactar por WhatsApp
+                    <img src="{{ url_for('static', filename='image/whatsapp.png') }}" alt="WhatsApp" class="whatsapp-icon" style="width:20px; height:20px;" aling-content="Contactar por WhatsApp" aling-around="true">
+                    <span class="whatsapp-text">Contactar por WhatsApp</span>
                 </a>
             </div>
             {% if user %}
             <button class="favorite-button {% if departamento['id'] in favoritos %}selected{% endif %}"
-                    onclick="toggleFavorite(this, '{{ departamento['id'] }}'); return false;"
+                    onclick="toggleFavorite(this; '{{ departamento['id'] }}'); return false;"
                     aria-label="{% if departamento['id'] in favoritos %}Eliminar de favoritos{% else %}Añadir a favoritos{% endif %}">
                 <span class="button-text">
                 {% if departamento['id'] in favoritos %}Eliminar de Favoritos{% else %}Añadir a Favoritos{% endif %}

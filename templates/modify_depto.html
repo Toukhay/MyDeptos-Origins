@@ -67,7 +67,7 @@
     <div class="background-img-overlay"></div>
     <div class="container">
         <h1>Modificar Departamento</h1>
-        <form method="POST" action="{{ url_for('modify_depto', depto_id=depto_id) }}">
+        <form method="POST" action="{{ url_for('modify_depto', depto_id=depto_id) }}" enctype="multipart/form-data">
             {{ form.hidden_tag() }}
             <div class="form-group">
                 <label for="title">Título</label>
@@ -123,6 +123,29 @@
                 <label for="rol_inmo_dir">Rol Inmobiliario</label>
                 {{ form.rol_inmo_dir(class="form-control", id="rol_inmo_dir") }}
             </div>
+
+            <div class="form-group">
+                <label>Imágenes Actuales</label>
+                <div class="current-images">
+                    {% if current_photos %}
+                        {% for photo_url in current_photos %}
+                            <img src="{{ url_for('static', filename='image/' + photo_url) }}" alt="Imagen actual" class="current-photo-thumbnail">
+                        {% endfor %}
+                    {% else %}
+                        <p>No hay imágenes cargadas para este departamento.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="photos">Nuevas Imágenes (opcional, reemplazará las actuales)</label>
+                {{ form.photos(class="form-control", id="photos") }}
+                <small class="form-text text-muted">Sube entre 1 y 5 imágenes (JPG, PNG, WEBP, JPEG). Si no seleccionas nuevas imágenes, se conservarán las actuales.</small>
+                {% if form.photos.errors %}
+                    <span class="error-message">{{ form.photos.errors[0] }}</span>
+                {% endif %}
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="latitud">Latitud</label>

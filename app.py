@@ -11,6 +11,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import uuid # Importar uuid
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager, current_user, UserMixin, login_user, logout_user
@@ -547,13 +548,15 @@ def publish_depto():
                 if photo.filename == '':  # Saltar si no hay archivo
                     continue
                     
-                filename = secure_filename(photo.filename)
-                photo_path = os.path.join(app.root_path, 'static', 'image', filename)
+                original_filename = secure_filename(photo.filename)
+                # Generar un nombre de archivo único
+                unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
+                photo_path = os.path.join(app.root_path, 'static', 'image', unique_filename)
                 
                 try:
                     photo.save(photo_path)
                     cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
-                                (departamento_id, filename))
+                                (departamento_id, unique_filename)) # Guardar el nombre único
                 except Exception as e:
                     mysql.connection.rollback()
                     flash(f'Error al guardar las imágenes: {str(e)}', 'danger')
@@ -750,15 +753,26 @@ def modify_depto(depto_id):
 
     cursor = mysql.connection.cursor()
     cursor.execute('''
-        SELECT titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, id_localidad, rol_inmo_dir
-        FROM departamento WHERE id_departamento = %s AND id_usuario = %s
+        SELECT d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.id_localidad, d.rol_inmo_dir,
+               GROUP_CONCAT(f.url_foto) AS fotos
+        FROM departamento d
+        LEFT JOIN foto f ON d.id_departamento = f.id_departamento
+        WHERE d.id_departamento = %s AND d.id_usuario = %s
+        GROUP BY d.id_departamento
     ''', (depto_id, session['user_id']))
-    depto = cursor.fetchone()
+    depto_data = cursor.fetchone()
+
+    if not depto_data:
+        flash('Departamento no encontrado o no tienes permisos para editarlo.', 'danger')
+        cursor.close()
+        return redirect(url_for('user_panel'))
+
+    current_photos_str = depto_data[12]
+    current_photos_list = current_photos_str.split(',') if current_photos_str else []
 
     cursor.execute('SELECT id_localidad, nombre FROM localidad')
     localidades = cursor.fetchall()
 
-    # Obtener latitud y longitud de la tabla coordenadas
     cursor.execute('SELECT latitud, longitud FROM coordenadas WHERE id_departamento = %s', (depto_id,))
     coords = cursor.fetchone()
     cursor.close()
@@ -766,49 +780,93 @@ def modify_depto(depto_id):
     latitud = coords[0] if coords else ''
     longitud = coords[1] if coords else ''
 
-    if not depto:
-        flash('Departamento no encontrado o no tienes permisos para editarlo.', 'danger')
-        return redirect(url_for('user_panel'))
+    form = PublishDeptoForm() # Usamos el mismo formulario, pero la lógica de fotos será diferente
+    form.localidad.choices = [(str(id_loc), nombre) for id_loc, nombre in localidades]
+    # Hacemos que el campo de fotos no sea obligatorio para la modificación si no se quieren cambiar
+    form.photos.validators = [FileAllowed(['jpg', 'png', 'webp', 'jpeg'], 'Solo se permiten imágenes')]
 
-    form = PublishDeptoForm()
-    form.localidad.choices = [(str(id), nombre) for id, nombre in localidades]
 
     if request.method == 'GET':
-        form.title.data = depto[0]
-        form.description.data = depto[1]
-        form.tipo_publicacion.data = depto[2]
-        form.price.data = depto[3]
-        form.moneda.data = depto[4]
-        form.ambientes.data = depto[5]
-        form.dormitorios.data = depto[6]
-        form.banos.data = depto[7]
-        form.superficie.data = depto[8]
-        form.direccion.data = depto[9]
-        form.localidad.data = str(depto[10])
-        form.rol_inmo_dir.data = depto[11]
+        form.title.data = depto_data[0]
+        form.description.data = depto_data[1]
+        form.tipo_publicacion.data = depto_data[2]
+        form.price.data = depto_data[3]
+        form.moneda.data = depto_data[4]
+        form.ambientes.data = depto_data[5]
+        form.dormitorios.data = depto_data[6]
+        form.banos.data = depto_data[7]
+        form.superficie.data = depto_data[8]
+        form.direccion.data = depto_data[9]
+        form.localidad.data = str(depto_data[10])
+        form.rol_inmo_dir.data = depto_data[11]
 
     if form.validate_on_submit():
-        # Actualizar los datos del departamento
         cursor = mysql.connection.cursor()
-        cursor.execute('''
-            UPDATE departamento SET titulo=%s, descripcion=%s, tipo_publicacion=%s, precio=%s, moneda=%s,
-                ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, id_localidad=%s, rol_inmo_dir=%s
-            WHERE id_departamento=%s AND id_usuario=%s
-        ''', (
-            form.title.data, form.description.data, form.tipo_publicacion.data, form.price.data, form.moneda.data,
-            form.ambientes.data, form.dormitorios.data, form.banos.data, form.superficie.data, form.direccion.data,
-            form.localidad.data, form.rol_inmo_dir.data, depto_id, session['user_id']
-        ))
-        # Actualizar coordenadas
-        lat = request.form.get('latitud')
-        lon = request.form.get('longitud')
-        cursor.execute('UPDATE coordenadas SET latitud=%s, longitud=%s WHERE id_departamento=%s', (lat, lon, depto_id))
-        mysql.connection.commit()
-        cursor.close()
-        flash('Departamento actualizado correctamente.', 'success')
-        return redirect(url_for('user_panel'))
+        try:
+            # Actualizar los datos del departamento
+            cursor.execute('''
+                UPDATE departamento SET titulo=%s, descripcion=%s, tipo_publicacion=%s, precio=%s, moneda=%s,
+                    ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, id_localidad=%s, rol_inmo_dir=%s
+                WHERE id_departamento=%s AND id_usuario=%s
+            ''', (
+                form.title.data, form.description.data, form.tipo_publicacion.data, form.price.data, form.moneda.data,
+                form.ambientes.data, form.dormitorios.data, form.banos.data, form.superficie.data, form.direccion.data,
+                form.localidad.data, form.rol_inmo_dir.data, depto_id, session['user_id']
+            ))
+            
+            # Actualizar coordenadas
+            lat = request.form.get('latitud')
+            lon = request.form.get('longitud')
+            cursor.execute('UPDATE coordenadas SET latitud=%s, longitud=%s WHERE id_departamento=%s', (lat, lon, depto_id))
 
-    return render_template('modify_depto.html', form=form, depto_id=depto_id, latitud=latitud, longitud=longitud)
+            # Procesar imágenes si se subieron nuevas
+            new_photos = request.files.getlist(form.photos.name)
+            if new_photos and new_photos[0].filename: # Verificar si se subió al menos un archivo con nombre
+                # Eliminar fotos antiguas de la DB y del sistema de archivos
+                if current_photos_list:
+                    for old_photo_filename in current_photos_list:
+                        try:
+                            os.remove(os.path.join(app.root_path, 'static', 'image', old_photo_filename))
+                        except OSError as e:
+                            app.logger.error(f"Error eliminando archivo antiguo {old_photo_filename}: {e}")
+                    cursor.execute('DELETE FROM foto WHERE id_departamento = %s', (depto_id,))
+
+                # Guardar nuevas fotos
+                if len(new_photos) > 5:
+                    flash('Puedes subir un máximo de 5 imágenes.', 'danger')
+                    # No hacer rollback aquí, los datos del depto ya se actualizaron.
+                    # Podríamos redirigir o manejarlo de otra forma.
+                    # Por ahora, se guardarán las primeras 5.
+                    new_photos = new_photos[:5]
+
+                for photo_file in new_photos:
+                    if photo_file.filename: # Asegurarse de que el archivo tiene nombre
+                        original_filename = secure_filename(photo_file.filename)
+                        # Generar un nombre de archivo único
+                        unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
+                        photo_path = os.path.join(app.root_path, 'static', 'image', unique_filename)
+                        try:
+                            photo_file.save(photo_path)
+                            cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
+                                        (depto_id, unique_filename)) # Guardar el nombre único
+                        except Exception as e:
+                            # Si falla el guardado de una imagen, podríamos querer hacer rollback de las fotos
+                            # o al menos loguear el error y continuar.
+                            app.logger.error(f"Error guardando nueva imagen {original_filename}: {e}")
+                            flash(f'Error al guardar la imagen {original_filename}.', 'warning')
+
+
+            mysql.connection.commit()
+            flash('Departamento actualizado correctamente.', 'success')
+            return redirect(url_for('user_panel'))
+        except Exception as e:
+            mysql.connection.rollback()
+            app.logger.error(f"Error actualizando departamento {depto_id}: {e}")
+            flash(f'Error al actualizar el departamento: {str(e)}', 'danger')
+        finally:
+            cursor.close()
+
+    return render_template('modify_depto.html', form=form, depto_id=depto_id, latitud=latitud, longitud=longitud, current_photos=current_photos_list)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -52,6 +52,7 @@ header {
 footer {
     position: relative;
     margin-top: auto;
+    color: white; /* Asegurar que el texto por defecto en el footer sea blanco */
 }
 
 nav {
@@ -315,6 +316,32 @@ button:hover {
     height: 400px;
     border: 2px solid #ccc;
     border-radius: 8px;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-around; /* Distribuye el espacio alrededor de los elementos */
+    align-items: center; /* Centra los elementos verticalmente */
+    flex-wrap: wrap; /* Permite que los elementos pasen a la siguiente línea en pantallas pequeñas */
+    padding: 1rem 0; /* Añade un poco de padding vertical */
+    max-width: 1200px; /* Coincide con el ancho máximo del nav */
+    margin: 0 auto; /* Centra el contenido del footer */
+}
+
+.footer-content div {
+    margin: 0.5rem 1rem; /* Espacio entre los elementos del footer */
+    text-align: center; /* Centra el texto dentro de cada div */
+}
+
+.footer-content a {
+    color: white; /* Color de fuente blanco para los enlaces */
+    text-decoration: none; /* Quita el subrayado de los enlaces */
+    transition: color var(--transition-duration);
+}
+
+.footer-content a:hover {
+    color: #f0f0f0; /* Un color ligeramente diferente al pasar el mouse */
+    text-decoration: underline; /* Subraya al pasar el mouse para feedback */
 }
 
 .whatsapp-btn {

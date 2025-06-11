@@ -192,3 +192,18 @@ label {
     color: #666;
     margin-bottom: 1rem;
 }
+
+.current-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+.current-photo-thumbnail {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+    border: 1px solid #ddd;
+}
