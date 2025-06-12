@@ -109,7 +109,7 @@
     <div id="auth-modal" class="auth-modal-hidden">
         <div class="auth-modal-content">
             <h2>Para usar estas opciones debe autenticarse y registrarse por seguridad</h2>
-            <button onclick="window.location.href='{{ url_for('register') }}'" class="register-btn">Registrarse</button>
+            <button onclick="window.location.href=&quot;{{ url_for('register') }}&quot;" class="register-btn">Registrarse</button>
             <button onclick="window.location.href='{{ url_for('login') }}'" class="login-btn">Iniciar sesión</button>
             <button onclick="closeAuthModal()" class="close-btn">Cerrar</button>
         </div>

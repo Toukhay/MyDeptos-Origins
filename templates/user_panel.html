@@ -8,6 +8,51 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/user_panel.css') }}">
     <!-- Eliminar Slick si no lo estás usando realmente -->
     <style>
+        /* Estilos básicos para el layout de dos columnas y cards. 
+           Estos deberían ir en user_panel.css, pero se incluyen aquí como referencia. */
+        .container-wrapper {
+            display: flex;
+            flex-wrap: wrap; /* Para responsividad */
+            gap: 20px; /* Espacio entre columnas */
+            padding: 20px; /* Espacio alrededor del contenido principal */
+            max-width: 1200px; /* O el ancho máximo deseado */
+            margin: 0 auto; /* Centrar el wrapper */
+        }
+
+        .user-panel-left-column {
+            flex: 1; /* Ocupa 1 parte del espacio */
+            display: flex;
+            flex-direction: column; /* Apila los elementos hijos verticalmente */
+            gap: 20px; /* Espacio entre la card de perfil y la de notificaciones */
+            min-width: 300px; /* Ancho mínimo para la columna */
+        }
+
+        .user-panel-right-column {
+            flex: 2; /* Ocupa 2 partes del espacio, haciéndola más ancha */
+            min-width: 300px; /* Ancho mínimo para la columna */
+        }
+
+        /* Ajustes para los contenedores dentro de las columnas */
+        .user-panel-left-column .container,
+        .user-panel-right-column .container.full-width {
+            width: 100%; /* Ocupan todo el ancho de su columna padre */
+            margin-bottom: 0; /* El gap de flexbox maneja el espaciado vertical en la columna izq. */
+        }
+        
+        .card { /* Estilo base para todas las cards */
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .profile-info h2, .notifications-history h2, .listings h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.5em; /* Tamaño de título para las cards */
+            color: #333;
+        }
+        
         .flash-popup {
             position: fixed;
             top: 20px;
@@ -83,67 +128,116 @@
             </ul>
         </nav>
     </header>
+
+    <!-- Mensajes Flash (si los usas fuera del formulario) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash-popup {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <div class="container-wrapper">
-        <div class="container profile-container">
-            <div class="card profile-info">
-                <h2>Bienvenido, {{ user_data[0] }}</h2>
-                <p><strong>Email:</strong> {{ user_data[1] }}</p>
-                <p><strong>Fecha de Registro:</strong> {{ user_data[2] }}</p>
-                <p><strong>Teléfono:</strong> {{ user_data[3] }}</p>
-                <div class="btn-group">
-                    <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Editar Perfil</a>
-                    <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar Sesión</a>
+        <div class="user-panel-left-column">
+            <div class="container profile-container">
+                <div class="card profile-info">
+                    <h2>Bienvenido, {{ user_data[0] }}</h2>
+                    <p><strong>Email:</strong> {{ user_data[1] }}</p>
+                    <p><strong>Fecha de Registro:</strong> {{ user_data[2].strftime('%Y-%m-%d %H:%M:%S') if user_data[2] else 'No disponible' }}</p>
+                    <p><strong>Teléfono:</strong> {{ user_data[3] if user_data[3] else 'No especificado' }}</p>
+                    <div class="btn-group">
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Editar Perfil</a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar Sesión</a>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="container full-width">
-            <div class="listings">
-                {% if mis_publicaciones %}
-                    {% for publicacion in mis_publicaciones %}
-                        <div class="listing">
-                            <div class="carousel-container">
-                                <div class="carousel">
-                                    {% if publicacion[12] %}
-                                        {% for image in publicacion[12] %}
-                                            <div class="carousel-item"><img src="{{ url_for('static', filename='image/' + image) }}" alt="Imagen del departamento"></div>
-                                        {% endfor %}
-                                    {% else %}
-                                        <div class="carousel-item"><img src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada"></div>
+            <!-- Historial de Notificaciones -->
+            <div class="container notifications-history-container">
+                <div class="card notifications-history">
+                    <h2>Historial de Notificaciones</h2>
+                    {% if notificaciones %}
+                        <ul class="notifications-list">
+                            {% for notif in notificaciones %}
+                                <li class="notification-item {% if not notif.leida %}unread{% endif %}">
+                                    <div class="notification-content">
+                                        <p>{{ notif.mensaje }}</p>
+                                        <small>Recibido: {{ notif.fecha_envio.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        {% if notif.id_departamento_ref %}
+                                            <a href="{{ url_for('view_property', property_id=notif.id_departamento_ref) }}" class="btn btn-sm btn-info">Ver Departamento</a>
+                                        {% endif %}
+                                    </div>
+                                    {% if not notif.leida %}
+                                     <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notif.id) }}" class="mark-read-form">
+                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                         <button type="submit" class="btn btn-sm btn-outline-secondary">Marcar como leída</button>
+                                     </form>
                                     {% endif %}
-                                </div>
-                                <button class="carousel-control prev" onclick="moveCarousel(this, -1)">&#10094;</button>
-                                <button class="carousel-control next" onclick="moveCarousel(this, 1)">&#10095;</button>
-                            </div>
-                            <div class="listing-info">
-                                <h3>{{ publicacion[1] }}</h3>
-                                <p>{{ publicacion[2] }}</p>
-                                <p><strong>Tipo de Publicación:</strong> {{ publicacion[3] }}</p>
-                                <p class="price"><strong>Precio:</strong> {{ publicacion[4] }}</p>
-                                <p><strong>Ambientes:</strong> {{ publicacion[6] }}</p>
-                                <p><strong>Dormitorios:</strong> {{ publicacion[7] }}</p>
-                                <p><strong>Baños:</strong> {{ publicacion[8] }}</p>
-                                <p><strong>Superficie:</strong> {{ publicacion[9] }} m²</p>
-                                <p><strong>Dirección: </strong> {{ publicacion[10] }}</p>
-                                <p><strong>Publicado por: </strong> {{ publicacion[11] }}</p>
-                                <p><strong>Latitud:</strong> {{ publicacion[13] }}</p>
-                                <p><strong>Longitud:</strong> {{ publicacion[14] }}</p>
-                                <div class="btn-group-vertical">
-                                    <a href="{{ url_for('view_property', property_id=publicacion[0]) }}" class="btn btn-primary">Ver Publicación</a>
-                                    <a href="{{ url_for('modify_depto', depto_id=publicacion[0]) }}" class="btn btn-edit">Editar</a>
-                                    <form method="POST" action="{{ url_for('delete_publication', publication_id=publicacion[0]) }}" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta publicación?');" style="display:inline-block; width:100%;">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-danger" style="width:100%;">Eliminar Publicación</button>
-                                    </form>
-                                </div>
-                            </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <div class="notifications-actions">
+                            <a href="{{ url_for('notifications') }}" class="btn btn-secondary">Ver todas las notificaciones</a>
                         </div>
-                    {% endfor %}
-                {% else %}
-                    <p>No tienes publicaciones.</p>
-                {% endif %}
+                    {% else %}
+                        <p>No tienes notificaciones.</p>
+                    {% endif %}
+                </div>
             </div>
-        </div>
-    </div>
+            <!-- Fin Historial de Notificaciones -->
+        </div> <!-- Fin user-panel-left-column -->
+
+        <div class="user-panel-right-column">
+            <div class="container full-width"> <!-- Este div ya contenía las publicaciones -->
+                <div class="listings"> <!-- Este div ya contenía las publicaciones -->
+                    
+                    {% if mis_publicaciones %}
+                        {% for publicacion in mis_publicaciones %}
+                            <div class="listing card"> <!-- Añadida clase card para consistencia de estilo -->
+                                <div class="carousel-container">
+                                    <div class="carousel">
+                                        {% if publicacion[12] %}
+                                            {% for image in publicacion[12] %}
+                                                <div class="carousel-item"><img src="{{ url_for('static', filename='image/' + image) }}" alt="Imagen del departamento"></div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="carousel-item"><img src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada"></div>
+                                        {% endif %}
+                                    </div>
+                                    <button class="carousel-control prev" onclick="moveCarousel(this, -1)">&#10094;</button>
+                                    <button class="carousel-control next" onclick="moveCarousel(this, 1)">&#10095;</button>
+                                </div>
+                                <div class="listing-info">
+                                    <h3>{{ publicacion[1] }}</h3>
+                                    <p>{{ publicacion[2] }}</p>
+                                    <p><strong>Tipo de Publicación:</strong> {{ publicacion[3] }}</p>
+                                    <p class="price"><strong>Precio:</strong> {{ publicacion[4] }} {{ publicacion[5] }}</p> <!-- Añadida moneda pub[5] -->
+                                    <p><strong>Ambientes:</strong> {{ publicacion[6] }}</p>
+                                    <p><strong>Dormitorios:</strong> {{ publicacion[7] }}</p>
+                                    <p><strong>Baños:</strong> {{ publicacion[8] }}</p>
+                                    <p><strong>Superficie:</strong> {{ publicacion[9] }} m²</p>
+                                    <p><strong>Dirección: </strong> {{ publicacion[10] }}</p>
+                                    <p><strong>Publicado por: </strong> {{ publicacion[11] }}</p>
+                                    <p><strong>Latitud:</strong> {{ publicacion[13] }}</p>
+                                    <p><strong>Longitud:</strong> {{ publicacion[14] }}</p>
+                                    <div class="btn-group-vertical">
+                                        <a href="{{ url_for('view_property', property_id=publicacion[0]) }}" class="btn btn-primary">Ver Publicación</a>
+                                        <a href="{{ url_for('modify_depto', depto_id=publicacion[0]) }}" class="btn btn-edit">Editar</a>
+                                        <form method="POST" action="{{ url_for('delete_publication', publication_id=publicacion[0]) }}" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta publicación?');" style="display:inline-block; width:100%;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-danger" style="width:100%;">Eliminar Publicación</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No tienes publicaciones.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div> <!-- Fin user-panel-right-column -->
+    </div> <!-- Fin container-wrapper -->
     <footer>
         <div class="footer-content">
             <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>

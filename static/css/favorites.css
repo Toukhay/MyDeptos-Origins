@@ -182,12 +182,13 @@ body {
 }
 
 .favorites-page .listings {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem; /* Aumentar el espacio entre los listados */
+    display: grid; /* Cambiado de flex a grid */
+    grid-template-columns: repeat(3, 1fr); /* Tres columnas de igual ancho */
+    gap: 2rem; /* Espacio entre los listados (filas y columnas) */
     margin-top: 2rem;
     padding: 1rem;
-    justify-content: center;
+    /* flex-wrap: wrap; ya no es necesario */
+    /* justify-content: center; ya no es necesario para este tipo de grid */
 }
 
 .favorites-page .listing {
@@ -195,10 +196,10 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     overflow: hidden;
-    width: calc(100% - 2rem); /* Ajustar el ancho al 45% para hacer los listados más anchos */
+    /* width: calc(100% - 2rem); */ /* Eliminado, el grid maneja el ancho */
     box-sizing: border-box;
     transition: transform 0.3s ease;
-    margin-bottom: 2rem; /* Aumentar el margen inferior */
+    /* margin-bottom: 2rem; */ /* Eliminado, el gap del grid maneja el espaciado vertical */
     position: relative;
     display: flex;
     flex-direction: column;

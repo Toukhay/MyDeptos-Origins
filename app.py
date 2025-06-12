@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash, send_from_directory, jsonify
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DecimalField, SelectField, IntegerField
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DecimalField, SelectField, IntegerField, HiddenField
 from flask_wtf.file import MultipleFileField, FileAllowed
 from wtforms.validators import DataRequired, Email, Length, NumberRange
 import bcrypt
@@ -15,13 +15,14 @@ import uuid # Importar uuid
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager, current_user, UserMixin, login_user, logout_user
+import datetime # <--- AÑADIR ESTA IMPORTACIÓN
 
 app = Flask(__name__, static_folder="static")
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'bdmydeptos'
-app.config['SECRET_KEY'] = 'tu_clave_secreta'
+app.config['SECRET_KEY'] = 'clave_secreta'
 
 mysql = MySQL(app)
 csrf = CSRFProtect(app)  # Habilitar CSRF
@@ -121,6 +122,16 @@ class PublishDeptoForm(FlaskForm):
 class ForgotPasswordForm(FlaskForm):
     email = StringField('Correo Electrónico', validators=[DataRequired(), Email()])
     submit = SubmitField('Enviar Enlace de Recuperación')
+
+class ResenaForm(FlaskForm):
+    puntaje = SelectField('Puntaje', choices=[(str(i), str(i)) for i in range(1, 6)], validators=[DataRequired()])
+    comentario = TextAreaField('Comentario', validators=[DataRequired(), Length(min=5, max=500)])
+    submit = SubmitField('Enviar Reseña')
+    
+class EditResenaForm(FlaskForm):
+    puntaje = SelectField('Puntaje', choices=[(str(i), str(i)) for i in range(1, 6)], validators=[DataRequired()])
+    comentario = TextAreaField('Comentario', validators=[DataRequired(), Length(min=5, max=500)])
+    submit = SubmitField('Actualizar Reseña')
 
 # -----------------------
 # Rutas principales
@@ -369,22 +380,43 @@ def user_panel():
             WHERE d.id_usuario = %s
             GROUP BY d.id_departamento
         ''', (user_id,))
-        mis_publicaciones = cur.fetchall()
+        mis_publicaciones_data = cur.fetchall()
+
+        # Obtener notificaciones del usuario
+        cur.execute('''
+            SELECT id_notificacion, tipo_notificacion, mensaje, id_departamento_ref, id_resena_ref, fecha_envio, leida
+            FROM notificaciones
+            WHERE id_usuario_receptor = %s
+            ORDER BY fecha_envio DESC
+        ''', (user_id,))
+        notificaciones_data = cur.fetchall()
+
     except Exception as e:
         flash(f'Error al cargar datos del usuario: {e}', 'danger')
+        cur.close() # Asegurarse de cerrar el cursor en caso de error
         return redirect(url_for('home'))
     finally:
-        cur.close()
+        if cur: # Solo cerrar si el cursor existe
+            cur.close()
 
     # Convertir las fotos en lista (si existen)
     mis_publicaciones = [
         (id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos.split(',') if fotos else [], latitud, longitud)
-        for id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos, latitud, longitud in mis_publicaciones
+        for id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos, latitud, longitud in mis_publicaciones_data
     ]
+
+    notificaciones_list = []
+    for row in notificaciones_data:
+        notif = {
+            "id": row[0], "tipo": row[1], "mensaje": row[2],
+            "id_departamento_ref": row[3], "id_resena_ref": row[4],
+            "fecha_envio": row[5], "leida": row[6]
+        }
+        notificaciones_list.append(notif)
 
     form = PublishDeptoForm()  # Crear una instancia del formulario para obtener el token CSRF
 
-    return render_template('user_panel.html', user_data=user_data, mis_publicaciones=mis_publicaciones, form=form)
+    return render_template('user_panel.html', user_data=user_data, mis_publicaciones=mis_publicaciones, form=form, notificaciones=notificaciones_list)
 
 class EditProfileForm(FlaskForm):
     username = StringField('Nuevo Usuario', validators=[Length(min=4, max=25)])
@@ -454,6 +486,8 @@ def generate_password():
 
 @app.route('/about')
 def about():
+    # Aquí puedes pasar cualquier variable que necesites a la plantilla
+    # Por ejemplo, si necesitas current_user para la barra de navegación
     return render_template('about.html')
 
 @app.route('/listings')
@@ -495,81 +529,90 @@ def publish_depto():
     form = PublishDeptoForm()
     cursor = mysql.connection.cursor()
     cursor.execute('SELECT id_localidad, nombre FROM localidad')
-    localidades = cursor.fetchall()
+    localidades_data = cursor.fetchall()
     cursor.close()
-    form.localidad.choices = [(str(id), nombre) for id, nombre in localidades]
+    form.localidad.choices = [(str(id_loc), nombre) for id_loc, nombre in localidades_data]
 
-    if form.validate_on_submit():
-        try:
-            # Datos del formulario
-            title = form.title.data
-            description = form.description.data
-            tipo_publicacion = form.tipo_publicacion.data
-            price = form.price.data
-            moneda = form.moneda.data
-            ambientes = form.ambientes.data
-            dormitorios = form.dormitorios.data
-            banos = form.banos.data
-            superficie = form.superficie.data
-            direccion = form.direccion.data
-            localidad = form.localidad.data
-            rol_inmo_dir = form.rol_inmo_dir.data
-            user_id = session['user_id']
+    if request.method == 'POST': # Mover la lógica de POST aquí para que los errores se manejen antes de renderizar
+        if form.validate_on_submit():
+            try:
+                # Datos del formulario
+                title = form.title.data
+                description = form.description.data
+                tipo_publicacion = form.tipo_publicacion.data
+                price = form.price.data
+                moneda = form.moneda.data
+                ambientes = form.ambientes.data
+                dormitorios = form.dormitorios.data
+                banos = form.banos.data
+                superficie = form.superficie.data
+                direccion = form.direccion.data
+                localidad = form.localidad.data
+                rol_inmo_dir = form.rol_inmo_dir.data
+                user_id = session['user_id']
 
-            # Validación de coordenadas
-            latitud = request.form.get('latitud')
-            longitud = request.form.get('longitud')
-            if not latitud or not longitud:
-                flash('Por favor, selecciona una ubicación en el mapa.', 'danger')
-                return redirect(url_for('publish_depto'))
+                # Validación de coordenadas
+                latitud = request.form.get('latitud')
+                longitud = request.form.get('longitud')
+                if not latitud or not longitud:
+                    flash('Por favor, selecciona una ubicación en el mapa.', 'danger')
+                    # Vuelve a renderizar el formulario con los datos y el error
+                    return render_template('publish_depto.html', form=form)
 
-            # Validación de imágenes
-            photos = request.files.getlist(form.photos.name)
-            if len(photos) < 1 or len(photos) > 5:
-                flash('Debes subir entre 1 y 5 imágenes.', 'error')
-                return redirect(url_for('publish_depto'))
+                # Validación de imágenes
+                photos_from_request = request.files.getlist(form.photos.name)
+                # Filtrar solo las fotos que realmente tienen un archivo subido
+                valid_photos = [p for p in photos_from_request if p and p.filename]
 
-            # Iniciar transacción
-            cursor = mysql.connection.cursor()
+                if not (1 <= len(valid_photos) <= 5):
+                    flash('Debes subir entre 1 y 5 imágenes válidas.', 'danger')
+                     # Vuelve a renderizar el formulario con los datos y el error
+                    return render_template('publish_depto.html', form=form)
 
-            # Insertar departamento
-            cursor.execute('''
-                INSERT INTO departamento (id_usuario, id_localidad, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fecha_publicacion)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-            ''', (user_id, localidad, title, description, tipo_publicacion, price, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir))
-            departamento_id = cursor.lastrowid
+                # Iniciar transacción
+                cursor = mysql.connection.cursor()
 
-            # Insertar coordenadas
-            cursor.execute('INSERT INTO coordenadas (id_departamento, latitud, longitud) VALUES (%s, %s, %s)', 
-                        (departamento_id, latitud, longitud))
+                # Insertar departamento
+                cursor.execute('''
+                    INSERT INTO departamento (id_usuario, id_localidad, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fecha_publicacion)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                ''', (user_id, localidad, title, description, tipo_publicacion, price, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir))
+                departamento_id = cursor.lastrowid
 
-            # Procesar cada imagen
-            for photo in photos:
-                if photo.filename == '':  # Saltar si no hay archivo
-                    continue
+                # Insertar coordenadas
+                cursor.execute('INSERT INTO coordenadas (id_departamento, latitud, longitud) VALUES (%s, %s, %s)', 
+                            (departamento_id, latitud, longitud))
+
+                # Procesar cada imagen válida
+                for photo in valid_photos:
+                    original_filename = secure_filename(photo.filename)
+                    unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
+                    photo_path = os.path.join(app.root_path, 'static', 'image', unique_filename)
                     
-                original_filename = secure_filename(photo.filename)
-                # Generar un nombre de archivo único
-                unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
-                photo_path = os.path.join(app.root_path, 'static', 'image', unique_filename)
-                
-                try:
-                    photo.save(photo_path)
-                    cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
-                                (departamento_id, unique_filename)) # Guardar el nombre único
-                except Exception as e:
-                    mysql.connection.rollback()
-                    flash(f'Error al guardar las imágenes: {str(e)}', 'danger')
-                    return redirect(url_for('publish_depto'))
+                    try:
+                        photo.save(photo_path)
+                        cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
+                                    (departamento_id, unique_filename))
+                    except Exception as e:
+                        mysql.connection.rollback()
+                        flash(f'Error al guardar la imagen {original_filename}: {str(e)}', 'danger')
+                        return render_template('publish_depto.html', form=form) # Vuelve al form
 
-            mysql.connection.commit()
-            cursor.close()
-            # Redirige directamente al template de éxito (sin flash popup)
-            return redirect(url_for('publication_success'))
-        except Exception as e:
-            mysql.connection.rollback()
-            flash(f'Error al publicar el departamento: {str(e)}', 'danger')
-            return redirect(url_for('publish_depto'))
+                mysql.connection.commit()
+                cursor.close()
+                return redirect(url_for('publication_success'))
+            except Exception as e:
+                mysql.connection.rollback()
+                flash(f'Error al publicar el departamento: {str(e)}', 'danger')
+                # No redirigir, renderizar el template con el formulario para no perder datos
+                return render_template('publish_depto.html', form=form)
+        else:# Si form.validate_on_submit() es False
+            for fieldName, errorMessages in form.errors.items():
+                for err in errorMessages:
+                    label = getattr(form, fieldName).label.text if hasattr(getattr(form, fieldName), 'label') else fieldName
+                    flash(f"Error en el campo '{label}': {err}", 'danger')
+    
+    # Para GET request o si POST falla validación y necesita re-renderizar
     return render_template('publish_depto.html', form=form)
 
 # -----------------------
@@ -615,48 +658,250 @@ def remove_favorite():
         print(f"Error en remove_favorite: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
-@app.route('/viewProperty/<int:property_id>')
+@app.route('/viewProperty/<int:property_id>', methods=['GET', 'POST'])
 def view_property(property_id):
     cursor = mysql.connection.cursor()
     cursor.execute('''
         SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, 
                d.superficie, d.direccion, d.rol_inmo_dir, GROUP_CONCAT(f.url_foto) AS fotos, 
-               c.latitud, c.longitud, u.name, u.email, u.telefono
+               c.latitud, c.longitud, u.id AS user_id, u.name AS user_name, u.email AS user_email, u.telefono AS user_telefono
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
         LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento
         LEFT JOIN usuario u ON d.id_usuario = u.id
         WHERE d.id_departamento = %s
+        GROUP BY d.id_departamento, u.id, u.name, u.email, u.telefono
     ''', (property_id,))
     departamento_data = cursor.fetchone()
-    cursor.close()
 
-    if departamento_data:
-        departamento = {
-            "id": departamento_data[0],
-            "titulo": departamento_data[1],
-            "descripcion": departamento_data[2],
-            "precio": departamento_data[3],
-            "moneda": departamento_data[4],
-            "ambientes": departamento_data[5],
-            "dormitorios": departamento_data[6],
-            "banos": departamento_data[7],
-            "superficie": departamento_data[8],
-            "direccion": departamento_data[9],
-            "rol_inmo_dir": departamento_data[10],
-            "fotos": departamento_data[11].split(',') if departamento_data[11] else [],
-            "latitud": float(departamento_data[12]) if departamento_data[12] else 0.0,
-            "longitud": float(departamento_data[13]) if departamento_data[13] else 0.0
-        }
-        publicador = {
-            "nombre": departamento_data[14],
-            "email": departamento_data[15],
-            "telefono": departamento_data[16]
-        }
-        user = session.get('user_id')
-        return render_template('viewProperty.html', departamento=departamento, user=user, publicador=publicador)
+    if not departamento_data:
+        cursor.close()
+        flash('Propiedad no encontrada.', 'danger')
+        return redirect(url_for('home'))
+
+    departamento = {
+        "id": departamento_data[0],
+        "titulo": departamento_data[1],
+        "descripcion": departamento_data[2],
+        "precio": departamento_data[3],
+        "moneda": departamento_data[4],
+        "ambientes": departamento_data[5],
+        "dormitorios": departamento_data[6],
+        "banos": departamento_data[7],
+        "superficie": departamento_data[8],
+        "direccion": departamento_data[9],
+        "rol_inmo_dir": departamento_data[10],
+        "fotos": departamento_data[11].split(',') if departamento_data[11] else [],
+        "latitud": float(departamento_data[12]) if departamento_data[12] else 0.0,
+        "longitud": float(departamento_data[13]) if departamento_data[13] else 0.0,
+        "propietario_id": departamento_data[14]
+    }
+    publicador = {
+        "id": departamento_data[14],
+        "nombre": departamento_data[15],
+        "email": departamento_data[16],
+        "telefono": departamento_data[17]
+    }
+
+    # Obtener reseñas
+    cursor.execute('''
+        SELECT r.id_resena, r.puntaje, r.comentario, r.fecha_calificacion, u.name AS calificador_nombre, r.id_usuario_calificador
+        FROM resena r
+        JOIN usuario u ON r.id_usuario_calificador = u.id
+        WHERE r.id_departamento = %s
+        ORDER BY r.fecha_calificacion DESC
+    ''', (property_id,))
+    resenas_data = cursor.fetchall()
+    
+    resenas = [{
+        "id_resena": row[0], "puntaje": row[1], "comentario": row[2], 
+        "fecha_calificacion": row[3], "calificador_nombre": row[4], 
+        "id_usuario_calificador": row[5]
+    } for row in resenas_data]
+
+    current_user_id = session.get('user_id')
+    user_has_reviewed = False
+    user_review_id = None
+    is_authenticated = 'user_id' in session
+    favoritos = []
+
+    if current_user_id:
+        for resena in resenas:
+            if resena['id_usuario_calificador'] == current_user_id:
+                user_has_reviewed = True
+                user_review_id = resena['id_resena']
+                break
+        # Obtener favoritos del usuario actual
+        cursor.execute('SELECT id_departamento FROM favorito WHERE id_usuario = %s', (current_user_id,))
+        favoritos = [row[0] for row in cursor.fetchall()]
+    
+    resena_form = ResenaForm()
+    edit_resena_form = EditResenaForm()
+
+    if user_has_reviewed and request.method == 'GET':
+        pass
+
+    cursor.close()
+    return render_template('viewProperty.html', departamento=departamento, publicador=publicador,
+                           resenas=resenas, resena_form=resena_form, edit_resena_form=edit_resena_form,
+                           current_user_id=current_user_id, user_has_reviewed=user_has_reviewed,
+                           user_review_id=user_review_id, is_authenticated=is_authenticated, favoritos=favoritos)
+
+@app.route('/departamento/<int:departamento_id>/add_resena', methods=['POST'])
+def add_resena(departamento_id):
+    if 'user_id' not in session:
+        flash('Debes iniciar sesión para dejar una reseña.', 'warning')
+        return redirect(url_for('login'))
+
+    form = ResenaForm()
+    if form.validate_on_submit():
+        puntaje = form.puntaje.data
+        comentario = form.comentario.data
+        id_usuario_calificador = session['user_id']
+
+        cursor = mysql.connection.cursor()
+        
+        # Verificar que el usuario no reseñe su propio departamento
+        cursor.execute("SELECT id_usuario FROM departamento WHERE id_departamento = %s", (departamento_id,))
+        depto_owner = cursor.fetchone()
+        if depto_owner and depto_owner[0] == id_usuario_calificador:
+            flash('No puedes reseñar tu propio departamento.', 'danger')
+            cursor.close()
+            return redirect(url_for('view_property', property_id=departamento_id))
+
+        # Verificar si el usuario ya ha reseñado este departamento
+        cursor.execute("SELECT id_resena FROM resena WHERE id_departamento = %s AND id_usuario_calificador = %s", (departamento_id, id_usuario_calificador))
+        existing_resena = cursor.fetchone()
+        if existing_resena:
+            flash('Ya has dejado una reseña para este departamento. Puedes editarla si lo deseas.', 'info')
+            cursor.close()
+            return redirect(url_for('view_property', property_id=departamento_id))
+
+        # Insertar reseña
+        cursor.execute('''
+            INSERT INTO resena (id_departamento, id_usuario_calificador, puntaje, comentario, fecha_calificacion)
+            VALUES (%s, %s, %s, %s, NOW())
+        ''', (departamento_id, id_usuario_calificador, puntaje, comentario))
+        resena_id = cursor.lastrowid
+
+        # Crear notificación para el propietario del departamento
+        if depto_owner:
+            propietario_id = depto_owner[0]
+            # Obtener nombre del calificador y título del departamento para el mensaje
+            cursor.execute("SELECT name FROM usuario WHERE id = %s", (id_usuario_calificador,))
+            calificador_name_tuple = cursor.fetchone()
+            cursor.execute("SELECT titulo FROM departamento WHERE id_departamento = %s", (departamento_id,))
+            depto_titulo_tuple = cursor.fetchone()
+            
+            if calificador_name_tuple and depto_titulo_tuple:
+                calificador_name = calificador_name_tuple[0]
+                depto_titulo = depto_titulo_tuple[0]
+                mensaje = f"El usuario '{calificador_name}' ha dejado una reseña en tu departamento '{depto_titulo}'."
+                cursor.execute('''
+                    INSERT INTO notificaciones (id_usuario_receptor, tipo_notificacion, mensaje, id_departamento_ref, id_resena_ref, fecha_envio, leida)
+                    VALUES (%s, %s, %s, %s, %s, NOW(), 0)
+                ''', (propietario_id, 'NUEVA_RESENA', mensaje, departamento_id, resena_id))
+            else:
+                app.logger.warning(f"No se pudo crear la notificación para la reseña {resena_id} porque faltan datos del calificador o del departamento.")
+
+        mysql.connection.commit()
+        cursor.close()
+        flash('Reseña agregada exitosamente.', 'success')
     else:
-        return "Propiedad no encontrada", 404
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"Error en el campo '{getattr(form, field).label.text}': {error}", 'danger')
+    return redirect(url_for('view_property', property_id=departamento_id))
+
+@app.route('/resena/<int:resena_id>/edit', methods=['GET', 'POST'])
+def edit_resena(resena_id):
+    if 'user_id' not in session:
+        flash('Debes iniciar sesión para editar una reseña.', 'warning')
+        return redirect(url_for('login'))
+
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT id_departamento, id_usuario_calificador, puntaje, comentario FROM resena WHERE id_resena = %s", (resena_id,))
+    resena_data = cursor.fetchone()
+
+    if not resena_data:
+        flash('Reseña no encontrada.', 'danger')
+        cursor.close()
+        return redirect(url_for('home'))
+
+    id_departamento = resena_data[0]
+    id_usuario_calificador = resena_data[1]
+
+    if id_usuario_calificador != session['user_id']:
+        flash('No tienes permiso para editar esta reseña.', 'danger')
+        cursor.close()
+        return redirect(url_for('view_property', property_id=id_departamento))
+
+    form = EditResenaForm(request.form) # Usar EditResenaForm
+
+    if request.method == 'POST' and form.validate():
+        nuevo_puntaje = form.puntaje.data
+        nuevo_comentario = form.comentario.data
+        cursor.execute('''
+            UPDATE resena SET puntaje = %s, comentario = %s, fecha_calificacion = NOW()
+            WHERE id_resena = %s
+        ''', (nuevo_puntaje, nuevo_comentario, resena_id))
+        mysql.connection.commit()
+        cursor.close()
+        flash('Reseña actualizada exitosamente.', 'success')
+        return redirect(url_for('view_property', property_id=id_departamento))
+    
+    if request.method == 'GET':
+        form.puntaje.data = str(resena_data[2])
+        form.comentario.data = resena_data[3]
+    
+    cursor.close()
+    # Se renderiza un template específico para editar o se puede hacer en un modal en viewProperty.
+    # Por simplicidad, asumimos un template 'edit_resena.html' o que se maneja con modal.
+    # Si no existe edit_resena.html, esta parte necesitará ajuste.
+    # Para este ejemplo, redirigimos de vuelta a la propiedad, y el usuario debe reabrir el modal/form de edición.
+    # Idealmente, se pasaría el form a un template dedicado.
+    return render_template('edit_resena_modal_content.html', form=form, resena_id=resena_id, property_id=id_departamento)
+
+
+@app.route('/resena/<int:resena_id>/delete', methods=['POST'])
+def delete_resena(resena_id):
+    if 'user_id' not in session:
+        flash('Debes iniciar sesión para eliminar una reseña.', 'warning')
+        return jsonify({'success': False, 'message': 'No autenticado'}), 401 # Devolver JSON para AJAX
+
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT id_departamento, id_usuario_calificador FROM resena WHERE id_resena = %s", (resena_id,))
+    resena_data = cursor.fetchone()
+
+    if not resena_data:
+        flash('Reseña no encontrada.', 'danger')
+        cursor.close()
+        return jsonify({'success': False, 'message': 'Reseña no encontrada'}), 404
+
+    id_departamento = resena_data[0]
+    id_usuario_calificador = resena_data[1]
+
+    if id_usuario_calificador != session['user_id']:
+        flash('No tienes permiso para eliminar esta reseña.', 'danger')
+        cursor.close()
+        return jsonify({'success': False, 'message': 'No autorizado'}), 403
+    
+    try:
+        # Opcional: Eliminar notificaciones asociadas a esta reseña
+        cursor.execute("DELETE FROM notificaciones WHERE id_resena_ref = %s", (resena_id,))
+        # Eliminar la reseña
+        cursor.execute("DELETE FROM resena WHERE id_resena = %s", (resena_id,))
+        mysql.connection.commit()
+        flash('Reseña eliminada exitosamente.', 'success')
+        cursor.close()
+        return jsonify({'success': True, 'message': 'Reseña eliminada', 'redirect_url': url_for('view_property', property_id=id_departamento)})
+    except Exception as e:
+        mysql.connection.rollback()
+        app.logger.error(f"Error al eliminar reseña {resena_id}: {e}")
+        flash('Error al eliminar la reseña.', 'danger')
+        cursor.close()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 @app.route('/favorites')
 def favorites():
@@ -732,8 +977,21 @@ def publication_success():
 print(app.url_map)
 
 @app.context_processor
-def inject_user():
-    return dict(current_user=current_user)
+def inject_user_and_notifications():
+    unread_notification_count = 0
+    if 'user_id' in session:
+        try:
+            cursor = mysql.connection.cursor()
+            cursor.execute("SELECT COUNT(*) FROM notificaciones WHERE id_usuario_receptor = %s AND leida = 0", (session['user_id'],))
+            count_result = cursor.fetchone()
+            if count_result:
+                unread_notification_count = count_result[0]
+            cursor.close()
+        except Exception as e:
+            app.logger.error(f"Error al obtener contador de notificaciones: {e}")
+            unread_notification_count = 0 # Fallback
+            
+    return dict(current_user=current_user, unread_notification_count=unread_notification_count)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -867,6 +1125,138 @@ def modify_depto(depto_id):
             cursor.close()
 
     return render_template('modify_depto.html', form=form, depto_id=depto_id, latitud=latitud, longitud=longitud, current_photos=current_photos_list)
+
+@app.route('/notifications')
+def notifications():
+    if 'user_id' not in session:
+        flash('Debes iniciar sesión para ver tus notificaciones.', 'warning')
+        return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+    cursor = None
+    notificaciones_data = []
+
+    try:
+        cursor = mysql.connection.cursor()
+        # Asegúrate de que los nombres de las columnas coincidan exactamente con tu tabla de notificaciones
+        cursor.execute('''
+            SELECT id_notificacion, tipo_notificacion, mensaje, id_departamento_ref, 
+                   id_resena_ref, fecha_envio, leida
+            FROM notificaciones
+            WHERE id_usuario_receptor = %s
+            ORDER BY fecha_envio DESC
+        ''', (user_id,))
+        notificaciones_data = cursor.fetchall()
+    except Exception as e:
+        app.logger.error(f"Error al obtener notificaciones para el usuario {user_id}: {e}")
+        flash('Ocurrió un error al cargar tus notificaciones.', 'danger')
+    finally:
+        if cursor:
+            cursor.close()
+
+    notificaciones_list = []
+    if notificaciones_data:
+        for row in notificaciones_data:
+            # Asegúrate de que el orden de los índices (row[X]) coincida con el SELECT
+            fecha_envio_obj = row[5]
+            fecha_formateada = "Fecha no disponible"
+            if isinstance(fecha_envio_obj, datetime.datetime):
+                fecha_formateada = fecha_envio_obj.strftime('%Y-%m-%d %H:%M')
+            
+            notif = {
+                "id": row[0], 
+                "tipo": row[1], 
+                "mensaje": row[2],
+                "id_departamento_ref": row[3], 
+                "id_resena_ref": row[4],
+                "fecha_envio": fecha_formateada, # Usar la fecha ya formateada o el mensaje de fallback
+                "leida": row[6]
+            }
+            notificaciones_list.append(notif)
+            
+    # Si el error persiste aquí, el problema podría estar en cómo Jinja2 maneja 'notifications.html'
+    # o en el propio template.
+    return render_template('notifications.html', notificaciones=notificaciones_list)
+
+@app.route('/notifications/mark_read/<int:notification_id>', methods=['POST'])
+def mark_notification_read(notification_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'No autenticado'}), 401
+    
+    user_id = session['user_id']
+    try:
+        cursor = mysql.connection.cursor()
+        # Asegurarse que la notificación pertenece al usuario
+        cursor.execute("UPDATE notificaciones SET leida = 1 WHERE id_notificacion = %s AND id_usuario_receptor = %s AND leida = 0", (notification_id, user_id))
+        mysql.connection.commit()
+        
+        if cursor.rowcount > 0: # Verifica si alguna fila fue actualizada
+            cursor.close()
+            # Podrías querer actualizar el contador de notificaciones no leídas en la sesión aquí
+            # para que el badge en el header se actualice en la próxima carga completa de página.
+            # Ejemplo: session['unread_notification_count'] = get_unread_notification_count_from_db(user_id)
+            return jsonify({'success': True})
+        else:
+            # No se actualizó ninguna fila, podría ser porque ya estaba leída o no existe/no pertenece al usuario.
+            # Si ya estaba leída, podemos considerarlo un éxito para la UI.
+            # Verificamos si ya estaba leída.
+            cursor.execute("SELECT leida FROM notificaciones WHERE id_notificacion = %s AND id_usuario_receptor = %s", (notification_id, user_id))
+            notif = cursor.fetchone()
+            cursor.close()
+            if notif and notif[0] == 1: # Si la notificación existe y ya está leída
+                return jsonify({'success': True, 'message': 'Ya estaba leída'})
+            return jsonify({'success': False, 'error': 'Notificación no encontrada, no pertenece al usuario o no se pudo actualizar'}), 404
+    except Exception as e:
+        app.logger.error(f"Error marcando notificación como leída: {e}")
+        mysql.connection.rollback() # Asegurar rollback en caso de excepción
+        if 'cursor' in locals() and cursor: # type: ignore
+            cursor.close()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/notifications/delete/<int:notification_id>', methods=['POST'])
+def delete_notification(notification_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'No autenticado'}), 401
+
+    user_id = session['user_id']
+    cursor = None
+    try:
+        cursor = mysql.connection.cursor()
+        # Verificar que la notificación pertenece al usuario antes de eliminar
+        cursor.execute("DELETE FROM notificaciones WHERE id_notificacion = %s AND id_usuario_receptor = %s", 
+                       (notification_id, user_id))
+        mysql.connection.commit()
+
+        if cursor.rowcount > 0:
+            # flash('Notificación eliminada exitosamente.', 'success') # Opcional si la UI se actualiza con JS
+            return jsonify({'success': True, 'message': 'Notificación eliminada'})
+        else:
+            return jsonify({'success': False, 'error': 'Notificación no encontrada o no tienes permiso para eliminarla'}), 404
+    except Exception as e:
+        mysql.connection.rollback()
+        app.logger.error(f"Error eliminando notificación {notification_id} para usuario {user_id}: {e}")
+        return jsonify({'success': False, 'error': 'Error al eliminar la notificación: ' + str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+@app.route('/notifications/mark_all_read', methods=['POST'])
+def mark_all_notifications_read():
+    if 'user_id' not in session:
+        flash('Debes iniciar sesión.', 'warning')
+        return redirect(url_for('login')) # O devolver JSON si es para AJAX
+    
+    user_id = session['user_id']
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("UPDATE notificaciones SET leida = 1 WHERE id_usuario_receptor = %s AND leida = 0", (user_id,))
+        mysql.connection.commit()
+        cursor.close()
+        flash('Todas las notificaciones han sido marcadas como leídas.', 'success')
+    except Exception as e:
+        app.logger.error(f"Error marcando todas las notificaciones como leídas: {e}")
+        flash('Error al marcar las notificaciones como leídas.', 'danger')
+    return redirect(url_for('notifications'))
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acerca de</title>
-    
+    <title>Sobre Nosotros - MyDeptos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
 </head>
 <body class="about-page">
@@ -27,38 +27,39 @@
             </ul>
         </nav>
     </header>
-    <main class="container">
-        <div class="card">
-            <h2>Información de la Aplicación</h2>
-            <p class="highlight">Gestiona propiedades de manera eficiente.</p>
-            <p>MyDeptos es una aplicación diseñada para ayudar a los usuarios a gestionar propiedades de manera eficiente y encontrar departamentos disponibles en su zona.</p>
-            <div class="more-info">
-                <p>Con MyDeptos, puedes buscar departamentos disponibles en tu área, contactar directamente con los propietarios y gestionar tus propiedades de manera sencilla y segura.</p>
-            </div>
-        </div>
-        <div class="card">
-            <h2>Nuestro Equipo</h2>
-            <p class="highlight">Profesionales dedicados a brindar el mejor servicio.</p>
-            <p>Contamos con un equipo de profesionales dedicados a brindar el mejor servicio y asegurar que encuentres el departamento ideal.</p>
-        </div>
-        <div class="card">
-            <h2>Beneficios de Usar MyDeptos</h2>
-            <p class="highlight">Plataforma confiable y fácil de usar.</p>
-            <p>MyDeptos ofrece una plataforma confiable y fácil de usar para encontrar propiedades en tu área. Con nuestra aplicación, puedes:</p>
-            <div class="more-info">
+
+    <div class="container">
+        <div class="about-content">
+            <h1>Sobre MyDeptos</h1>
+            <p>Bienvenido a MyDeptos, tu plataforma de confianza para encontrar el departamento o la casa de tus sueños en la región. Nuestra misión es facilitar la conexión entre quienes buscan un nuevo hogar y quienes ofrecen propiedades, ya sean dueños directos o inmobiliarias.</p>
+            
+            <section class="mission-vision">
+                <h2>Nuestra Misión</h2>
+                <p>Proveer una herramienta intuitiva, segura y eficiente que simplifique el proceso de búsqueda y publicación de propiedades inmobiliarias, fomentando transacciones transparentes y satisfactorias para todos nuestros usuarios.</p>
+                
+                <h2>Nuestra Visión</h2>
+                <p>Ser la plataforma líder y referente en el mercado inmobiliario local, reconocida por nuestra innovación, calidad de servicio y por contribuir positivamente al desarrollo de la comunidad.</p>
+            </section>
+            
+            <section class="values">
+                <h2>Nuestros Valores</h2>
                 <ul>
-                    <li>Buscar departamentos disponibles en tu zona.</li>
-                    <li>Contactar directamente con los propietarios.</li>
-                    <li>Gestionar tus propiedades de manera eficiente.</li>
+                    <li><strong>Confianza:</strong> Construimos relaciones basadas en la transparencia y la honestidad.</li>
+                    <li><strong>Innovación:</strong> Buscamos constantemente mejorar nuestra plataforma y servicios.</li>
+                    <li><strong>Compromiso:</strong> Estamos dedicados a la satisfacción de nuestros usuarios.</li>
+                    <li><strong>Comunidad:</strong> Fomentamos un mercado inmobiliario justo y accesible.</li>
                 </ul>
-            </div>
+            </section>
+
+            <section class="contact-info">
+                <h2>Contáctanos</h2>
+                <p>Si tienes alguna pregunta, sugerencia o necesitas asistencia, no dudes en ponerte en contacto con nuestro equipo. Estamos aquí para ayudarte.</p>
+                <p>Email: <a href="mailto:contacto@mydeptos.com">contacto@mydeptos.com</a></p>
+                <!-- Puedes añadir más información de contacto si lo deseas -->
+            </section>
         </div>
-        <div class="card">
-            <h2>Confianza y Seguridad</h2>
-            <p class="highlight">Valoramos la confianza y seguridad de nuestros usuarios.</p>
-            <p>En MyDeptos, valoramos la confianza y seguridad de nuestros usuarios. Nos aseguramos de que todas las propiedades listadas sean verificadas y que los contactos externos sean confiables.</p>
-        </div>
-    </main>
+    </div>
+
     <footer>
         <div class="footer-content">
             <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
@@ -67,7 +68,7 @@
                 <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
             </div>
             <div class="navigation-links">
-                <a href="/about">Sobre Nosotros</a>
+                <a href="{{ url_for('about') }}">Sobre Nosotros</a>
             </div>
         </div>
     </footer>

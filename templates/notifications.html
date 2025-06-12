@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Notificaciones</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"> <!-- Un CSS general -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications_page.css') }}"> <!-- CSS específico para esta página -->
+</head>
+<body class="notifications-page">
+    <header>
+        <nav>
+            <div class="logo">MyDeptos</div>
+            <ul class="menu">
+                <li><a href="{{ url_for('home') }}">Inicio</a></li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('user_panel') }}">Mi Perfil</a></li>
+                    <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
+                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
+                    <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
+                    <li><a href="{{ url_for('register') }}">Registrarse</a></li>
+                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1>Todas mis Notificaciones</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages-container">
+                    {% for category, message in messages %}
+                        <div class="flash-popup {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if notificaciones %}
+            <div class="notifications-actions-top">
+                <form method="POST" action="{{ url_for('mark_all_notifications_read') }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-secondary">Marcar todas como leídas</button>
+                </form>
+            </div>
+            <ul class="notifications-list-full">
+                {% for notif in notificaciones %}
+                    <li class="notification-item-full {% if not notif.leida %}unread{% else %}read{% endif %}" id="notif-{{ notif.id }}">
+                        <div class="notification-icon">
+                            {% if notif.tipo == 'NUEVA_RESENA' %}
+                                <span>⭐</span> <!-- Icono para nueva reseña -->
+                            {% elif notif.tipo == 'NUEVA_PUBLICACION_FAVORITO' %}
+                                <span>🏠</span> <!-- Icono para nueva publicación de un favorito -->
+                            {% else %}
+                                <span>🔔</span> <!-- Icono genérico -->
+                            {% endif %}
+                        </div>
+                        <div class="notification-content-full">
+                            <p class="notification-message">{{ notif.mensaje }}</p>
+                            {# Ahora notif.fecha_envio ya es una cadena formateada o "Fecha no disponible" #}
+                            <small class="notification-date">Recibido: {{ notif.fecha_envio }}</small>
+                        </div>
+                        <div class="notification-actions-full">
+                            {% if notif.id_departamento_ref %}
+                                <a href="{{ url_for('view_property', property_id=notif.id_departamento_ref) }}" class="btn btn-sm btn-info">Ver Departamento</a>
+                            {% endif %}
+                            {% if not notif.leida %}
+                                <button type="button" class="btn btn-sm btn-outline-secondary mark-as-read-btn" data-notification-id="{{ notif.id }}">Marcar como leída</button>
+                            {% else %}
+                                <button type="button" class="btn btn-sm btn-success mark-as-read-btn" data-notification-id="{{ notif.id }}" disabled>Leída ✓</button>
+                            {% endif %}
+                            <button type="button" class="btn btn-sm btn-danger delete-notification-btn" data-notification-id="{{ notif.id }}">Eliminar</button>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No tienes notificaciones.</p>
+        {% endif %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
+            <div class="social-media">
+                <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
+                <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
+            </div>
+            <div class="navigation-links">
+                <a href="{{ url_for('about') }}">Sobre Nosotros</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const csrfToken = "{{ csrf_token() }}"; 
+
+            document.querySelectorAll('.mark-as-read-btn').forEach(button => {
+                if (button.disabled) return; 
+
+                button.addEventListener('click', function () {
+                    const notificationId = this.dataset.notificationId;
+                    fetch(`/notifications/mark_read/${notificationId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({}) 
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.textContent = 'Leída ✓';
+                            this.classList.remove('btn-outline-secondary');
+                            this.classList.add('btn-success');
+                            this.disabled = true;
+                            
+                            const notificationItem = document.getElementById(`notif-${notificationId}`);
+                            if (notificationItem) {
+                                notificationItem.classList.remove('unread');
+                                notificationItem.classList.add('read');
+                            }
+                        } else {
+                            console.error('Error al marcar la notificación como leída:', data.error);
+                            alert('Error al marcar la notificación como leída: ' + (data.error || 'Error desconocido'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error en la petición fetch:', error);
+                        alert('Error de red al marcar la notificación como leída.');
+                    });
+                });
+            });
+
+            document.querySelectorAll('.delete-notification-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const notificationId = this.dataset.notificationId;
+                    if (!confirm('¿Estás seguro de que quieres eliminar esta notificación?')) {
+                        return;
+                    }
+
+                    fetch(`/notifications/delete/${notificationId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const notificationItem = document.getElementById(`notif-${notificationId}`);
+                            if (notificationItem) {
+                                notificationItem.remove();
+                            }
+                        } else {
+                            console.error('Error al eliminar la notificación:', data.error);
+                            alert('Error al eliminar la notificación: ' + (data.error || 'Error desconocido'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error en la petición fetch para eliminar:', error);
+                        alert('Error de red al eliminar la notificación.');
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

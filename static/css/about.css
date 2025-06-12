@@ -219,58 +219,165 @@ p {
 }
 
 .about-page .container {
-    max-width: 800px;
-    margin: 4rem auto;
+    flex: 1;
     padding: 2rem;
-    background-color: white;
+    max-width: 900px;
+    margin: 4rem auto 2rem;
+    background: white;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
 }
 
-.about-page h1 {
+.about-page header, .about-page footer {
+    background-color: var(--header-footer-bg);
+    padding: 1.5rem;
+    text-align: center;
+    width: 100%;
+    box-shadow: var(--box-shadow);
+    color: white;
+}
+
+.about-page header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.about-page footer {
+    position: relative;
+    margin-top: auto;
+}
+
+.about-page nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.about-page .logo {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.about-page .menu {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.about-page .menu li {
+    margin-left: 20px;
+    position: relative;
+}
+
+.about-page .menu a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 5px 0;
+    display: block;
+    transition: color var(--transition-duration);
+}
+
+.about-page .menu a::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background-color: white;
+    bottom: -5px;
+    left: 0;
+    transform: scaleX(0);
+    transform-origin: bottom right;
+    transition: transform 0.25s ease-out;
+}
+
+.about-page .menu a:hover::before {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
+.about-page .about-content {
+    padding: 1rem;
+    line-height: 1.6;
+}
+
+.about-page .about-content h1 {
     font-size: 2.5rem;
     color: var(--primary-color);
-    margin-bottom: 1rem;
-}
-
-.about-page p {
-    font-size: 1.25rem;
-    color: var(--text-color);
-    line-height: 1.6;
-    margin-bottom: 1rem;
-}
-
-.about-page .team {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    margin-top: 2rem;
-}
-
-.about-page .team-member {
-    flex: 1 1 calc(33.333% - 2rem);
-    background-color: #f9f9f9;
-    padding: 1rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+    margin-bottom: 1.5rem;
     text-align: center;
 }
 
-.about-page .team-member img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
+.about-page .about-content h2 {
+    font-size: 1.8rem;
+    color: var(--secondary-color);
+    margin-top: 2rem;
     margin-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5rem;
 }
 
-.about-page .team-member h3 {
-    font-size: 1.5rem;
-    color: var(--primary-color);
+.about-page .about-content p {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.about-page .about-content section {
+    margin-bottom: 2rem;
+}
+
+.about-page .about-content ul {
+    list-style: disc;
+    margin-left: 20px;
+    padding-left: 0;
+}
+
+.about-page .about-content li {
     margin-bottom: 0.5rem;
 }
 
-.about-page .team-member p {
-    font-size: 1rem;
-    color: var(--text-color);
+.about-page .about-content strong {
+    color: var(--primary-color);
+}
+
+.about-page .about-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.about-page .about-content a:hover {
+    text-decoration: underline;
+}
+
+.about-page .footer-content {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 1rem 0;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.about-page .footer-content div {
+    margin: 0.5rem 1rem;
+    text-align: center;
+}
+
+.about-page .footer-content a {
+    color: white;
+    text-decoration: none;
+    transition: color var(--transition-duration);
+}
+
+.about-page .footer-content a:hover {
+    text-decoration: underline;
 }

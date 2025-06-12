@@ -72,12 +72,12 @@
                     <span class="whatsapp-text">Contactar por WhatsApp</span>
                 </a>
             </div>
-            {% if user %}
-            <button class="favorite-button {% if departamento['id'] in favoritos %}selected{% endif %}"
-                    onclick="toggleFavorite(this; '{{ departamento['id'] }}'); return false;"
-                    aria-label="{% if departamento['id'] in favoritos %}Eliminar de favoritos{% else %}Añadir a favoritos{% endif %}">
+            {% if is_authenticated %}
+            <button class="favorite-button {% if departamento.id in favoritos %}selected{% endif %}"
+                    onclick="toggleFavorite(this, '{{ departamento.id }}'); return false;"
+                    aria-label="{% if departamento.id in favoritos %}Eliminar de favoritos{% else %}Añadir a favoritos{% endif %}">
                 <span class="button-text">
-                {% if departamento['id'] in favoritos %}Eliminar de Favoritos{% else %}Añadir a Favoritos{% endif %}
+                {% if departamento.id in favoritos %}Eliminar de Favoritos{% else %}Añadir a Favoritos{% endif %}
                 </span>
             </button>
             {% endif %}
@@ -85,7 +85,103 @@
 
         <!-- Contenedor del mapa -->
         <div id="map" style="height: 400px; margin-top: 20px;"></div>
+
+        <!-- Sección de Reseñas -->
+        <div class="reviews-section">
+            <h2>Reseñas</h2>
+            {% if current_user.is_authenticated and current_user_id != departamento.propietario_id and not user_has_reviewed %}
+                <div class="card review-form-card">
+                    <h3>Deja tu reseña</h3>
+                    <form method="POST" action="{{ url_for('add_resena', departamento_id=departamento.id) }}">
+                        {{ resena_form.hidden_tag() }}
+                        <div class="form-group">
+                            {{ resena_form.puntaje.label(class="form-label") }}
+                            {{ resena_form.puntaje(class="form-control") }}
+                            {% if resena_form.puntaje.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in resena_form.puntaje.errors %}<span>{{ error }}</span>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            {{ resena_form.comentario.label(class="form-label") }}
+                            {{ resena_form.comentario(class="form-control", rows="3") }}
+                            {% if resena_form.comentario.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in resena_form.comentario.errors %}<span>{{ error }}</span>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {{ resena_form.submit(class="btn btn-primary") }}
+                    </form>
+                </div>
+            {% elif current_user.is_authenticated and current_user_id == departamento.propietario_id %}
+                <p>No puedes reseñar tu propio departamento.</p>
+            {% elif user_has_reviewed %}
+                 <p>Ya has dejado una reseña para este departamento. Puedes editarla o eliminarla.</p>
+            {% elif not current_user.is_authenticated %}
+                <p><a href="{{ url_for('login') }}">Inicia sesión</a> para dejar una reseña.</p>
+            {% endif %}
+
+            <div class="existing-reviews">
+                {% if resenas %}
+                    {% for resena in resenas %}
+                        <div class="card review-card">
+                            <div class="review-header">
+                                <strong>{{ resena.calificador_nombre }}</strong>
+                                <span class="review-score">Puntaje: {{ resena.puntaje }}/5</span>
+                            </div>
+                            <p class="review-comment">{{ resena.comentario }}</p>
+                            <small class="review-date">Fecha: {{ resena.fecha_calificacion.strftime('%Y-%m-%d %H:%M') }}</small>
+                            {% if current_user.is_authenticated and resena.id_usuario_calificador == current_user_id %}
+                                <div class="review-actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="openEditReviewModal('{{ resena.id_resena }}', '{{ resena.puntaje }}', '{{ resena.comentario }}')">Editar</button>
+                                    <form method="POST" action="{{ url_for('delete_resena', resena_id=resena.id_resena) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta reseña?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>Todavía no hay reseñas para este departamento.</p>
+                {% endif %}
+            </div>
+        </div>
+        <!-- Fin Sección de Reseñas -->
+
     </div>
+
+    <!-- Modal para Editar Reseña -->
+    <div id="editReviewModal" class="modal fade" tabindex="-1" aria-labelledby="editReviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editReviewForm" method="POST" action=""> {# La action se seteará con JS #}
+                    {{ edit_resena_form.hidden_tag() }}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editReviewModalLabel">Editar Reseña</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            {{ edit_resena_form.puntaje.label(class="form-label") }}
+                            {{ edit_resena_form.puntaje(class="form-control", id="edit_puntaje") }}
+                        </div>
+                        <div class="form-group">
+                            {{ edit_resena_form.comentario.label(class="form-label") }}
+                            {{ edit_resena_form.comentario(class="form-control", rows="3", id="edit_comentario") }}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        {{ edit_resena_form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <div class="footer-content">
             <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
@@ -111,48 +207,85 @@
             // Verifica si las coordenadas son válidas
             if (isNaN(lat) || isNaN(lng)) {
                 console.error('Coordenadas no válidas:', lat, lng);
-                alert('No se encontraron coordenadas válidas para este departamento.');
-                return;
+                // Considera no mostrar una alerta si el mapa no es crítico o tiene un fallback.
+                // alert('No se encontraron coordenadas válidas para este departamento.');
+                // Ocultar el mapa o mostrar un mensaje en lugar del mapa
+                const mapDiv = document.getElementById('map');
+                if (mapDiv) {
+                    mapDiv.innerHTML = '<p style="text-align:center; padding:20px;">Ubicación no disponible.</p>';
+                }
+                // No retornar aquí si el resto de la página debe funcionar
+            } else {
+                 // Inicializar el mapa solo si las coordenadas son válidas
+                const map = L.map('map').setView([lat, lng], 13);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                L.marker([lat, lng]).addTo(map)
+                    .bindPopup('Ubicación del departamento')
+                    .openPopup();
             }
-
-            // Inicializar el mapa
-            const map = L.map('map').setView([lat, lng], 13);
-
-            // Agregar capa de mapa base
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-
-            // Agregar marcador en la ubicación del departamento
-            L.marker([lat, lng]).addTo(map)
-                .bindPopup('Ubicación del departamento')
-                .openPopup();
         });
 
+        function openEditReviewModal(resenaId, puntaje, comentario) {
+            const modal = new bootstrap.Modal(document.getElementById('editReviewModal'));
+            const form = document.getElementById('editReviewForm');
+            form.action = `/resena/${resenaId}/edit`; // Actualiza la URL del formulario
+            document.getElementById('edit_puntaje').value = puntaje;
+            document.getElementById('edit_comentario').value = comentario;
+            modal.show();
+        }
+
         function toggleFavorite(element, propertyId) {
-            const isFavorite = element.classList.contains('selected');
-            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
+            const isCurrentlyFavorite = element.classList.contains('selected');
+            const url = isCurrentlyFavorite ? "{{ url_for('remove_favorite') }}" : "{{ url_for('add_favorite') }}";
             const formData = new FormData();
             formData.append('property_id', propertyId);
+            const buttonTextSpan = element.querySelector('.button-text');
+
+            // Obtener el token CSRF (si usas un meta tag, o directamente si está disponible)
+            // Esta línea asume que {{ csrf_token() }} está disponible y es la forma correcta en tu setup.
+            const csrfToken = "{{ csrf_token() }}"; 
 
             fetch(url, {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'  // Asegúrate de tener CSRF token habilitado
+                    'X-CSRFToken': csrfToken 
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    // Intenta obtener un mensaje de error del cuerpo de la respuesta si es JSON
+                    return response.json()
+                        .catch(() => { 
+                            // Si no es JSON, o falla el parseo, usa el texto de estado
+                            throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+                        })
+                        .then(errorData => {
+                            // Si es JSON y tiene un mensaje, úsalo
+                            throw new Error(errorData.message || `Error ${response.status}`);
+                        });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     element.classList.toggle('selected');
-                    element.textContent = isFavorite ? 'Añadir a Favoritos' : 'Eliminar de Favoritos';
+                    const isNowFavorite = element.classList.contains('selected'); // Estado después del toggle
+                    if (buttonTextSpan) {
+                        buttonTextSpan.textContent = isNowFavorite ? 'Eliminar de Favoritos' : 'Añadir a Favoritos';
+                    }
+                    element.setAttribute('aria-label', isNowFavorite ? 'Eliminar de favoritos' : 'Añadir a favoritos');
                 } else {
-                    alert('Error al actualizar favorito');
+                    alert('Error al actualizar favorito: ' + (data.message || 'Operación no exitosa.'));
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error en toggleFavorite:', error);
+                alert('No se pudo procesar la solicitud: ' + error.message);
             });
         }
     </script>
