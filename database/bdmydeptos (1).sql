@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 17-05-2025 a las 20:44:29
+-- Tiempo de generación: 28-06-2025 a las 20:38:12
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -54,16 +54,13 @@ CREATE TABLE `coordenadas` (
 --
 
 INSERT INTO `coordenadas` (`id_coordenadas`, `id_departamento`, `latitud`, `longitud`) VALUES
-(30, 101, -27.4796, -55.1143),
-(36, 107, -27.4714, -55.1448),
-(41, 112, -27.474, -55.1004),
-(45, 116, -27.4901, -55.114),
-(46, 117, -27.4824, -55.0985),
-(47, 118, -27.49, -55.1138),
-(48, 119, -27.4996, -55.116),
+(46, 117, -27.4823, -55.1098),
 (49, 120, -27.4879, -55.1145),
-(50, 121, -27.4835, -55.1112),
-(51, 122, -27.4751, -55.0539);
+(52, 123, -27.4848, -55.1231),
+(57, 128, -27.4883, -55.1144),
+(58, 129, -27.4851, -55.1163),
+(60, 131, -27.4904, -55.1076),
+(61, 132, -27.4861, -55.1197);
 
 -- --------------------------------------------------------
 
@@ -96,19 +93,13 @@ CREATE TABLE `departamento` (
 --
 
 INSERT INTO `departamento` (`id_departamento`, `id_usuario`, `id_localidad`, `id_coordenadas`, `rol_inmo_dir`, `titulo`, `descripcion`, `tipo_publicacion`, `precio`, `moneda`, `ambientes`, `dormitorios`, `banos`, `superficie`, `direccion`, `fecha_publicacion`, `telefono_opcional`) VALUES
-(79, 12, 1, 0, 'Dueño directo', 'Una casita', 'Una casitaUna casitaUna casitaUna casitaUna casitaUna casitaUna casita123123123123', 'venta', 200000, 'ARS', 1, 1, 2, 324, 'Sanchez123', '2025-03-24 22:07:08', 0),
-(80, 12, 1, 0, 'Dueño directo', 'aaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'venta', 123, 'ARS', 1, 1, 1, 1, '1asd3', '2025-03-24 22:24:12', 0),
-(81, 12, 1, 0, 'Dueño directo', 'Ejemplooo', 'Mate y facturasMate y facturasMate y facturasMate y facturasMate y facturasMate y facturas', 'alquiler', 989898, 'ARS', 1, 2, 2, 100, 'Avenida Inventorio', '2025-03-27 22:47:27', 0),
-(101, 15, 1, 0, 'Dueño directo', 'KLKALSDAKSD', 'qsdasdasdasdqsdasdasdasdqsdasdasdasdqsdasdasdasdqsdasdasdasdqsdasdasdasdqsdasdasdasdqsdasdasdasdqsdasdasdasd12312', 'venta', 999999, 'ARS', 2, 3, 1, 42, '1asdas11', '2025-04-27 22:56:08', 0),
-(107, 15, 1, 0, 'Dueño directo', 'gggggggggggggg', 'fdgggggggggggggggdfgdfgr', 'venta', 44, 'ARS', 3, 2, 1, 222222000000, 'ertetert', '2025-04-27 23:10:36', 0),
-(112, 15, 1, 0, 'Dueño directo', 'qqqqqqqqqqqqqqqqq', 'dsssssssssssssssssssssssssss', 'venta', 123, 'ARS', 3, 3, 3, 33, 'ddd233', '2025-04-27 23:24:13', 0),
-(116, 15, 1, 0, 'Inmobiliaria', 'Departamento en Centro de obera', 'Departamento publicado en el centro de obera, manteniendo la estetica y flujo en el cual los estudiantes puedan tener un logro que es encontrar un alquiler disponible para tenerlo siempre', 'alquiler', 150000, 'ARS', 1, 1, 1, 200, 'Av. Italia 323', '2025-05-05 20:55:37', 0),
-(117, 13, 1, 0, 'Dueño directo', 'Lindo departamento a la vista de la facultdad', 'Departamento echo para estudiantes y trabajadores', 'alquiler', 130000, 'ARS', 2, 1, 1, 1200, 'Barrio Obera Mar de la Flota', '2025-05-05 21:35:49', 0),
-(118, 13, 1, 0, 'Inmobiliaria', 'Casa de Ejemplo', 'Ejemplo de Casa para probar 123123 ¬¬¬+54\r\n\r\n***', 'alquiler', 150000, 'ARS', 1, 1, 1, 50, 'Av. Italia 200', '2025-05-15 16:52:29', 0),
-(119, 13, 1, 0, 'Inmobiliaria', 'departamento mono ambiente', 'Especialmente diseñado para estudiantes\r\nNO SE HACEPTAN MASCOTAS\r\n', 'alquiler', 300, 'ARS', 1, 1, 1, 20, 'haiti 1199', '2025-05-17 12:54:37', 0),
-(120, 13, 1, 0, 'Dueño directo', 'Departamento para estudiantes o trabajadores', 'Este departamento esta ubicado en el microcentro de Obera, fecha 2025', 'alquiler', 170000, 'ARS', 1, 1, 1, 50, 'Maipu 100', '2025-05-17 15:47:46', 0),
-(121, 13, 1, 0, 'Dueño directo', 'aaaaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'alquiler', 123000, 'ARS', 1, 1, 1, 50, 'aaaaaaaaaaaaaaaaaaaaaaa', '2025-05-17 18:15:29', 0),
-(122, 17, 1, 0, 'Inmobiliaria', 'ciriciriciriciriciriciriciri', 'ciriciriciriciriciriciriciri', 'venta', 2000000, 'ARS', 2, 2, 1, 100, 'ciriciriciri', '2025-05-17 18:38:07', 0);
+(117, 13, 1, 0, 'Dueño directo', 'Depto. Maiaa', 'Departamento echo para estudiantes y trabajadores sin perros', 'alquiler', 130000, 'ARS', 2, 2, 1, 1200, 'Alvar Núñez Cabeza de Vaca 102, Oberá, Provincia de Misiones, Argentina', '2025-05-05 21:35:49', '0'),
+(120, 13, 1, 0, 'Dueño directo', 'Departamento para estudiantes o trabajadores', 'Este departamento esta ubicado en el microcentro de Obera, fecha 2025', 'alquiler', 170000, 'ARS', 1, 1, 1, 50, 'Maipu 100', '2025-05-17 15:47:46', '0'),
+(123, 21, 1, 0, 'Dueño directo', 'Departamento de prueba4', 'Departamento de prueba 4, para mostrar al publico en zona centro cerca de la calle salta y go. barreyro', 'alquiler', 800000, 'ARS', 1, 1, 1, 300, 'Salta y Gobernador barreyro', '2025-05-18 00:45:01', ''),
+(128, 25, 1, 0, 'Dueño directo', 'depto hanne', 'departamento de hanne', 'alquiler', 100000, 'ARS', 2, 1, 1, 30, 'Brasil 505, Oberá, Provincia de Misiones, Argentina', '2025-05-18 14:33:23', ''),
+(129, 25, 1, 0, 'Dueño directo', 'departamento de hanne2', 'departamento para estudiantes y/o trabajadores\r\n', 'alquiler', 180000, 'ARS', 1, 1, 1, 500, 'Río Negro 120, Oberá, Provincia de Misiones, Argentina', '2025-06-11 14:53:56', ''),
+(131, 25, 1, 0, 'Dueño directo', 'Departamento de prueba', 'Departamento para alquilarse pronto', 'alquiler', 1111110000000, 'ARS', 1, 1, 1, 123, 'España, Oberá, Provincia de Misiones, Argentina', '2025-06-11 23:33:16', ''),
+(132, 27, 1, 0, 'Dueño directo', 'Departamento de Orlando', 'Departamento del profe orlando, publicado el dia de hoy 23/06 tiene 1 baño en mal estado', 'alquiler', 650000, 'ARS', 2, 1, 1, 2000, '9 de Julio 796, Oberá, Municipio de Oberá, Provincia de Misiones, Argentina', '2025-06-23 16:35:38', '');
 
 -- --------------------------------------------------------
 
@@ -153,7 +144,20 @@ INSERT INTO `favorito` (`id_favorito`, `id_usuario`, `id_departamento`, `fecha_a
 (146, 13, 98, '2025-04-27 21:01:54'),
 (148, 13, 95, '2025-04-27 21:02:13'),
 (182, 13, 117, '2025-05-12 23:09:29'),
-(184, 13, 116, '2025-05-13 00:28:06');
+(184, 13, 116, '2025-05-13 00:28:06'),
+(188, 22, 124, '2025-05-18 06:05:57'),
+(192, 24, 125, '2025-05-18 13:17:45'),
+(193, 24, 120, '2025-05-18 13:17:53'),
+(195, 26, 128, '2025-06-11 11:13:37'),
+(201, 15, 125, '2025-06-11 16:31:22'),
+(203, 22, 129, '2025-06-11 23:11:33'),
+(206, 22, 120, '2025-06-20 18:56:59'),
+(209, 13, 131, '2025-06-21 15:48:10'),
+(210, 13, 129, '2025-06-21 15:48:11'),
+(211, 15, 129, '2025-06-21 15:52:21'),
+(212, 27, 132, '2025-06-23 16:41:27'),
+(214, 27, 117, '2025-06-23 16:41:40'),
+(216, 15, 131, '2025-06-23 16:47:42');
 
 -- --------------------------------------------------------
 
@@ -172,33 +176,23 @@ CREATE TABLE `foto` (
 --
 
 INSERT INTO `foto` (`id_foto`, `id_departamento`, `url_foto`) VALUES
-(97, 79, 'angel2.webp'),
-(98, 79, 'gamer123.jpg'),
-(99, 79, 'arbol1.jpg'),
-(100, 80, 'arbol1.jpg'),
-(101, 80, 'gamer123.jpg'),
-(102, 81, 'b4656768a9fbae8e3c58dffd0f2e85cc.jpg'),
-(103, 81, 'asdas.jpg'),
-(123, 101, 'PublicaDepto.png'),
-(124, 101, 'DepartamentoHome.webp'),
-(126, 107, 'PublicaDepto.png'),
-(129, 112, 'PublicaDepto.png'),
-(135, 116, 'arbol.jpeg'),
-(136, 117, 'arbol.jpeg'),
-(137, 117, 'DepartamentoHome.webp'),
-(138, 118, 'DepartamentoHome.webp'),
-(139, 118, 'arbol.jpeg'),
-(140, 119, 'arbol.jpeg'),
-(141, 119, 'DepartamentoHome.webp'),
-(142, 119, 'PublicaDepto.png'),
-(143, 120, '489371184_667085076207472_50246891497294917_n.jpg'),
-(144, 120, '489371896_668933249470576_5831833776925473544_n.jpg'),
-(145, 121, '489371896_668933249470576_5831833776925473544_n.jpg'),
-(146, 121, '489371184_667085076207472_50246891497294917_n.jpg'),
-(147, 121, '496063745_3621494658156466_1751569581737620015_n.jpg'),
-(148, 122, '496063745_3621494658156466_1751569581737620015_n.jpg'),
-(149, 122, '489371184_667085076207472_50246891497294917_n.jpg'),
-(150, 122, '489371896_668933249470576_5831833776925473544_n.jpg');
+(151, 123, 'thumb-1920-1360883.jpeg'),
+(152, 123, 'yasuke-dark-3840x1080-21997.jpg'),
+(172, 120, 'b4adf95cf26149b780a337feab842692_489372094_1190603509279635_5779781098789826881_n.jpg'),
+(173, 120, 'a6bd891418ef4a28a61aec40fac295c2_489374759_687727687335352_8190738063981778176_n.jpg'),
+(174, 120, 'b6ddfe5f334a496e9d212fc6e3061553_496063745_3621494658156466_1751569581737620015_n.jpg'),
+(178, 128, 'd9ef3efeb0a74fedaf2dda80b0e2ae02_depto2.webp'),
+(179, 128, 'f339334c56694a64866801115de2b5ee_depto3.jpg'),
+(180, 129, '30f6e87d3c994e86b39a172223f9a7cd_pexels-fabiano-rodrigues-794857-1662298.jpg'),
+(181, 129, '3d5915adc06f4e99b0d48f7785b191be_whatsapp.png'),
+(185, 131, '3844d9afa1b24894a98da233d7bb0c20_857653-final.jpeg'),
+(186, 131, '2a6959645bc44796bff70f76a0799f51_yasuke-dark-3840x1080-21997.jpg'),
+(190, 117, '7250836ad2864017a7539f9bdf78621b_1198867-3840x1080-desktop-dual-monitors-studio-ghibli-wallpaper.jpg'),
+(191, 117, 'e9f41c5fe1c2463d8bf5fa47b0e46b48_876413.jpg'),
+(192, 117, 'a29f7fe3c3e2485d8f004ce3fffd212a_780881-3440x1440-desktop-dual-monitors-mount-fuji-wallpaper-image.jpg'),
+(193, 132, 'c1257296671d4e20abf7bb5b8f6a9a80_780881-3440x1440-desktop-dual-monitors-mount-fuji-wallpaper-image.jpg'),
+(194, 132, 'e04a019281334784a2e52e47c1c42df5_thumb-1920-1360883.jpeg'),
+(195, 132, '69b1cc83c1274f08b0992e85794c60b8_whatsapp.png');
 
 -- --------------------------------------------------------
 
@@ -219,7 +213,7 @@ CREATE TABLE `localidad` (
 
 INSERT INTO `localidad` (`id_localidad`, `nombre`, `provincia`, `pais`) VALUES
 (1, 'Obera', 'Misiones', 'Argentina'),
-(2, 'Apostoles', 'Misiones', 'Argentina');
+(2, 'Proximamente en otras ciudades...', 'Misiones', 'Argentina');
 
 -- --------------------------------------------------------
 
@@ -229,11 +223,24 @@ INSERT INTO `localidad` (`id_localidad`, `nombre`, `provincia`, `pais`) VALUES
 
 CREATE TABLE `notificaciones` (
   `id_notificacion` int(11) NOT NULL,
-  `id_usuario` int(11) NOT NULL,
+  `id_usuario_receptor` int(11) NOT NULL,
+  `tipo_notificacion` varchar(50) NOT NULL COMMENT 'Ej: nuevo_favorito, nueva_resena, sistema',
   `mensaje` varchar(255) NOT NULL,
-  `fecha_envio` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `leida` tinyint(1) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+  `id_departamento_ref` int(11) DEFAULT NULL COMMENT 'Referencia a un departamento si aplica',
+  `id_resena_ref` int(11) DEFAULT NULL COMMENT 'Referencia a una reseña si aplica',
+  `leida` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0 = no leída, 1 = leída',
+  `fecha_envio` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `notificaciones`
+--
+
+INSERT INTO `notificaciones` (`id_notificacion`, `id_usuario_receptor`, `tipo_notificacion`, `mensaje`, `id_departamento_ref`, `id_resena_ref`, `leida`, `fecha_envio`) VALUES
+(3, 25, 'nueva_resena', 'Has recibido una nueva reseña en tu departamento \'depto hanne\'.', 128, NULL, 1, '2025-06-11 14:50:57'),
+(4, 25, 'NUEVA_RESENA', 'El usuario \'prueba5\' ha dejado una reseña en tu departamento \'departamento de hanne2\'.', 129, 5, 1, '2025-06-11 23:22:14'),
+(5, 21, 'NUEVA_RESENA', 'El usuario \'hanne\' ha dejado una reseña en tu departamento \'Departamento de prueba4\'.', 123, 6, 0, '2025-06-11 23:50:21'),
+(7, 13, 'NUEVA_RESENA', 'El usuario \'prueba5\' ha dejado una reseña en tu departamento \'Departamento para estudiantes o trabajadores\'.', 120, 8, 1, '2025-06-20 18:57:22');
 
 -- --------------------------------------------------------
 
@@ -243,23 +250,22 @@ CREATE TABLE `notificaciones` (
 
 CREATE TABLE `resena` (
   `id_resena` int(11) NOT NULL,
-  `id_usuario_resenado` int(11) NOT NULL,
+  `id_departamento` int(11) NOT NULL,
   `id_usuario_calificador` int(11) NOT NULL,
-  `calificacion` int(11) NOT NULL,
-  `comentario` varchar(200) NOT NULL,
+  `puntaje` tinyint(1) NOT NULL COMMENT 'Calificación de 1 a 5 estrellas',
+  `comentario` text DEFAULT NULL,
   `fecha_calificacion` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
--- --------------------------------------------------------
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Estructura de tabla para la tabla `roles`
+-- Volcado de datos para la tabla `resena`
 --
 
-CREATE TABLE `roles` (
-  `id_rol` int(11) NOT NULL,
-  `nombre` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+INSERT INTO `resena` (`id_resena`, `id_departamento`, `id_usuario_calificador`, `puntaje`, `comentario`, `fecha_calificacion`) VALUES
+(5, 129, 22, 5, 'Departamento optimo y muy interesante el lugar', '2025-06-11 23:22:14'),
+(6, 123, 25, 5, 'Departamento super duper', '2025-06-11 23:50:21'),
+(8, 120, 22, 4, 'Buen departamento pero le falta iluminación', '2025-06-20 18:57:22'),
+(9, 132, 15, 5, 'Muy buen departamento, la atencion tambien', '2025-06-23 16:49:57');
 
 -- --------------------------------------------------------
 
@@ -273,7 +279,7 @@ CREATE TABLE `usuario` (
   `email` varchar(200) NOT NULL,
   `password` varchar(255) NOT NULL,
   `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `telefono` VARCHAR(30) NOT NULL
+  `telefono` varchar(30) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
@@ -281,26 +287,18 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id`, `name`, `email`, `password`, `fecha_registro`, `telefono`) VALUES
-(11, 'maimora', 'moramaia18@gmail.com', '$2b$12$q3FrPZbXIQZVrNe211DXSOWyn7T/t.5eaHGg74Ok8b3btQG1dDq2C', '2025-02-13 15:33:26', 0),
-(12, 'facundo', 'facu-202020@hotmail.com', '$2b$12$biygPUvU6eR/SI3fZiUfcu6ZMDvBHov9vXdTSG6BNFkvgyr9h/4ve', '2025-04-17 19:37:36', 0),
-(13, 'maiaa', 'moramaia@gmail.com', '$2b$12$cSH6hwOYj8nGsT0RHHdaQejy1vEXyzYB2q3hr/jeIU.SfhTpQq3.W', '2025-02-22 00:17:57', 0),
-(14, 'marta', 'test@teset.com', '$2b$12$ohU2zMHfG89AHFHmeox7Q.5Gf1cDMjPr5u3UFnMosATs8zX.fISOu', '2025-02-21 23:06:26', 0),
-(15, 'facu875', 'facu-202020@hotmail.com', '$2b$12$hBO7uykz0TKodKT9HIWY8OB69ZCzFjBxyfmyMKzcpdrEj0ZA6/jNu', '2025-04-24 17:39:01', 0),
-(16, 'prueba2', 'prueba2@hotmail.com', '$2b$12$0qBxnF0khlkJg22OXDYGbORmKd5BCAGxSkHz1ILz5g.CzAh58V3KW', '2025-05-05 18:37:05', 0),
-(17, 'ciri', 'ciri123@gmail.com', '$2b$12$UNST3Pc6.Wfy2A2g3.h7VutoDDCQNvmE1NQEBUwdyIHqV5ZRSSoga', '2025-05-17 18:34:43', 2147483647),
-(18, 'lolita', 'lolita@gmail.com', '$2b$12$tAOO2g8wsK7VfcLb5UR6s.s9X3ufnrTv2pWp.i.6uJ5FBieBZOVo6', '2025-05-17 18:35:38', 2147483647),
-(19, 'lala', 'test@teset.com', '$2b$12$7I8PH0/R8Frip3MhehJ2l.vIrvq6exdY1Z7mVxh2DEiJPZ6unxMRm', '2025-05-17 18:39:58', 2147483647);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `usuario_rol`
---
-
-CREATE TABLE `usuario_rol` (
-  `id_usuario` int(11) NOT NULL,
-  `id_rol` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+(11, 'maimora', 'moramaia18@gmail.com', '$2b$12$q3FrPZbXIQZVrNe211DXSOWyn7T/t.5eaHGg74Ok8b3btQG1dDq2C', '2025-02-13 15:33:26', '0'),
+(12, 'facundo', 'facu-202020@hotmail.com', '$2b$12$3Qa07TGrV7luYdwS2mBHkOhOjqilpO2cYd73s9jz3Kv6fFa09ABRm', '2025-05-18 07:28:07', '543755696943'),
+(13, 'maiaa', 'moramaia@gmail.com', '$2b$12$cSH6hwOYj8nGsT0RHHdaQejy1vEXyzYB2q3hr/jeIU.SfhTpQq3.W', '2025-02-22 00:17:57', '0'),
+(14, 'marta', 'test@teset.com', '$2b$12$ohU2zMHfG89AHFHmeox7Q.5Gf1cDMjPr5u3UFnMosATs8zX.fISOu', '2025-02-21 23:06:26', '0'),
+(15, 'facundo875', 'facu-2020@hotmail.com', '$2b$12$VVgW4b.qwDPwxTcEinAKy.VXdMlvWbuK8NjpTMdbVg21Y/Lm4BIYe', '2025-06-20 18:32:30', '543755384591'),
+(16, 'prueba2', 'prueba2@hotmail.com', '$2b$12$rFe0Wszb86YswkJvgeEvFOCtS98tPvj8xz/.OYaF2OYv8ZyQwaXR.', '2025-05-17 23:14:10', '0'),
+(21, 'prueba9', 'prueba9@hotmail.com', 'pbkdf2:sha256:1000000$GceyfnfTtmC060ZS$2e087d6045248cc8c432d5a9647394d2f02b0c48ed2d9b7d23b9d04efa14946b', '2025-06-11 01:10:51', '543755339833'),
+(22, 'prueba5', 'prueba5@hotmail.com', 'pbkdf2:sha256:1000000$QRRnBqDgQekR2JXm$6fc195b3639e9006425eee9532f80d6a286cb7eabeb4cc2eafe5afd395d92a36', '2025-05-18 06:05:25', '543766544585'),
+(24, 'prueba21', 'prueba21@gmail.com', 'pbkdf2:sha256:1000000$B7PD7m4R2n8tIbfm$e209223f73b367f2eb445141fd420db096ee8ae6cc3b086c027e3f698aff87a9', '2025-05-18 13:15:16', '2333445533'),
+(25, 'hanne', 'hanne_schallmoser@hotmial.com', 'pbkdf2:sha256:1000000$gyLRFJk4fgxZfUFm$59def588f34fd51d1b0c34df31f6f56536a319a0c8c6ef572230533637c8aa3c', '2025-06-11 10:34:26', '5493755571611'),
+(26, 'damirafa', 'damirafa@gmail.com', 'pbkdf2:sha256:1000000$D2RW6vm6ia8R6n5Y$d0182532e1ac24c1c768fc5c5caa314223a2bb84abb32b2a095ceb068c2403b2', '2025-06-11 11:12:03', '3755221566'),
+(27, 'Orlandoo', 'orlando123@hotmail.com', '$2b$12$tdkkt4ErYGKWC/tFhSwTyO1QqqoMU30fL2O8s9rBVagk7fWn37DoG', '2025-06-23 16:24:17', '543755654788');
 
 --
 -- Índices para tablas volcadas
@@ -354,34 +352,23 @@ ALTER TABLE `localidad`
 --
 ALTER TABLE `notificaciones`
   ADD PRIMARY KEY (`id_notificacion`),
-  ADD KEY `id_usuario` (`id_usuario`);
+  ADD KEY `idx_notificaciones_usuario_receptor` (`id_usuario_receptor`),
+  ADD KEY `idx_notificaciones_departamento_ref` (`id_departamento_ref`),
+  ADD KEY `idx_notificaciones_resena_ref` (`id_resena_ref`);
 
 --
 -- Indices de la tabla `resena`
 --
 ALTER TABLE `resena`
   ADD PRIMARY KEY (`id_resena`),
-  ADD UNIQUE KEY `id_usuario_resenado` (`id_usuario_resenado`),
-  ADD UNIQUE KEY `id_usuario_calificador` (`id_usuario_calificador`),
-  ADD KEY `id_usuario_resenado_2` (`id_usuario_resenado`,`id_usuario_calificador`);
-
---
--- Indices de la tabla `roles`
---
-ALTER TABLE `roles`
-  ADD PRIMARY KEY (`id_rol`);
+  ADD KEY `idx_resena_departamento` (`id_departamento`),
+  ADD KEY `idx_resena_usuario_calificador` (`id_usuario_calificador`);
 
 --
 -- Indices de la tabla `usuario`
 --
 ALTER TABLE `usuario`
   ADD PRIMARY KEY (`id`);
-
---
--- Indices de la tabla `usuario_rol`
---
-ALTER TABLE `usuario_rol`
-  ADD KEY `id_usuario` (`id_usuario`,`id_rol`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -397,25 +384,25 @@ ALTER TABLE `configuracion_usuario`
 -- AUTO_INCREMENT de la tabla `coordenadas`
 --
 ALTER TABLE `coordenadas`
-  MODIFY `id_coordenadas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `id_coordenadas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- AUTO_INCREMENT de la tabla `departamento`
 --
 ALTER TABLE `departamento`
-  MODIFY `id_departamento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=123;
+  MODIFY `id_departamento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
 
 --
 -- AUTO_INCREMENT de la tabla `favorito`
 --
 ALTER TABLE `favorito`
-  MODIFY `id_favorito` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=185;
+  MODIFY `id_favorito` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=217;
 
 --
 -- AUTO_INCREMENT de la tabla `foto`
 --
 ALTER TABLE `foto`
-  MODIFY `id_foto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=151;
+  MODIFY `id_foto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=196;
 
 --
 -- AUTO_INCREMENT de la tabla `localidad`
@@ -427,25 +414,19 @@ ALTER TABLE `localidad`
 -- AUTO_INCREMENT de la tabla `notificaciones`
 --
 ALTER TABLE `notificaciones`
-  MODIFY `id_notificacion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_notificacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `resena`
 --
 ALTER TABLE `resena`
-  MODIFY `id_resena` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `roles`
---
-ALTER TABLE `roles`
-  MODIFY `id_rol` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_resena` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- Restricciones para tablas volcadas
@@ -486,13 +467,16 @@ ALTER TABLE `foto`
 -- Filtros para la tabla `notificaciones`
 --
 ALTER TABLE `notificaciones`
-  ADD CONSTRAINT `notificaciones_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`);
+  ADD CONSTRAINT `fk_notificaciones_departamento_ref` FOREIGN KEY (`id_departamento_ref`) REFERENCES `departamento` (`id_departamento`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_notificaciones_resena_ref` FOREIGN KEY (`id_resena_ref`) REFERENCES `resena` (`id_resena`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_notificaciones_usuario_receptor` FOREIGN KEY (`id_usuario_receptor`) REFERENCES `usuario` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Filtros para la tabla `usuario_rol`
+-- Filtros para la tabla `resena`
 --
-ALTER TABLE `usuario_rol`
-  ADD CONSTRAINT `usuario_rol_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`);
+ALTER TABLE `resena`
+  ADD CONSTRAINT `fk_resena_departamento` FOREIGN KEY (`id_departamento`) REFERENCES `departamento` (`id_departamento`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_resena_usuario_calificador` FOREIGN KEY (`id_usuario_calificador`) REFERENCES `usuario` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

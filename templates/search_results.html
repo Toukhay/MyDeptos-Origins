@@ -83,8 +83,8 @@
                     <h3>{{ depto[1] }}</h3>
                     
                     <div class="listing-price">
-                        ${{ "{:,.0f}".format(depto[3]) }} 
-                        <span class="currency">{{ depto[4] }}</span>
+                        ${{ "{:,.0f}".format(depto[4]) }} 
+                        <span class="currency">{{ depto[5] }}</span>
                     </div>
                     
                     <div class="listing-address">
@@ -115,6 +115,16 @@
                 </div>
             </div>
             {% endfor %}
+        </div>
+        <!-- Paginación -->
+        <div class="pagination">
+            {% if page > 1 %}
+                <a href="{{ url_for('search', page=page-1) }}">&laquo; Anterior</a>
+            {% endif %}
+            <span>Página {{ page }} de {{ total_pages }}</span>
+            {% if page < total_pages %}
+                <a href="{{ url_for('search', page=page+1) }}">Siguiente &raquo;</a>
+            {% endif %}
         </div>
         {% else %}
         <div class="no-results">

@@ -32,125 +32,130 @@
         </nav>
     </header>
     <div class="container">
-        <div class="property-details">
-            <h1>{{ departamento['titulo'] }}</h1>
-            {% if departamento['fotos'] %}
-                <!-- Carrusel de imágenes -->
-                <div id="propertyCarousel" class="carousel slide" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-                        {% for foto in departamento['fotos'] %}
-                        <div class="carousel-item {% if loop.first %}active{% endif %}">
-                            <img src="{{ url_for('static', filename='image/' + foto) }}" class="d-block w-100" alt="Imagen del departamento">
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Anterior</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Siguiente</span>
-                    </button>
-                </div>
-            {% endif %}
-            <p>{{ departamento['descripcion'] }}</p>
-            <p class="price">Precio: ${{ departamento['precio'] }} {{ departamento['moneda'] }}</p>
-            <p>Ambientes: {{ departamento['ambientes'] }}</p>
-            <p>Dormitorios: {{ departamento['dormitorios'] }}</p>
-            <p>Baños: {{ departamento['banos'] }}</p>
-            <p>Superficie: {{ departamento['superficie'] }} m²</p>
-            <p>Dirección: {{ departamento['direccion'] }}</p>
-            <div class="publisher-info">
-                <h3>Publicado por:</h3>
-                <p>Nombre: {{ publicador['nombre'] }}</p>
-                <p>Email: {{ publicador['email'] }}</p>
-                <!-- Botón WhatsApp -->
-                <a href="https://wa.me/{{ publicador['telefono'] }}?text=Hola, estoy interesado en tu departamento publicado en MyDeptos: {{ departamento['titulo'] }}" 
-                    target="_blank" class="whatsapp-btn" title="Contactar por WhatsApp">
-                    <img src="{{ url_for('static', filename='image/whatsapp.png') }}" alt="WhatsApp" class="whatsapp-icon" style="width:20px; height:20px;" aling-content="Contactar por WhatsApp" aling-around="true">
-                    <span class="whatsapp-text">Contactar por WhatsApp</span>
-                </a>
-            </div>
-            {% if is_authenticated %}
-            <button class="favorite-button {% if departamento.id in favoritos %}selected{% endif %}"
-                    onclick="toggleFavorite(this, '{{ departamento.id }}'); return false;"
-                    aria-label="{% if departamento.id in favoritos %}Eliminar de favoritos{% else %}Añadir a favoritos{% endif %}">
-                <span class="button-text">
-                {% if departamento.id in favoritos %}Eliminar de Favoritos{% else %}Añadir a Favoritos{% endif %}
-                </span>
-            </button>
-            {% endif %}
-        </div>
-
-        <!-- Contenedor del mapa -->
-        <div id="map" style="height: 400px; margin-top: 20px;"></div>
-
-        <!-- Sección de Reseñas -->
-        <div class="reviews-section">
-            <h2>Reseñas</h2>
-            {% if current_user.is_authenticated and current_user_id != departamento.propietario_id and not user_has_reviewed %}
-                <div class="card review-form-card">
-                    <h3>Deja tu reseña</h3>
-                    <form method="POST" action="{{ url_for('add_resena', departamento_id=departamento.id) }}">
-                        {{ resena_form.hidden_tag() }}
-                        <div class="form-group">
-                            {{ resena_form.puntaje.label(class="form-label") }}
-                            {{ resena_form.puntaje(class="form-control") }}
-                            {% if resena_form.puntaje.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in resena_form.puntaje.errors %}<span>{{ error }}</span>{% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="form-group">
-                            {{ resena_form.comentario.label(class="form-label") }}
-                            {{ resena_form.comentario(class="form-control", rows="3") }}
-                            {% if resena_form.comentario.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in resena_form.comentario.errors %}<span>{{ error }}</span>{% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        {{ resena_form.submit(class="btn btn-primary") }}
-                    </form>
-                </div>
-            {% elif current_user.is_authenticated and current_user_id == departamento.propietario_id %}
-                <p>No puedes reseñar tu propio departamento.</p>
-            {% elif user_has_reviewed %}
-                 <p>Ya has dejado una reseña para este departamento. Puedes editarla o eliminarla.</p>
-            {% elif not current_user.is_authenticated %}
-                <p><a href="{{ url_for('login') }}">Inicia sesión</a> para dejar una reseña.</p>
-            {% endif %}
-
-            <div class="existing-reviews">
-                {% if resenas %}
-                    {% for resena in resenas %}
-                        <div class="card review-card">
-                            <div class="review-header">
-                                <strong>{{ resena.calificador_nombre }}</strong>
-                                <span class="review-score">Puntaje: {{ resena.puntaje }}/5</span>
+        <div class="property-columns">
+            <!-- Primera columna: Galería tipo "imagen pegada" -->
+            <div class="property-main">
+                <div class="property-details">
+                    <h1>{{ departamento['titulo'] }}</h1>
+                    {% if departamento['fotos'] %}
+                    <div class="property-gallery-grid">
+                        {% set total = departamento['fotos']|length %}
+                        {% if total > 0 %}
+                            <div class="gallery-main-img">
+                                <img src="{{ url_for('static', filename='image/' + departamento['fotos'][0]) }}" alt="Imagen principal" />
                             </div>
-                            <p class="review-comment">{{ resena.comentario }}</p>
-                            <small class="review-date">Fecha: {{ resena.fecha_calificacion.strftime('%Y-%m-%d %H:%M') }}</small>
-                            {% if current_user.is_authenticated and resena.id_usuario_calificador == current_user_id %}
-                                <div class="review-actions">
-                                    <button class="btn btn-sm btn-secondary" onclick="openEditReviewModal('{{ resena.id_resena }}', '{{ resena.puntaje }}', '{{ resena.comentario }}')">Editar</button>
-                                    <form method="POST" action="{{ url_for('delete_resena', resena_id=resena.id_resena) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta reseña?');">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
-                                    </form>
+                            <div class="gallery-side-thumbs">
+                                {% for foto in departamento['fotos'][1:5] %}
+                                    <img src="{{ url_for('static', filename='image/' + foto) }}" class="gallery-thumb-img" alt="Miniatura {{ loop.index }}">
+                                {% endfor %}
+                                {% if total > 5 %}
+                                    <div class="gallery-thumb-more">
+                                        <span>Ver todas las fotos</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <p>{{ departamento['descripcion'] }}</p>
+                    <p class="price">Precio: ${{ departamento['precio'] }} {{ departamento['moneda'] }}</p>
+                    <p>Ambientes: {{ departamento['ambientes'] }}</p>
+                    <p>Dormitorios: {{ departamento['dormitorios'] }}</p>
+                    <p>Baños: {{ departamento['banos'] }}</p>
+                    <p>Superficie: {{ departamento['superficie'] }} m²</p>
+                    <p>Dirección: {{ departamento['direccion'] }}</p>
+                    <div class="publisher-info">
+                        <h3>Publicado por:</h3>
+                        <p>Nombre: {{ publicador['nombre'] }}</p>
+                        <p>Email: {{ publicador['email'] }}</p>
+                        <!-- Botón WhatsApp -->
+                        <a href="https://wa.me/{{ publicador['telefono'] }}?text=Hola, estoy interesado en tu departamento publicado en MyDeptos: {{ departamento['titulo'] }}" 
+                            target="_blank" class="whatsapp-btn" title="Contactar por WhatsApp">
+                            <img src="{{ url_for('static', filename='image/whatsapp.png') }}" alt="WhatsApp" class="whatsapp-icon" style="width:20px; height:20px;">
+                            <span class="whatsapp-text">Contactar por WhatsApp</span>
+                        </a>
+                    </div>
+                    {% if is_authenticated %}
+                    <button class="favorite-button {% if departamento.id in favoritos %}selected{% endif %}"
+                            onclick="toggleFavorite(this, '{{ departamento.id }}'); return false;"
+                            aria-label="{% if departamento.id in favoritos %}Eliminar de favoritos{% else %}Añadir a favoritos{% endif %}">
+                        <span class="button-text">
+                        {% if departamento.id in favoritos %}Eliminar de Favoritos{% else %}Añadir a Favoritos{% endif %}
+                        </span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Segunda columna: Mapa y reseñas -->
+            <div class="property-side">
+                <!-- Contenedor del mapa -->
+                <div id="map" style="height: 400px; margin-bottom: 20px;"></div>
+                <!-- Sección de Reseñas -->
+                <div class="reviews-section">
+                    <h2>Reseñas</h2>
+                    {% if current_user.is_authenticated and current_user_id != departamento.propietario_id and not user_has_reviewed %}
+                        <div class="card review-form-card custom-review-form">
+                            <h3>Deja tu reseña</h3>
+                            <form method="POST" action="{{ url_for('add_resena', departamento_id=departamento.id) }}">
+                                {{ resena_form.hidden_tag() }}
+                                <div class="form-group mb-2">
+                                    {{ resena_form.puntaje.label(class="form-label") }}
+                                    {{ resena_form.puntaje(class="form-control") }}
+                                    {% if resena_form.puntaje.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in resena_form.puntaje.errors %}<span>{{ error }}</span>{% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
+                                <div class="form-group mb-2">
+                                    {{ resena_form.comentario.label(class="form-label") }}
+                                    {{ resena_form.comentario(class="form-control", rows="3") }}
+                                    {% if resena_form.comentario.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in resena_form.comentario.errors %}<span>{{ error }}</span>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {{ resena_form.submit(class="btn btn-primary w-100") }}
+                            </form>
                         </div>
-                    {% endfor %}
-                {% else %}
-                    <p>Todavía no hay reseñas para este departamento.</p>
-                {% endif %}
+                    {% elif current_user.is_authenticated and current_user_id == departamento.propietario_id %}
+                        <p>No puedes reseñar tu propio departamento.</p>
+                    {% elif user_has_reviewed %}
+                        <p>Ya has dejado una reseña para este departamento. Puedes editarla o eliminarla.</p>
+                    {% elif not current_user.is_authenticated %}
+                        <p><a href="{{ url_for('login') }}">Inicia sesión</a> para dejar una reseña.</p>
+                    {% endif %}
+
+                    <div class="existing-reviews">
+                        {% if resenas %}
+                            {% for resena in resenas %}
+                                <div class="card review-card">
+                                    <div class="review-header">
+                                        <strong>{{ resena.calificador_nombre }}</strong>
+                                        <span class="review-score">Puntaje: {{ resena.puntaje }}/5</span>
+                                    </div>
+                                    <p class="review-comment">{{ resena.comentario }}</p>
+                                    <small class="review-date">Fecha: {{ resena.fecha_calificacion.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    {% if current_user.is_authenticated and resena.id_usuario_calificador == current_user_id %}
+                                        <div class="review-actions">
+                                            <button class="btn btn-sm btn-secondary" onclick="openEditReviewModal('{{ resena.id_resena }}', '{{ resena.puntaje }}', '{{ resena.comentario }}')">Editar</button>
+                                            <form method="POST" action="{{ url_for('delete_resena', resena_id=resena.id_resena) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta reseña?');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p>Todavía no hay reseñas para este departamento.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Fin Sección de Reseñas -->
             </div>
         </div>
-        <!-- Fin Sección de Reseñas -->
-
     </div>
 
     <!-- Modal para Editar Reseña -->

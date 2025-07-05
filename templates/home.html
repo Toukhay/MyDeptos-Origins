@@ -132,14 +132,22 @@
             </ul>
         </nav>
     </header>
-    <div class="main-content">
-        <div class="intro">
-            <h1>Encuentra tu próximo hogar en Oberá</h1>
-            {% if is_authenticated %}
-                <p>Esperamos que encuentres pronto lo que buscas, {{ user_name }}.</p>
-            {% endif %}
-        </div>
-        <div class="search-box">
+    <!-- Bienvenida arriba de todo, centrada, con espacio debajo del nav -->
+    <h1 class="welcome-title">
+        ¡Bienvenido!
+    </h1>
+    <p class="welcome-desc">
+        {% if is_authenticated and user_name %}
+            {{ user_name }}, el portal más completo para encontrar departamentos y casas en Oberá y alrededores.<br>
+            Explora, filtra y encuentra tu próximo hogar de manera fácil y segura.
+        {% else %}
+            El portal más completo para encontrar departamentos y casas en Oberá y alrededores.<br>
+            Explora, filtra y encuentra tu próximo hogar de manera fácil y segura.
+        {% endif %}
+    </p>
+    <div class="home-main-flex">
+        <!-- Filtro de búsqueda a la izquierda -->
+        <div class="filter-box">
             <h2>Filtro de búsqueda</h2>
             <form id="searchForm" action="{{ url_for('search') }}" method="get">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -181,73 +189,57 @@
                 <button type="submit" id="buscar-btn">Buscar</button>
             </form>
         </div>
-        <div class="summary-section">
-            <div class="summary-box">
-                <h3>Variedad de Propiedades</h3>
-                <p>Encuentra departamentos y casas en diferentes ubicaciones y precios.</p>
-            </div>
-            <div class="summary-box">
-                <h3>Filtros de Búsqueda</h3>
-                <p>Utiliza nuestros filtros para encontrar la propiedad que mejor se adapte a tus necesidades.</p>
-            </div>
-            <div class="summary-box">
-                <h3>Fácil Navegación</h3>
-                <p>Navega fácilmente por nuestra lista de propiedades y encuentra tu hogar ideal.</p>
-            </div>
-        </div>
-        <h2 class="listings-header">Últimos Departamentos</h2>
-        <div class="listings home-listings">
-            {% for depto in ultimos_departamentos %}
-            <div class="listing-card">
-                <div class="property-badge">Nuevo</div> <!-- Badge opcional -->
-                
-                <div class="carousel">
-                    <div class="carousel-inner">
-                        {% if depto[11] %}
-                            {% for image in depto[11] %}
-                                <img src="{{ url_for('static', filename='image/' ~ image) }}" alt="Imagen del departamento">
+        <!-- Contenido principal a la derecha -->
+        <div class="container home-bottom-container" style="margin-top: 1.2rem;">
+            <h2 class="listings-header">Últimos Departamentos</h2>
+            <div class="listings home-listings">
+                {% for depto in ultimos_departamentos %}
+                <div class="listing-card">
+                    <div class="property-badge">Nuevo</div>
+                    <div class="carousel">
+                        <div class="carousel-inner">
+                            {% if depto[11] %}
+                                {% for image in depto[11] %}
+                                    <img src="{{ url_for('static', filename='image/' ~ image) }}" alt="Imagen del departamento">
+                                {% endfor %}
+                            {% else %}
+                                <img src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada">
+                            {% endif %}
+                        </div>
+                        <button class="prev" onclick="prevImage(this)">&#10094;</button>
+                        <button class="next" onclick="nextImage(this)">&#10095;</button>
+                        <div class="carousel-dots">
+                            {% for i in range(depto[11]|length) %}
+                            <span class="dot" onclick="goToImage(this, '{{ i }}')"></span>
                             {% endfor %}
-                        {% else %}
-                            <img src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada">
-                        {% endif %}
+                        </div>
                     </div>
-                    <button class="prev" onclick="prevImage(this)">&#10094;</button>
-                    <button class="next" onclick="nextImage(this)">&#10095;</button>
-                    <div class="carousel-dots">
-                        {% for i in range(depto[11]|length) %}
-                        <span class="dot" onclick="goToImage(this, '{{ i }}')"></span>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="property-info"> <!-- Cambiado de 'listing-info' -->
-                    <div class="property-header">
-                        <h3>{{ depto[1] }}</h3>
-                        <span class="property-location">{{ depto[9] }}</span>
-                    </div>
-                    
-                    <p class="property-description">{{ depto[2][:150] }}{% if depto[2]|length > 150 %}...{% endif %}</p>
-                    
-                    <div class="property-details">
-                        <span class="price">${{ depto[3] }}</span>
-                        <span class="operation-type">{{ depto[4] }}</span>
-                    </div>
-                    
-                    <div class="property-actions">
-                        <button class="favorite-btn {% if depto[0] in favoritos %}selected{% endif %}" 
-                        onclick="toggleFavorite(this, '{{ depto[0] }}'); return false;">
-                        {% if depto[0] in favoritos %}❤️ Quitar de Favoritos{% else %}Añadir a Favoritos{% endif %}
-                        </button>
-                        <button class="view-btn" onclick="viewProperty('{{ depto[0] }}'); return false;">
-                            👁️ Ver
-                        </button>
+                    <div class="property-info">
+                        <div class="property-header">
+                            <h3>{{ depto[1] }}</h3>
+                            <span class="property-location">{{ depto[9] }}</span>
+                        </div>
+                        <p class="property-description">{{ depto[2][:150] }}{% if depto[2]|length > 150 %}...{% endif %}</p>
+                        <div class="property-details">
+                            <span class="price">${{ depto[3] }}</span>
+                            <span class="operation-type">{{ depto[4] }}</span>
+                        </div>
+                        <div class="property-actions">
+                            <button class="favorite-btn {% if depto[0] in favoritos %}selected{% endif %}" 
+                            onclick="toggleFavorite(this, '{{ depto[0] }}'); return false;">
+                            {% if depto[0] in favoritos %}❤️ Quitar de Favoritos{% else %}Añadir a Favoritos{% endif %}
+                            </button>
+                            <button class="view-btn" onclick="viewProperty('{{ depto[0] }}'); return false;">
+                                👁️ Ver
+                            </button>
+                        </div>
                     </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
-        <div class="view-listing-container">
-            <button class="view-listing-button" onclick="window.location.href='/listings'">Ver listado</button>
+            <div class="view-listing-container">
+                <button class="view-listing-button" onclick="window.location.href='/listings'">Ver listado</button>
+            </div>
         </div>
     </div>
     <div style="height: 50px;"></div>
@@ -316,16 +308,16 @@
 
         // Interceptar el envío del formulario de búsqueda si no está autenticado
         document.addEventListener('DOMContentLoaded', function() {
-            const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
             const searchForm = document.getElementById('searchForm');
             if (searchForm) {
-                searchForm.addEventListener('submit', function(e) {
-                    if (!isAuthenticated) {
-                        e.preventDefault();
-                        showAuthModal();
-                        return false;
-                    }
-                });
+                // Eliminar la restricción: ya no se bloquea el submit para no autenticados
+                // searchForm.addEventListener('submit', function(e) {
+                //     if (!isAuthenticated) {
+                //         e.preventDefault();
+                //         showAuthModal();
+                //         return false;
+                //     }
+                // });
             }
         });
     </script>
@@ -370,6 +362,145 @@
         font-size: 1rem;
         cursor: pointer;
     }
-    </style>
+
+    /* Estilos adicionales para la página de inicio */
+    /* Bienvenida grande y centrada */
+.welcome-title {
+    width: 100%;
+    text-align: center;
+    font-size: 3.2rem;
+    color: var(--primary-color);
+    margin: 5.5rem 0 1.2rem 0; /* Aumenta el margen superior para bajar el texto */
+    font-weight: 900;
+    letter-spacing: 0.01em;
+}
+.welcome-desc {
+    width: 100%;
+    text-align: center;
+    font-size: 1.35rem;
+    color: #444;
+    margin: 0 0 2.5rem 0;
+    font-weight: 400;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Layout principal: filtro chico, contenido grande */
+.home-main-flex {
+    display: flex;
+    flex-direction: row;
+    gap: 3.5rem;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 1700px;
+    margin: 0 auto;
+}
+.filter-box {
+    flex: 0 0 320px;
+    max-width: 340px;
+    min-width: 260px;
+    margin: 0;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(74,144,226,0.10), 0 1.5px 4px rgba(74,144,226,0.07);
+    border: 1.5px solid #e3eaf3;
+    padding: 2.2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    height: fit-content;
+}
+.container.home-bottom-container {
+    flex: 1 1 70%;
+    min-width: 380px;
+    max-width: 1100px;
+    margin: 0;
+    padding: 2.5rem 2.5rem 2rem 2.5rem;
+    border-radius: 18px;
+    box-shadow: 0 6px 32px rgba(74,144,226,0.13), 0 2px 8px rgba(74,144,226,0.09);
+}
+
+/* Ajustes de tarjetas de departamentos */
+.listing-card {
+    border-radius: 14px;
+    box-shadow: 0 4px 18px rgba(74,144,226,0.11);
+    padding: 0.5rem 0.5rem 1.2rem 0.5rem;
+    min-width: 260px;
+    max-width: 440px;
+    margin: 0 auto;
+}
+.property-info {
+    padding: 1.2rem 1rem 0.8rem 1rem;
+}
+.property-header h3 {
+    font-size: 1.18rem;
+}
+.property-description {
+    font-size: 1.02rem;
+}
+.price {
+    font-size: 1.18rem;
+}
+.operation-type {
+    font-size: 0.98rem;
+}
+
+/* Ajuste de grilla de departamentos */
+.listings {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+/* Responsive mejorado */
+@media (max-width: 1200px) {
+    .home-main-flex {
+        flex-direction: column; 
+        gap: 2rem; /* Reducir el espacio entre columnas */
+        max-width: 100vw;
+    }
+    .filter-box,
+    .container.home-bottom-container {
+        max-width: 100%;
+        width: 100%;
+    }
+    .filter-box {
+        margin-bottom: 2rem;
+    }
+    .container.home-bottom-container {
+        padding: 1.5rem 0.5rem 1.5rem 0.5rem;
+        margin-top: 0; 
+    }
+    .welcome-box {
+        padding: 2.2rem 0.5rem 1.5rem 0.5rem;
+    }
+    .listing-card {
+        max-width: 100%;
+    }
+}
+@media (max-width: 700px) {
+    .welcome-box h1 {
+        font-size: 2.1rem;
+    }
+    .welcome-box p {
+        font-size: 1.05rem;
+    }
+    .filter-box {
+        padding: 1.2rem 0.5rem;
+    }
+    .container.home-bottom-container {
+        /* padding: 0.5rem 0.2rem; */
+        margin-top: 0; /* Eliminar el margen superior de 1.2rem */
+        padding: 1.5rem;
+    }
+    .listing-card {
+        padding: 0.2rem 0.2rem 0.7rem 0.2rem;
+    }
+}
+
+/* ...resto de estilos existentes... */
+</style>
 </body>
 </html>

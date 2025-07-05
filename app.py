@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, request, session, f
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DecimalField, SelectField, IntegerField, HiddenField
 from flask_wtf.file import MultipleFileField, FileAllowed
-from wtforms.validators import DataRequired, Email, Length, NumberRange
+from wtforms.validators import DataRequired, Email, Length, NumberRange, EqualTo
 import bcrypt
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mysqldb import MySQL
@@ -16,13 +16,19 @@ from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager, current_user, UserMixin, login_user, logout_user
 import datetime # <--- AÑADIR ESTA IMPORTACIÓN
+from dotenv import load_dotenv
+from wtforms import ValidationError
+import re
+
+# Cargar variables de entorno desde .env
+load_dotenv()
 
 app = Flask(__name__, static_folder="static")
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = 'bdmydeptos'
-app.config['SECRET_KEY'] = 'clave_secreta'
+app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST', 'localhost')
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'root')
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', '')
+app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'bdmydeptos')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'clave_secreta')
 
 mysql = MySQL(app)
 csrf = CSRFProtect(app)  # Habilitar CSRF
@@ -69,8 +75,8 @@ setup_logger()
 # Función para enviar correos
 # -----------------------
 def send_email(to_email, subject, body):
-    sender_email = "mydeptos@gmail.com"
-    sender_password = "qhai btga vlfl wpyu"  # Verifica credenciales
+    sender_email = os.getenv('EMAIL_USER', 'mydeptos@gmail.com')
+    sender_password = os.getenv('EMAIL_PASSWORD', 'qhai btga vlfl wpyu')
 
     message = MIMEMultipart()
     message["From"] = sender_email
@@ -95,8 +101,38 @@ class RegisterForm(FlaskForm):
     username = StringField('Nombre de Usuario', validators=[DataRequired()])
     email = StringField('Correo Electrónico', validators=[DataRequired(), Email()])
     password = PasswordField('Contraseña', validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField('Repetir Contraseña', validators=[
+        DataRequired(),
+        EqualTo('password', message='Revisa este campo, las contraseñas no coinciden')
+    ])
     telefono = StringField('Teléfono', validators=[DataRequired(), Length(max=30)])
     submit = SubmitField('Registrarse')
+
+    def validate_username(self, field):
+        # Solo letras y números, sin espacios ni símbolos especiales
+        if not re.match(r'^[A-Za-z0-9]+$', field.data):
+            raise ValidationError('El nombre de usuario solo puede contener letras y números, sin espacios ni símbolos/caracteres especiales.')
+
+    def validate_email(self, field):
+        # No espacios y debe ser un email válido
+        if ' ' in field.data:
+            raise ValidationError('El correo electrónico no puede contener espacios.')
+        # Validar dominio común (gmail, hotmail, outlook, yahoo, etc)
+        if not re.match(r'^[^@]+@[^@]+\.[^@]+$', field.data):
+            raise ValidationError('Ingresa un correo electrónico válido.')
+        # Buscar emails similares en la base de datos
+        cur = mysql.connection.cursor()
+        # Buscar emails que contengan la parte antes del @
+        username_part = field.data.split('@')[0]
+        cur.execute("SELECT email FROM usuario WHERE email LIKE %s", (f"%{username_part}%",))
+        similar = cur.fetchone()
+        cur.close()
+        if similar:
+            raise ValidationError('Ya existe una dirección o email parecido, intenta con otro.')
+
+    def validate_confirm_password(self, field):
+        if field.data != self.password.data:
+            raise ValidationError('Revisa este campo, las contraseñas no coinciden')
 
 class LoginForm(FlaskForm):
     username = StringField('Nombre de Usuario', validators=[DataRequired()])
@@ -188,21 +224,19 @@ def static_files(filename):
 # -----------------------
 @app.route('/search', methods=['GET'])
 def search():
+    # Obtener filtros desde la URL
     tipo_publicacion = request.args.get('tipo_publicacion')
-    rol_inmobiliario = request.args.get('rol_inmobiliario')
     precio_min = request.args.get('precio_min')
     precio_max = request.args.get('precio_max')
-    localidad = request.args.get('localidad')
     ambientes = request.args.get('ambientes')
 
-    cursor = mysql.connection.cursor()
-    cursor.execute('SELECT id_localidad, nombre FROM localidad')
-    localidades = cursor.fetchall()
+    page = int(request.args.get('page', 1))
+    per_page = 6  
+    offset = (page - 1) * per_page
 
+    # Construir la consulta dinámica
     query = '''
-        SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, 
-            d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir,
-            GROUP_CONCAT(f.url_foto) AS url_foto
+        SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, GROUP_CONCAT(f.url_foto) AS fotos
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
         WHERE 1=1
@@ -210,38 +244,82 @@ def search():
     params = []
 
     if tipo_publicacion:
-        query += " AND d.tipo_publicacion = %s"
+        query += ' AND d.tipo_publicacion = %s'
         params.append(tipo_publicacion)
-    if rol_inmobiliario:
-        query += " AND d.rol_inmo_dir = %s"
-        params.append(rol_inmobiliario)
     if precio_min:
-        query += " AND d.precio >= %s"
+        query += ' AND d.precio >= %s'
         params.append(precio_min)
     if precio_max:
-        query += " AND d.precio <= %s"
+        query += ' AND d.precio <= %s'
         params.append(precio_max)
-    if localidad:
-        query += " AND d.id_localidad = %s"
-        params.append(localidad)
     if ambientes:
-        query += " AND d.ambientes = %s"
+        query += ' AND d.ambientes = %s'
         params.append(ambientes)
 
-    query += " GROUP BY d.id_departamento"
+    query += ' GROUP BY d.id_departamento'
+    query += ' LIMIT %s OFFSET %s'
+    params.extend([per_page, offset])
 
+    cursor = mysql.connection.cursor()
     cursor.execute(query, params)
     resultados = cursor.fetchall()
     cursor.close()
 
-    # Convertir las fotos en lista (si existen)
-    resultados = [
-        (id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir,
-        fotos.split(',') if fotos else [])
-        for id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos in resultados
-    ]
+    # Obtener el total de resultados para la paginación
+    count_query = 'SELECT COUNT(*) FROM departamento d WHERE 1=1'
+    count_params = []
+    if tipo_publicacion:
+        count_query += ' AND d.tipo_publicacion = %s'
+        count_params.append(tipo_publicacion)
+    if precio_min:
+        count_query += ' AND d.precio >= %s'
+        count_params.append(precio_min)
+    if precio_max:
+        count_query += ' AND d.precio <= %s'
+        count_params.append(precio_max)
+    if ambientes:
+        count_query += ' AND d.ambientes = %s'
+        count_params.append(ambientes)
 
-    return render_template('search_results.html', resultados=resultados, localidades=localidades)
+    cursor = mysql.connection.cursor()
+    cursor.execute(count_query, count_params)
+    total = cursor.fetchone()[0]
+    cursor.close()
+    total_pages = (total + per_page - 1) // per_page
+
+    # Procesar resultados with manejo seguro de precios
+    resultados_procesados = []
+    for row in resultados:
+        id_departamento, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, fotos = row
+        
+        # Manejo seguro de la conversión de precio
+        try:
+            if precio is not None:
+                if isinstance(precio, (int, float)):
+                    precio_float = float(precio)
+                elif hasattr(precio, '__float__'):  # Para objetos Decimal
+                    precio_float = float(precio)
+                else:
+                    precio_float = float(str(precio))  # Conversión desde string
+            else:
+                precio_float = 0.0
+        except (ValueError, TypeError) as e:
+            app.logger.warning(f"Error convirtiendo precio para departamento {id_departamento}: {precio}, error: {e}")
+            precio_float = 0.0
+        
+        resultados_procesados.append((
+            id_departamento, titulo, descripcion, tipo_publicacion, 
+            precio_float, moneda, ambientes, dormitorios, banos, superficie, direccion, 
+            fotos.split(',') if fotos else []
+        ))
+
+    # Renderizar resultados y paginación
+    return render_template(
+        'search_results.html',
+        resultados=resultados_procesados,
+        page=page,
+        total_pages=total_pages
+    )
 
 # -----------------------
 # Rutas de autenticación
@@ -337,7 +415,8 @@ def reset_password(token):
     return render_template('resetpassword.html')
 
 # -----------------------
-# Ruta de registro
+# Ruta de registro + campo de confirmacion en mi archivo register.html
+
 # -----------------------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -425,6 +504,21 @@ class EditProfileForm(FlaskForm):
     telefono = StringField('Nuevo Teléfono', validators=[Length(max=30)])
     submit = SubmitField('Actualizar Perfil')
 
+    def validate_email(self, field):
+        if field.data:
+            if ' ' in field.data:
+                raise ValidationError('El correo electrónico no puede contener espacios.')
+            if not re.match(r'^[^@]+@[^@]+\.[^@]+$', field.data):
+                raise ValidationError('Ingresa un correo electrónico válido.')
+            # Verificar si el email ya está en uso por otro usuario
+            user_id = session.get('user_id')
+            cur = mysql.connection.cursor()
+            cur.execute("SELECT id FROM usuario WHERE email = %s AND id != %s", (field.data, user_id))
+            existing_email = cur.fetchone()
+            cur.close()
+            if existing_email:
+                raise ValidationError('Ya existe o ya esta ocupado este mail.')
+
 @app.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
     if 'user_id' not in session:
@@ -433,9 +527,34 @@ def edit_profile():
     
     user_id = session['user_id']
     cursor = mysql.connection.cursor()
-    cursor.execute('SELECT name, email, telefono FROM usuario WHERE id = %s', (user_id,))
+    cursor.execute('SELECT name, email, telefono, fecha_ultima_modificacion FROM usuario WHERE id = %s', (user_id,))
     user = cursor.fetchone()
     cursor.close()
+
+    # user = (name, email, telefono, fecha_ultima_modificacion)
+    fecha_ultima_modificacion = user[3]
+    now = datetime.datetime.now()
+    puede_modificar = True
+    dias_restantes = 0
+
+    if fecha_ultima_modificacion:
+        # Si es string, intenta convertir a datetime
+        if isinstance(fecha_ultima_modificacion, str):
+            try:
+                fecha_ultima_modificacion = datetime.datetime.strptime(fecha_ultima_modificacion, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                try:
+                    fecha_ultima_modificacion = datetime.datetime.strptime(fecha_ultima_modificacion, "%Y-%m-%d")
+                except Exception:
+                    fecha_ultima_modificacion = None
+        # Si es date, conviértelo a datetime
+        if isinstance(fecha_ultima_modificacion, datetime.date) and not isinstance(fecha_ultima_modificacion, datetime.datetime):
+            fecha_ultima_modificacion = datetime.datetime.combine(fecha_ultima_modificacion, datetime.time.min)
+        if isinstance(fecha_ultima_modificacion, datetime.datetime):
+            diferencia = now - fecha_ultima_modificacion
+            if diferencia.days < 2:
+                puede_modificar = False
+                dias_restantes = 2 - diferencia.days
 
     form = EditProfileForm()
     if request.method == 'GET':
@@ -443,41 +562,35 @@ def edit_profile():
         form.email.data = user[1]
         form.telefono.data = user[2] if user[2] is not None else ""
 
+    if not puede_modificar:
+        flash(f'Solo puedes modificar tus datos cada 2 días. Intenta nuevamente en {dias_restantes} día(s).', 'warning')
+        return render_template('edit_profile.html', form=form, puede_modificar=puede_modificar)
+
     if form.validate_on_submit():
         new_username = form.username.data if form.username.data else user[0]
         new_email = form.email.data if form.email.data else user[1]
         new_telefono = form.telefono.data if form.telefono.data else ""
         new_password = form.password.data
-        
-        cursor = mysql.connection.cursor()
-        cursor.execute('SELECT id FROM usuario WHERE name = %s AND id != %s', (new_username, user_id))
-        existing_user = cursor.fetchone()
-        if existing_user:
-            flash(f'El nombre de usuario "{new_username}" ya está en uso. Por favor, elige otro.', 'danger')
-            return render_template('edit_profile.html', form=form)
-        
-        cursor.execute('SELECT id FROM usuario WHERE email = %s AND id != %s', (new_email, user_id))
-        existing_email = cursor.fetchone()
-        if existing_email:
-            flash(f'El correo electrónico "{new_email}" ya está en uso. Por favor, elige otro.', 'danger')
-            return render_template('edit_profile.html', form=form)
-        
+
         if new_password:
             hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-            cursor.execute('UPDATE usuario SET name = %s, email = %s, password = %s, telefono = %s WHERE id = %s', 
+            cursor = mysql.connection.cursor()
+            cursor.execute('UPDATE usuario SET name = %s, email = %s, password = %s, telefono = %s, fecha_ultima_modificacion = NOW() WHERE id = %s', 
                         (new_username, new_email, hashed_password, new_telefono, user_id))
+            mysql.connection.commit()
+            cursor.close()
         else:
-            cursor.execute('UPDATE usuario SET name = %s, email = %s, telefono = %s WHERE id = %s', 
+            cursor = mysql.connection.cursor()
+            cursor.execute('UPDATE usuario SET name = %s, email = %s, telefono = %s, fecha_ultima_modificacion = NOW() WHERE id = %s', 
                         (new_username, new_email, new_telefono, user_id))
-        
-        mysql.connection.commit()
-        cursor.close()
+            mysql.connection.commit()
+            cursor.close()
         
         session['user_name'] = new_username
         flash('Perfil actualizado con éxito', 'success')
-        return redirect(url_for('user_panel'))  # <-- Redirige al panel de usuario
+        return redirect(url_for('user_panel'))
     
-    return render_template('edit_profile.html', form=form)
+    return render_template('edit_profile.html', form=form, puede_modificar=puede_modificar)
 
 @app.route('/generate_password')
 def generate_password():
@@ -492,14 +605,26 @@ def about():
 
 @app.route('/listings')
 def listings():
+    page = int(request.args.get('page', 1))
+    per_page = 6
+    offset = (page - 1) * per_page
+
     cursor = mysql.connection.cursor()
+    # Consulta paginada
     cursor.execute('''
         SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir, GROUP_CONCAT(f.url_foto) AS fotos
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
         GROUP BY d.id_departamento
-    ''')
+        LIMIT %s OFFSET %s
+    ''', (per_page, offset))
     departamentos = cursor.fetchall()
+
+    # Obtener el total de departamentos para paginación
+    cursor.execute('SELECT COUNT(*) FROM departamento')
+    total = cursor.fetchone()[0]
+    total_pages = (total + per_page - 1) // per_page
+
     cursor.close()
 
     # Convertir las fotos en una lista
@@ -518,7 +643,14 @@ def listings():
         favoritos = [row[0] for row in cursor.fetchall()]
         cursor.close()
 
-    return render_template('listings.html', departamentos=departamentos, favoritos=favoritos, is_authenticated=is_authenticated)
+    return render_template(
+        'listings.html',
+        departamentos=departamentos,
+        favoritos=favoritos,
+        is_authenticated=is_authenticated,
+        page=page,
+        total_pages=total_pages
+    )
 
 @app.route('/publish_depto', methods=['GET', 'POST'])
 def publish_depto():
@@ -663,8 +795,8 @@ def view_property(property_id):
     cursor = mysql.connection.cursor()
     cursor.execute('''
         SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, 
-               d.superficie, d.direccion, d.rol_inmo_dir, GROUP_CONCAT(f.url_foto) AS fotos, 
-               c.latitud, c.longitud, u.id AS user_id, u.name AS user_name, u.email AS user_email, u.telefono AS user_telefono
+            d.superficie, d.direccion, d.rol_inmo_dir, GROUP_CONCAT(f.url_foto) AS fotos, 
+            c.latitud, c.longitud, u.id AS user_id, u.name AS user_name, u.email AS user_email, u.telefono AS user_telefono
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
         LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento
@@ -743,9 +875,9 @@ def view_property(property_id):
 
     cursor.close()
     return render_template('viewProperty.html', departamento=departamento, publicador=publicador,
-                           resenas=resenas, resena_form=resena_form, edit_resena_form=edit_resena_form,
-                           current_user_id=current_user_id, user_has_reviewed=user_has_reviewed,
-                           user_review_id=user_review_id, is_authenticated=is_authenticated, favoritos=favoritos)
+                        resenas=resenas, resena_form=resena_form, edit_resena_form=edit_resena_form,
+                        current_user_id=current_user_id, user_has_reviewed=user_has_reviewed,
+                        user_review_id=user_review_id, is_authenticated=is_authenticated, favoritos=favoritos)
 
 @app.route('/departamento/<int:departamento_id>/add_resena', methods=['POST'])
 def add_resena(departamento_id):
@@ -1141,7 +1273,7 @@ def notifications():
         # Asegúrate de que los nombres de las columnas coincidan exactamente con tu tabla de notificaciones
         cursor.execute('''
             SELECT id_notificacion, tipo_notificacion, mensaje, id_departamento_ref, 
-                   id_resena_ref, fecha_envio, leida
+                id_resena_ref, fecha_envio, leida
             FROM notificaciones
             WHERE id_usuario_receptor = %s
             ORDER BY fecha_envio DESC
@@ -1224,7 +1356,7 @@ def delete_notification(notification_id):
         cursor = mysql.connection.cursor()
         # Verificar que la notificación pertenece al usuario antes de eliminar
         cursor.execute("DELETE FROM notificaciones WHERE id_notificacion = %s AND id_usuario_receptor = %s", 
-                       (notification_id, user_id))
+                    (notification_id, user_id))
         mysql.connection.commit()
 
         if cursor.rowcount > 0:

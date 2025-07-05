@@ -99,6 +99,18 @@ nav {
     align-items: flex-start;
 }
 
+/* Ajuste para que ambas cards de la columna izquierda tengan el mismo ancho */
+.container.profile-container,
+.container.notifications-history-container {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    box-sizing: border-box;
+}
+
 .container.full-width {
     flex: 1 1 70%;
     display: grid;
@@ -137,33 +149,42 @@ nav {
     margin-bottom: 2rem;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    text-align: left;
 }
 
-.profile-info h2 {
+.profile-title {
     color: var(--primary-color);
     margin-bottom: 1rem;
     font-size: 1.5rem;
+    text-align: left;
+    width: 100%;
 }
 
-.profile-info p {
+.profile-fields {
+    width: 100%;
+    text-align: left;
+}
+
+.profile-fields p {
     margin: 0.3rem 0;
     color: var(--secondary-color);
     font-size: 1rem;
-    text-align: center;
+    text-align: left;
 }
 
 .btn-group {
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
     margin-top: 1.5rem;
     width: 100%;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 .btn-group .btn {
     flex: 1 1 45%;
     min-width: 120px;
+    text-align: center;
 }
 
 /* Carrusel de imágenes */
@@ -349,6 +370,97 @@ footer {
     text-align: left;
     font-size: 1.75rem;
     color: var(--primary-color);
+}
+
+/* Historial de notificaciones */
+.notifications-history {
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 1.2rem 1rem 1rem 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.notifications-history h2 {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.notifications-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+}
+
+.notification-item {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(74,144,226,0.07);
+    padding: 0.7rem 0.8rem 0.5rem 0.8rem;
+    margin-bottom: 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.notification-item.unread {
+    border-left: 4px solid #4A90E2;
+    background: #eaf4ff;
+}
+
+.notification-content p {
+    margin: 0 0 0.2rem 0;
+    color: #333;
+    font-size: 1rem;
+}
+
+.notification-content small {
+    color: #888;
+    font-size: 0.92rem;
+}
+
+.notif-btn {
+    margin-top: 0.4rem;
+    margin-right: 0.5rem;
+    font-size: 0.95rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-info.notif-btn {
+    background: #4A90E2;
+    color: #fff;
+    border: none;
+}
+
+.btn-info.notif-btn:hover {
+    background: #357ABD;
+    color: #fff;
+}
+
+.btn-outline-secondary.notif-btn {
+    background: #fff;
+    color: #4A90E2;
+    border: 1px solid #4A90E2;
+}
+
+.btn-outline-secondary.notif-btn:hover {
+    background: #eaf4ff;
+    color: #357ABD;
+    border: 1px solid #357ABD;
+}
+
+.notifications-actions {
+    margin-top: 1rem;
+    text-align: left;
+}
+
+.notifications-actions .btn {
+    width: auto;
+    min-width: 180px;
 }
 
 /* Responsive */

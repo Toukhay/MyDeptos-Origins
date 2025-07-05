@@ -108,6 +108,83 @@
             background-color: #6c3483;
             color: #fff;
         }
+        /* Nuevos estilos para mejorar la alineación y diseño del panel de usuario */
+        .profile-title {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .profile-fields {
+            margin-bottom: 15px;
+            color: #34495e;
+        }
+
+        .notifications-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .notification-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notif-btn {
+            margin-left: 10px;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-align: center;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-align: center;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-align: center;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
     </style>
 </head>
 <body class="user-panel-page">
@@ -142,10 +219,12 @@
         <div class="user-panel-left-column">
             <div class="container profile-container">
                 <div class="card profile-info">
-                    <h2>Bienvenido, {{ user_data[0] }}</h2>
-                    <p><strong>Email:</strong> {{ user_data[1] }}</p>
-                    <p><strong>Fecha de Registro:</strong> {{ user_data[2].strftime('%Y-%m-%d %H:%M:%S') if user_data[2] else 'No disponible' }}</p>
-                    <p><strong>Teléfono:</strong> {{ user_data[3] if user_data[3] else 'No especificado' }}</p>
+                    <h2 class="profile-title">Bienvenido, {{ user_data[0] }}</h2>
+                    <div class="profile-fields">
+                        <p><strong>Email:</strong> {{ user_data[1] }}</p>
+                        <p><strong>Fecha de Registro:</strong> {{ user_data[2].strftime('%Y-%m-%d %H:%M:%S') if user_data[2] else 'No disponible' }}</p>
+                        <p><strong>Teléfono:</strong> {{ user_data[3] if user_data[3] else 'No especificado' }}</p>
+                    </div>
                     <div class="btn-group">
                         <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Editar Perfil</a>
                         <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar Sesión</a>
@@ -164,20 +243,20 @@
                                         <p>{{ notif.mensaje }}</p>
                                         <small>Recibido: {{ notif.fecha_envio.strftime('%Y-%m-%d %H:%M') }}</small>
                                         {% if notif.id_departamento_ref %}
-                                            <a href="{{ url_for('view_property', property_id=notif.id_departamento_ref) }}" class="btn btn-sm btn-info">Ver Departamento</a>
+                                            <a href="{{ url_for('view_property', property_id=notif.id_departamento_ref) }}" class="btn btn-sm btn-info notif-btn">Ver Departamento</a>
                                         {% endif %}
                                     </div>
                                     {% if not notif.leida %}
                                      <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notif.id) }}" class="mark-read-form">
                                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                         <button type="submit" class="btn btn-sm btn-outline-secondary">Marcar como leída</button>
+                                         <button type="submit" class="btn btn-sm btn-outline-secondary notif-btn">Marcar como leída</button>
                                      </form>
                                     {% endif %}
                                 </li>
                             {% endfor %}
                         </ul>
                         <div class="notifications-actions">
-                            <a href="{{ url_for('notifications') }}" class="btn btn-secondary">Ver todas las notificaciones</a>
+                            <a href="{{ url_for('notifications') }}" class="btn btn-secondary notif-btn">Ver todas las notificaciones</a>
                         </div>
                     {% else %}
                         <p>No tienes notificaciones.</p>

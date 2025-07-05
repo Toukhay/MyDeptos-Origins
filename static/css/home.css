@@ -11,7 +11,7 @@ body {
 
 .home-page .container {
     max-width: 1200px;
-    margin: 4rem auto;
+    margin: 10rem auto;
     padding: 2rem;
     background-color: white;
     border-radius: var(--border-radius);
@@ -639,5 +639,351 @@ body {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* Layout para el primer container en dos columnas */
+.home-top-container {
+    max-width: 1100px;
+    margin: 6rem auto 1.2rem auto;
+    padding: 0;
+    background: transparent;
+    border-radius: var(--border-radius);
+    box-shadow: none;
+    min-height: 340px;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+}
+
+.home-top-columns.home-top-columns-card {
+    display: flex;
+    flex-direction: row;
+    gap: 2.5rem;
+    align-items: stretch;
+    min-height: 340px;
+    width: 100%;
+    justify-content: center;
+}
+
+.card-style {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(74,144,226,0.10), 0 1.5px 4px rgba(74,144,226,0.07);
+    border: 1.5px solid #e3eaf3;
+    padding: 2.2rem 2.2rem 2.2rem 2.2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 340px;
+    width: 100%;
+    min-height: 340px;
+    max-width: 430px;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.home-top-left.card-style {
+    margin-right: 0;
+}
+
+.home-top-right.card-style {
+    margin-left: 0;
+}
+
+.modern-intro {
+    margin-bottom: 1.2rem;
+    text-align: left;
+    width: 100%;
+}
+
+.modern-intro h1 {
+    font-size: 2.1rem;
+    color: var(--primary-color);
+    margin-bottom: 0.3rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.intro-desc {
+    font-size: 1.08rem;
+    color: #444;
+    margin-bottom: 0.5rem;
+    font-weight: 400;
+}
+
+.intro-highlight {
+    font-size: 1.08rem;
+    color: #222;
+    font-weight: bold;
+    margin: 0.2rem 0 0.5rem 0;
+    letter-spacing: 0.01em;
+}
+
+.modern-search-box {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+    background: #f6fafd;
+    padding: 1.2rem 1.2rem 1.2rem 1.2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(74,144,226,0.07);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.modern-search-box h2 {
+    text-align: center;
+    font-size: 1.18rem;
+    margin-bottom: 1rem;
+}
+
+.modern-summary-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: flex-start;
+}
+
+.modern-summary-section .summary-box {
+    width: 100%;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(74,144,226,0.07);
+    padding: 0.9rem 1rem 0.8rem 1rem;
+    text-align: left;
+    font-size: 0.98rem;
+    color: #333;
+    min-height: 55px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-bottom: 0;
+}
+
+.modern-summary-section .summary-box h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+    font-size: 1.01rem;
+    margin-bottom: 0.2rem;
+}
+
+.modern-summary-section .summary-box p {
+    margin: 0.1rem 0 0 0;
+    color: #555;
+    line-height: 1.35;
+    font-size: 0.95rem;
+}
+
+/* Caja horizontal superior */
+.welcome-box {
+    width: 92%;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(74,144,226,0.10), 0 1.5px 4px rgba(74,144,226,0.07);
+    border: 1.5px solid #e3eaf3;
+    padding: 1.5rem 2.2rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.welcome-box h1 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.welcome-box p {
+    font-size: 1.08rem;
+    color: #444;
+    margin: 0;
+    font-weight: 400;
+}
+
+/* Layout para las dos columnas verticales */
+.home-top-3columns {
+    display: flex;
+    flex-direction: row;
+    gap: 2.5rem;
+    width: 100%;
+    align-items: stretch;
+    justify-content: center;
+}
+
+/* Caja filtro de búsqueda */
+.filter-box {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(74,144,226,0.10), 0 1.5px 4px rgba(74,144,226,0.07);
+    border: 1.5px solid #e3eaf3;
+    padding: 2rem 1.5rem;
+    min-width: 320px;
+    max-width: 420px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+.filter-box h2 {
+    text-align: center;
+    font-size: 1.18rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.filter-box form {
+    width: 100%;
+}
+
+.filter-box .form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-box label {
+    margin-bottom: 0.3rem;
+    color: #333;
+    font-size: 1rem;
+}
+
+.filter-box input,
+.filter-box select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+#buscar-btn {
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.7rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    width: 100%;
+}
+
+#buscar-btn:hover {
+    background: #357ABD;
+}
+
+/* Caja resumen vertical derecha */
+.summary-box-vertical {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(74,144,226,0.10), 0 1.5px 4px rgba(74,144,226,0.07);
+    border: 1.5px solid #e3eaf3;
+    padding: 2rem 1.5rem;
+    min-width: 320px;
+    max-width: 420px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 1.2rem;
+}
+
+.summary-box {
+    background: #f6fafd;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(74,144,226,0.07);
+    padding: 1rem 1rem 0.8rem 1rem;
+    text-align: left;
+    font-size: 0.98rem;
+    color: #333;
+    min-height: 55px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-bottom: 0;
+}
+
+.summary-box h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+    font-size: 1.01rem;
+    margin-bottom: 0.2rem;
+}
+
+.summary-box p {
+    margin: 0.1rem 0 0 0;
+    color: #555;
+    line-height: 1.35;
+    font-size: 0.95rem;
+}
+
+/* Elimina/reduce reglas de .summary-section si existen */
+.summary-section {
+    display: contents;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .home-top-container {
+        padding: 0;
+        min-height: unset;
+    }
+    .home-top_columns {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .home-top-left, .home-top-right {
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+    }
+    .home-top-left .search-box {
+        max-width: 100%;
+        min-height: unset;
+    }
+    .summary-section .summary-box {
+        min-height: unset;
+    }
+    .home-top-columns.full-height-columns {
+        flex-direction: column;
+        height: unset;
+        min-height: unset;
+    }
+    .stretch-col, .home-top-left.stretch-col, .home-top-right.stretch-col {
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 1.2rem;
+        border-radius: 0;
+        border-right: none;
+        border-bottom: 1.5px solid #e3eaf3;
+    }
+    .home-top-right.stretch-col {
+        border-bottom: none;
+    }
+    .home-top-columns.home-top-columns-card {
+        flex-direction: column;
+        gap: 1.2rem;
+        min-height: unset;
+    }
+    .card-style, .home-top-left.card-style, .home-top-right.card-style {
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 1.2rem;
+        border-radius: 10px;
+        margin: 0 0 1.2rem 0;
     }
 }

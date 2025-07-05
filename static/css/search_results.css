@@ -233,10 +233,10 @@ button:hover {
 }
 
 .results {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    justify-items: center;
     margin-top: 2rem;
 }
 
@@ -413,20 +413,24 @@ button:hover {
 }
 
 .listing {
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-    border-radius: var(--border-radius);
+    width: 320px;
+    max-width: 100%;
+    min-width: 280px;
+    margin: 0;
+    /* Elimina flex para que no se estiren */
+    display: block;
+    height: auto;
+    transition: none; /* Elimina animaciones de movimiento */
     box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+    background: white;
     overflow: hidden;
-    width: 100%;
-    max-width: 300px;
-    margin: 1rem;
-    transition: transform 0.3s ease;
 }
 
+/* Opcional: elimina el efecto hover de movimiento */
 .listing:hover {
-    transform: translateY(-5px);
+    transform: none;
+    box-shadow: 0 2px 5px rgba(74, 144, 226, 0.15);
 }
 
 .carousel {
@@ -524,10 +528,10 @@ button.prev:hover, button.next:hover {
 }
 
 .results {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    justify-items: center;
     margin-top: 2rem;
 }
 

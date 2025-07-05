@@ -373,3 +373,291 @@ button:hover {
     margin-right: 0.7rem;
     vertical-align: middle;
 }
+
+/* Layout de columnas para la vista de propiedad */
+.property-columns {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+.property-main {
+    flex: 1 1 55%;
+    min-width: 340px;
+}
+.property-side {
+    flex: 1 1 40%;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Mejoras para la sección de reseñas */
+.reviews-section {
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 1.5rem 1.2rem;
+    margin-top: 0;
+}
+
+.reviews-section h2 {
+    color: var(--primary-color);
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.custom-review-form {
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(74,144,226,0.08);
+    padding: 1.2rem 1rem 1rem 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.custom-review-form h3 {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.custom-review-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.custom-review-form .form-label {
+    font-weight: 500;
+    color: var(--secondary-color);
+    margin-bottom: 0.3rem;
+}
+
+.custom-review-form .form-control {
+    border-radius: 8px;
+    border: 1px solid #cfd8dc;
+    font-size: 1rem;
+    padding: 0.5rem 0.8rem;
+}
+
+.custom-review-form .btn-primary {
+    background: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    padding: 0.6rem 0;
+    margin-top: 0.5rem;
+    width: 100%;
+}
+
+.custom-review-form .btn-primary:hover {
+    background: #357ABD;
+}
+
+.invalid-feedback {
+    color: #d32f2f;
+    font-size: 0.95rem;
+    margin-top: 0.2rem;
+}
+
+.existing-reviews {
+    margin-top: 1.5rem;
+}
+
+.review-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(74,144,226,0.07);
+    padding: 1rem 1rem 0.7rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+}
+
+.review-score {
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.review-comment {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 0.3rem;
+}
+
+.review-date {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.review-actions {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.property-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1.2rem;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.property-gallery .gallery-img {
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(74,144,226,0.08);
+    border: 1px solid #e0e0e0;
+    background: #fafbfc;
+    transition: transform 0.18s;
+    cursor: pointer;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0;
+}
+
+.property-gallery .gallery-img:hover {
+    transform: scale(1.07);
+    box-shadow: 0 4px 12px rgba(74,144,226,0.18);
+}
+
+/* Galería tipo "imagen pegada" */
+.property-gallery-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    margin-bottom: 1.2rem;
+    width: 100%;
+    min-height: 180px;
+}
+
+.gallery-main-img {
+    flex: 2 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+.gallery-main-img img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 1px 6px rgba(74,144,226,0.10);
+}
+
+.gallery-side-thumbs {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.gallery-thumb-img {
+    width: 100%;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(74,144,226,0.08);
+    border: 1px solid #e0e0e0;
+    background: #fafbfc;
+    cursor: pointer;
+    transition: transform 0.18s;
+}
+
+.gallery-thumb-img:hover {
+    transform: scale(1.04);
+    box-shadow: 0 4px 12px rgba(74,144,226,0.18);
+}
+
+.gallery-thumb-more {
+    width: 100%;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(74,144,226,0.08);
+    border-radius: 8px;
+    color: #4A90E2;
+    font-weight: bold;
+    font-size: 1rem;
+    border: 1px solid #e0e0e0;
+    cursor: pointer;
+}
+
+.gallery-thumb-more span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Ajuste para columnas principales */
+.property-columns {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.property-main {
+    flex: 1 1 55%;
+    min-width: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.property-side {
+    flex: 1 1 40%;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: stretch;
+}
+
+/* Responsive para galería */
+@media (max-width: 900px) {
+    .property-columns {
+        flex-direction: column;
+    }
+    .property-main, .property-side {
+        min-width: 0;
+        width: 100%;
+    }
+    .property-side {
+        margin-top: 2rem;
+    }
+    .property-gallery-grid {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .gallery-main-img img {
+        height: 160px;
+    }
+    .gallery-side-thumbs {
+        flex-direction: row;
+        gap: 8px;
+    }
+    .gallery-thumb-img, .gallery-thumb-more {
+        width: 60px;
+        height: 40px;
+    }
+}
