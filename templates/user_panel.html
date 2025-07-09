@@ -317,6 +317,23 @@
             </div>
         </div> <!-- Fin user-panel-right-column -->
     </div> <!-- Fin container-wrapper -->
+    {% if total_pages > 1 %}
+<nav class="pagination-nav">
+    <ul class="pagination">
+        <li class="page-item{% if page == 1 %} disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('user_panel', page=page-1) }}" tabindex="-1">Anterior</a>
+        </li>
+        {% for p in range(1, total_pages + 1) %}
+            <li class="page-item{% if p == page %} active{% endif %}">
+                <a class="page-link" href="{{ url_for('user_panel', page=p) }}">{{ p }}</a>
+            </li>
+        {% endfor %}
+        <li class="page-item{% if page == total_pages %} disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('user_panel', page=page+1) }}">Siguiente</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
     <footer>
         <div class="footer-content">
             <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>

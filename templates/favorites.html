@@ -86,12 +86,29 @@
                     <p>Baños: {{ favorito[7] }}</p>
                     <p>Superficie: {{ favorito[8] }} m²</p>
                     <p>Rol Inmobiliario: {{ favorito[10] }}</p>
-                    <span class="favorite active" onclick="toggleFavorite(this, '{{ favorito[0] }}')">&#10084;</span>
+                    <span class="favorite active" onclick="toggleFavorite(this, '{{ favorito[0] }}')">&#9733;</span>
                     <a href="{{ url_for('view_property', property_id=favorito[0]) }}" class="btn">Ver propiedad</a>
                 </div>
             </div>
             {% endfor %}
         </div>
+        {% if total_pages > 1 %}
+        <nav class="pagination-nav">
+            <ul class="pagination">
+                <li class="page-item{% if page == 1 %} disabled{% endif %}">
+                    <a class="page-link" href="{% if page > 1 %}{{ url_for('favorites', page=page-1) }}{% else %}#{% endif %}" {% if page == 1 %}tabindex="-1"{% endif %}>Anterior</a>
+                </li>
+                {% for p in range(1, total_pages + 1) %}
+                    <li class="page-item{% if p == page %} active{% endif %}">
+                        <a class="page-link{% if p == page %} active{% endif %}" href="{{ url_for('favorites', page=p) }}">{{ p }}</a>
+                    </li>
+                {% endfor %}
+                <li class="page-item{% if page == total_pages %} disabled{% endif %}">
+                    <a class="page-link" href="{% if page < total_pages %}{{ url_for('favorites', page=page+1) }}{% else %}#{% endif %}" {% if page == total_pages %}tabindex="-1"{% endif %}>Siguiente</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
     </main>
     <footer>
         <div class="footer-content">

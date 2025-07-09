@@ -18,32 +18,87 @@
                     Solo puedes modificar tus datos cada 2 días. Intenta nuevamente más adelante.
                 </div>
             {% endif %}
+            <!-- Nombre de usuario -->
             <div class="form-group">
-                <label for="username">Nuevo nombre de usuario</label>
-                {{ form.username(class="form-control", id="username", disabled=not puede_modificar) }}
+                <label for="username">Nombre de usuario</label>
+                <div style="display:flex;align-items:center;">
+                    {{ form.username(
+                        class="form-control",
+                        id="username",
+                        readonly=True,
+                        value=form.username.data,
+                        disabled=not puede_modificar
+                    ) }}
+                    {% if puede_modificar %}
+                        <span class="edit-icon" onclick="enableEdit('username')" title="Editar">&#9998;</span>
+                    {% endif %}
+                </div>
                 {% if form.username.errors %}
                     <span class="error-message">{{ form.username.errors[0] }}</span>
                 {% endif %}
             </div>
+            <!-- Email -->
             <div class="form-group">
                 <label for="email">Nuevo email</label>
-                {{ form.email(class="form-control", id="email", disabled=not puede_modificar) }}
+                <div style="display:flex;align-items:center;">
+                    {{ form.email(
+                        class="form-control",
+                        id="email",
+                        readonly=True,
+                        value=form.email.data,
+                        disabled=not puede_modificar
+                    ) }}
+                    {% if puede_modificar %}
+                        <span class="edit-icon" onclick="enableEdit('email')" title="Editar">&#9998;</span>
+                    {% endif %}
+                </div>
                 {% if form.email.errors %}
                     <span class="error-message" style="color:red;">{{ form.email.errors[0] }}</span>
                 {% endif %}
             </div>
-            <div class="form-group">
-                <label for="password">Nueva contraseña</label>
-                {{ form.password(class="form-control", id="password", disabled=not puede_modificar) }}
-                {% if form.password.errors %}
-                    <span class="error-message">{{ form.password.errors[0] }}</span>
-                {% endif %}
-            </div>
+            <!-- Teléfono -->
             <div class="form-group">
                 <label for="telefono">Nuevo teléfono</label>
-                {{ form.telefono(class="form-control", id="telefono", disabled=not puede_modificar) }}
+                <div style="display:flex;align-items:center;">
+                    {{ form.telefono(
+                        class="form-control",
+                        id="telefono",
+                        readonly=True,
+                        value=form.telefono.data,
+                        disabled=not puede_modificar
+                    ) }}
+                    {% if puede_modificar %}
+                        <span class="edit-icon" onclick="enableEdit('telefono')" title="Editar">&#9998;</span>
+                    {% endif %}
+                </div>
                 {% if form.telefono.errors %}
                     <span class="error-message">{{ form.telefono.errors[0] }}</span>
+                {% endif %}
+            </div>
+            <!-- Contraseña actual -->
+            <div class="form-group">
+                <label for="current_password">Contraseña actual</label>
+                {{ form.current_password(
+                    class="form-control",
+                    id="current_password",
+                    type="password",
+                    disabled=not puede_modificar
+                ) }}
+                {% if form.current_password.errors %}
+                    <span class="error-message">{{ form.current_password.errors[0] }}</span>
+                {% endif %}
+            </div>
+            <!-- Nueva contraseña (deshabilitada hasta que se ingrese la actual) -->
+            <div class="form-group">
+                <label for="password" id="label-password" style="color: #aaa;">Nueva contraseña</label>
+                {{ form.password(
+                    class="form-control",
+                    id="password",
+                    type="password",
+                    disabled=True
+                ) }}
+                {% if form.password.errors %}
+                    <span class="error-message">{{ form.password.errors[0] }}</span>
                 {% endif %}
             </div>
             <div class="button-group">
@@ -78,6 +133,7 @@
         // Modal de confirmación para edición de un solo campo
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('editProfileForm');
+            // Guardar valores iniciales
             const initial = {
                 username: form.username.value,
                 email: form.email.value,
@@ -85,7 +141,6 @@
                 telefono: form.telefono.value
             };
             form.addEventListener('submit', function(e) {
-                // Detectar cuántos campos cambiaron (ignora password si vacío)
                 let changed = [];
                 if (form.username.value !== initial.username) changed.push('usuario');
                 if (form.email.value !== initial.email) changed.push('email');
@@ -112,6 +167,30 @@
                 document.getElementById('confirm-modal-backdrop').classList.remove('show');
                 document.getElementById('confirm-modal').classList.remove('show');
             };
+
+            // --- Habilitar campo al hacer click en el lápiz ---
+            window.enableEdit = function(fieldId) {
+                if (!{{ 'true' if puede_modificar else 'false' }}) return;
+                const input = document.getElementById(fieldId);
+                input.removeAttribute('readonly');
+                input.removeAttribute('disabled');
+                input.focus();
+            };
+
+            // --- Habilitar nueva contraseña solo si se ingresa la actual ---
+            const currentPasswordInput = document.getElementById('current_password');
+            const newPasswordInput = document.getElementById('password');
+            const labelPassword = document.getElementById('label-password');
+            currentPasswordInput.addEventListener('input', function() {
+                if (currentPasswordInput.value.length > 0) {
+                    newPasswordInput.removeAttribute('disabled');
+                    labelPassword.style.color = '';
+                } else {
+                    newPasswordInput.value = '';
+                    newPasswordInput.setAttribute('disabled', true);
+                    labelPassword.style.color = '#aaa';
+                }
+            });
         });
     </script>
 </body>

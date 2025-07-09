@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_panel.css') }}">
+    <style>
+        /* Slider/tab styles */
+        .admin-tabs {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0 1rem 0;
+            gap: 1rem;
+        }
+        .admin-tab-btn {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            padding: 0.7rem 2.2rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            outline: none;
+        }
+        .admin-tab-btn.active {
+            background: #174ea6;
+            font-weight: bold;
+        }
+        .admin-section {
+            display: none;
+        }
+        .admin-section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Panel de Administración</h1>
+    <div class="admin-tabs">
+        <button class="admin-tab-btn active" id="tab-usuarios-btn" onclick="showAdminTab('usuarios')">Usuarios</button>
+        <button class="admin-tab-btn" id="tab-deptos-btn" onclick="showAdminTab('deptos')">Departamentos</button>
+    </div>
+    <div id="admin-usuarios-section" class="admin-section active">
+        <h2>Usuarios</h2>
+        <div style="max-height: 400px; overflow-y: auto; border-radius: 10px;">
+            <table border="1" cellpadding="6">
+                <tr>
+                    <th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Rol</th><th>Acciones</th>
+                </tr>
+                {% for u in usuarios %}
+                <tr>
+                    <td>{{ u[0] }}</td>
+                    <td>{{ u[1] }}</td>
+                    <td>{{ u[2] }}</td>
+                    <td>{{ u[3] }}</td>
+                    <td>{{ u[4] }}</td>
+                    <td>
+                        <a href="{{ url_for('admin_edit_user', user_id=u[0]) }}">Editar</a>
+                        <form action="{{ url_for('admin_delete_user', user_id=u[0]) }}" method="post" style="display:inline;" onsubmit="return confirm('¿Eliminar usuario?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    <div id="admin-deptos-section" class="admin-section">
+        <h2>Departamentos</h2>
+        <div style="max-height: 400px; overflow-y: auto; border-radius: 10px;">
+            <table border="1" cellpadding="6">
+                <tr>
+                    <th>ID</th><th>Título</th><th>Descripción</th><th>Precio</th><th>Moneda</th>
+                    <th>Ambientes</th><th>Dormitorios</th><th>Baños</th><th>Superficie</th>
+                    <th>Dirección</th><th>Rol Inmobiliario</th><th>Usuario</th>
+                    <th>Fotos</th>
+                    <th>Acciones</th>
+                </tr>
+                {% for d in departamentos %}
+                <tr>
+                    <td>{{ d[0] }}</td>
+                    <td>{{ d[1] }}</td>
+                    <td>{{ d[2] }}</td>
+                    <td>{{ d[3] }}</td>
+                    <td>{{ d[4] }}</td>
+                    <td>{{ d[5] }}</td>
+                    <td>{{ d[6] }}</td>
+                    <td>{{ d[7] }}</td>
+                    <td>{{ d[8] }}</td>
+                    <td>{{ d[9] }}</td>
+                    <td>{{ d[10] }}</td>
+                    <td>{{ d[11] }}</td>
+                    <td>
+                        {% if d[12] %}
+                            <div style="max-width:120px;overflow-x:auto;white-space:nowrap;">
+                            {% for foto in d[12].split(',') %}
+                                <div style="display:inline-block;position:relative;margin:2px;">
+                                    <img src="{{ url_for('static', filename='image/' ~ foto) }}" alt="foto" style="width:60px;height:40px;object-fit:cover;border-radius:4px;border:1px solid #ccc;">
+                                    <form action="{{ url_for('admin_delete_foto', depto_id=d[0], foto_nombre=foto) }}" method="post" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" style="background:#e74c3c;color:#fff;border:none;border-radius:3px;padding:2px 6px;font-size:0.8em;position:absolute;top:0;right:0;cursor:pointer;">X</button>
+                                    </form>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        {% else %}
+                            Sin fotos
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin_edit_depto', depto_id=d[0]) }}">Editar</a>
+                        <form action="{{ url_for('admin_delete_depto', depto_id=d[0]) }}" method="post" style="display:inline;" onsubmit="return confirm('¿Eliminar departamento?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    <script>
+        function showAdminTab(tab) {
+            // Botones
+            document.getElementById('tab-usuarios-btn').classList.remove('active');
+            document.getElementById('tab-deptos-btn').classList.remove('active');
+            // Secciones
+            document.getElementById('admin-usuarios-section').classList.remove('active');
+            document.getElementById('admin-deptos-section').classList.remove('active');
+            if (tab === 'usuarios') {
+                document.getElementById('tab-usuarios-btn').classList.add('active');
+                document.getElementById('admin-usuarios-section').classList.add('active');
+            } else {
+                document.getElementById('tab-deptos-btn').classList.add('active');
+                document.getElementById('admin-deptos-section').classList.add('active');
+            }
+        }
+    </script>
+    <br>
+    <a href="{{ url_for('home') }}">Volver al inicio</a>
+</body>
+</html>

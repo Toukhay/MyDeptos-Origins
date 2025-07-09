@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Departamento</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_edit_depto.css') }}">
+</head>
+<body>
+    <h1>Editar Departamento</h1>
+    <form method="post" action="{{ url_for('admin_edit_depto', depto_id=depto[0]) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>Título: <input type="text" name="titulo" value="{{ depto[1] }}" required></label><br>
+        <label>Descripción: <input type="text" name="descripcion" value="{{ depto[2] }}" required></label><br>
+        <label>Precio: <input type="number" name="precio" value="{{ depto[3] }}" required></label><br>
+        <label>Moneda: <input type="text" name="moneda" value="{{ depto[4] }}" required></label><br>
+        <label>Ambientes: <input type="number" name="ambientes" value="{{ depto[5] }}" required></label><br>
+        <label>Dormitorios: <input type="number" name="dormitorios" value="{{ depto[6] }}" required></label><br>
+        <label>Baños: <input type="number" name="banos" value="{{ depto[7] }}" required></label><br>
+        <label>Superficie: <input type="number" name="superficie" value="{{ depto[8] }}" required></label><br>
+        <label>Dirección: <input type="text" name="direccion" value="{{ depto[9] }}" required></label><br>
+        <label>Rol Inmobiliario: <input type="text" name="rol_inmo_dir" value="{{ depto[10] }}" required></label><br>
+        <button type="submit">Guardar</button>
+        <a href="{{ url_for('admin_panel') }}">Cancelar</a>
+    </form>
+</body>
+</html>

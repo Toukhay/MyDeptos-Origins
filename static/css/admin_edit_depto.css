@@ -1,0 +1,49 @@
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    background: #f4f8fb;
+    margin: 0;
+    padding: 0;
+}
+h1 {
+    color: #2563eb;
+    text-align: center;
+    margin-top: 2rem;
+}
+form {
+    max-width: 500px;
+    margin: 2rem auto;
+    background: #fff;
+    padding: 2rem 2.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.10);
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+label {
+    font-weight: bold;
+    color: #2563eb;
+    margin-bottom: 0.2rem;
+}
+input[type="text"], input[type="number"] {
+    padding: 0.6rem;
+    border: 1px solid #bcd0ee;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+button, a {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    margin-top: 1rem;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.2s;
+    text-align: center;
+}
+button:hover, a:hover {
+    background: #174ea6;
+}

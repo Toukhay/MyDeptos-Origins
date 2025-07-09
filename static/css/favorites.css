@@ -196,24 +196,39 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     overflow: hidden;
-    /* width: calc(100% - 2rem); */ /* Eliminado, el grid maneja el ancho */
     box-sizing: border-box;
     transition: transform 0.3s ease;
-    /* margin-bottom: 2rem; */ /* Eliminado, el gap del grid maneja el espaciado vertical */
     position: relative;
     display: flex;
     flex-direction: column;
-    height: 500px; /* Establecer una altura fija para las tarjetas */
+    /* height: 500px; */ /* Eliminar altura fija */
+    min-height: 420px; /* Altura mínima para mantener estructura */
 }
 
 .favorites-page .listing:hover {
     transform: translateY(-5px);
 }
 
-.favorites-page .listing img {
+.favorites-page .listing img,
+.carousel img {
     width: 100%;
-    height: 250px; /* Establecer una altura fija para las imágenes */
+    height: 160px; /* Altura más baja para dejar espacio a la info */
     object-fit: cover;
+    display: block;
+    border-radius: 10px;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.carousel {
+    position: relative;
+    width: 100%;
+    min-height: 160px;
+    max-height: 160px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #f4f4f4;
 }
 
 .favorites-page .favorite {
@@ -230,12 +245,12 @@ body {
 }
 
 .favorites-page .listing-info {
-    padding: 1rem;
+    padding: 1rem 0.7rem 0.7rem 0.7rem;
     position: relative;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-end;
 }
 
 .favorites-page .listing-info h3 {
@@ -254,12 +269,12 @@ body {
 .favorites-page .listing-info .btn {
     background-color: var(--primary-color);
     color: white;
-    padding: 0.75rem 1rem; /* Aumentar el padding */
+    padding: 0.15rem ; /* Aumentar el padding */
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    margin-top: 0.5rem;
-    width: 90%;
+    margin-top: 0.7rem;
+    width: 100%;
     font-size: 1.1rem; /* Aumentar el tamaño de la fuente */
     text-align: center;
     display: inline-block;
@@ -269,20 +284,6 @@ body {
 .favorites-page .listing-info button:hover,
 .favorites-page .listing-info .btn:hover {
     background-color: #357ABD;
-}
-
-.carousel {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    border-radius: 10px;
-}
-
-.carousel img {
-    width: 100%;
-    height: 250px; /* Establecer una altura fija para las imágenes */
-    object-fit: cover;
-    display: block;
 }
 
 .carousel-dots {
@@ -328,4 +329,58 @@ body {
 
 .prev:hover, .next:hover {
     background-color: rgba(0,0,0,0.8);
+}
+
+.pagination-nav {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0 1rem 0;
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 0.5rem;
+}
+
+.page-item {
+    display: inline-block;
+}
+
+.page-link {
+    display: inline-block;
+    padding: 0.5rem 1.1rem;
+    border-radius: 6px;
+    background: var(--primary-color);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    border: none;
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(74,144,226,0.08);
+}
+
+.page-item.active .page-link,
+.page-link.active {
+    background: #174ea6;
+    color: #fff;
+    font-weight: bold;
+    transform: scale(1.08);
+}
+
+.page-item.disabled .page-link,
+.page-link[tabindex="-1"] {
+    background: #e0e7ef;
+    color: #aaa;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.page-link:hover:not([tabindex="-1"]):not(.active) {
+    background: #357ABD;
+    color: #fff;
+    transform: scale(1.05);
 }

@@ -13,12 +13,14 @@ from email.mime.multipart import MIMEMultipart
 import os
 import uuid # Importar uuid
 from werkzeug.utils import secure_filename
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_login import LoginManager, current_user, UserMixin, login_user, logout_user
 import datetime # <--- AÑADIR ESTA IMPORTACIÓN
 from dotenv import load_dotenv
 from wtforms import ValidationError
 import re
+from datetime import datetime, timedelta
+from functools import wraps
 
 # Cargar variables de entorno desde .env
 load_dotenv()
@@ -112,23 +114,27 @@ class RegisterForm(FlaskForm):
         # Solo letras y números, sin espacios ni símbolos especiales
         if not re.match(r'^[A-Za-z0-9]+$', field.data):
             raise ValidationError('El nombre de usuario solo puede contener letras y números, sin espacios ni símbolos/caracteres especiales.')
+        # Verificar que el username no exista exactamente igual
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT id FROM usuario WHERE name = %s", (field.data,))
+        if cur.fetchone():
+            cur.close()
+            raise ValidationError('El nombre de usuario ya está en uso. Elige otro.')
+        cur.close()
 
     def validate_email(self, field):
         # No espacios y debe ser un email válido
         if ' ' in field.data:
             raise ValidationError('El correo electrónico no puede contener espacios.')
-        # Validar dominio común (gmail, hotmail, outlook, yahoo, etc)
         if not re.match(r'^[^@]+@[^@]+\.[^@]+$', field.data):
             raise ValidationError('Ingresa un correo electrónico válido.')
-        # Buscar emails similares en la base de datos
+        # Verificar que el email no exista exactamente igual
         cur = mysql.connection.cursor()
-        # Buscar emails que contengan la parte antes del @
-        username_part = field.data.split('@')[0]
-        cur.execute("SELECT email FROM usuario WHERE email LIKE %s", (f"%{username_part}%",))
-        similar = cur.fetchone()
+        cur.execute("SELECT id FROM usuario WHERE email = %s", (field.data,))
+        if cur.fetchone():
+            cur.close()
+            raise ValidationError('Ya existe una cuenta registrada con este correo electrónico.')
         cur.close()
-        if similar:
-            raise ValidationError('Ya existe una dirección o email parecido, intenta con otro.')
 
     def validate_confirm_password(self, field):
         if field.data != self.password.data:
@@ -168,6 +174,27 @@ class EditResenaForm(FlaskForm):
     puntaje = SelectField('Puntaje', choices=[(str(i), str(i)) for i in range(1, 6)], validators=[DataRequired()])
     comentario = TextAreaField('Comentario', validators=[DataRequired(), Length(min=5, max=500)])
     submit = SubmitField('Actualizar Reseña')
+
+class EditProfileForm(FlaskForm):
+    username = StringField('Nombre de Usuario', validators=[DataRequired()])
+    email = StringField('Correo Electrónico', validators=[DataRequired(), Email()])
+    telefono = StringField('Teléfono', validators=[Length(max=30)])
+    current_password = PasswordField('Contraseña Actual')
+    password = PasswordField('Nueva Contraseña (opcional)')
+    submit = SubmitField('Guardar Cambios')
+
+    def __init__(self, original_username, *args, **kwargs):
+        super(EditProfileForm, self).__init__(*args, **kwargs)
+        self.original_username = original_username
+
+    def validate_username(self, field):
+        if field.data != self.original_username:
+            cur = mysql.connection.cursor()
+            cur.execute("SELECT id FROM usuario WHERE name = %s", (field.data,))
+            user = cur.fetchone()
+            cur.close()
+            if user:
+                raise ValidationError('El nombre de usuario ya está en uso. Elige otro.')
 
 # -----------------------
 # Rutas principales
@@ -332,11 +359,12 @@ def login():
         username = form.username.data
         password = form.password.data
         cur = mysql.connection.cursor()
-        cur.execute("SELECT id, name, email, password FROM usuario WHERE name = %s OR email = %s", (username, username))
+        cur.execute("SELECT id, name, email, password, rol FROM usuario WHERE name = %s OR email = %s", (username, username))
         user = cur.fetchone()
         cur.close()
         if user:
             stored_hash = user[3]
+            rol = user[4] if len(user) > 4 else 'user'
             if stored_hash.startswith('pbkdf2:') or stored_hash.startswith('scrypt:'):
                 valid = check_password_hash(stored_hash, password)
             elif stored_hash.startswith('$2a$') or stored_hash.startswith('$2b$'):
@@ -348,7 +376,12 @@ def login():
                 login_user(user_obj)
                 session['user_id'] = user[0]
                 session['user_name'] = user[1]
-                return render_template('login_redirect.html')
+                session['user_rol'] = rol
+                # Redirección según rol
+                if rol == 'admin':
+                    return redirect(url_for('admin_panel'))
+                else:
+                    return render_template('login_redirect.html')
         login_error = "Usuario o contraseña incorrectos."
     return render_template('login.html', form=form, login_error=login_error)
 
@@ -427,7 +460,8 @@ def register():
         password = generate_password_hash(form.password.data, method='pbkdf2:sha256')
         telefono = form.telefono.data
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO usuario (name, email, password, telefono) VALUES (%s, %s, %s, %s)", (username, email, password, telefono))
+        # Cambia el INSERT para incluir el campo rol
+        cur.execute("INSERT INTO usuario (name, email, password, telefono, rol) VALUES (%s, %s, %s, %s, %s)", (username, email, password, telefono, 'user'))
         mysql.connection.commit()
         cur.close()
         # Redirige al template de éxito de registro
@@ -443,6 +477,12 @@ def user_panel():
         flash('Debes iniciar sesión primero', 'warning')
         return redirect(url_for('login'))
     user_id = session['user_id']
+
+    # PAGINACIÓN
+    page = int(request.args.get('page', 1))
+    per_page = 2
+    offset = (page - 1) * per_page
+
     conn = get_db_connection()
     cur = conn.cursor()
     try:
@@ -458,8 +498,14 @@ def user_panel():
             LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento
             WHERE d.id_usuario = %s
             GROUP BY d.id_departamento
-        ''', (user_id,))
+            LIMIT %s OFFSET %s
+        ''', (user_id, per_page, offset))
         mis_publicaciones_data = cur.fetchall()
+
+        # Total para paginación
+        cur.execute('SELECT COUNT(*) FROM departamento WHERE id_usuario = %s', (user_id,))
+        total = cur.fetchone()[0]
+        total_pages = (total + per_page - 1) // per_page
 
         # Obtener notificaciones del usuario
         cur.execute('''
@@ -472,13 +518,12 @@ def user_panel():
 
     except Exception as e:
         flash(f'Error al cargar datos del usuario: {e}', 'danger')
-        cur.close() # Asegurarse de cerrar el cursor en caso de error
+        cur.close()
         return redirect(url_for('home'))
     finally:
-        if cur: # Solo cerrar si el cursor existe
+        if cur:
             cur.close()
 
-    # Convertir las fotos en lista (si existen)
     mis_publicaciones = [
         (id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos.split(',') if fotos else [], latitud, longitud)
         for id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos, latitud, longitud in mis_publicaciones_data
@@ -493,109 +538,132 @@ def user_panel():
         }
         notificaciones_list.append(notif)
 
-    form = PublishDeptoForm()  # Crear una instancia del formulario para obtener el token CSRF
+    form = PublishDeptoForm()
 
-    return render_template('user_panel.html', user_data=user_data, mis_publicaciones=mis_publicaciones, form=form, notificaciones=notificaciones_list)
+    return render_template('user_panel.html', user_data=user_data, mis_publicaciones=mis_publicaciones, form=form, notificaciones=notificaciones_list, page=page, total_pages=total_pages)
 
-class EditProfileForm(FlaskForm):
-    username = StringField('Nuevo Usuario', validators=[Length(min=4, max=25)])
-    email = StringField('Nuevo Email', validators=[Email()])
-    password = PasswordField('Nueva Contraseña')
-    telefono = StringField('Nuevo Teléfono', validators=[Length(max=30)])
-    submit = SubmitField('Actualizar Perfil')
-
-    def validate_email(self, field):
-        if field.data:
-            if ' ' in field.data:
-                raise ValidationError('El correo electrónico no puede contener espacios.')
-            if not re.match(r'^[^@]+@[^@]+\.[^@]+$', field.data):
-                raise ValidationError('Ingresa un correo electrónico válido.')
-            # Verificar si el email ya está en uso por otro usuario
-            user_id = session.get('user_id')
-            cur = mysql.connection.cursor()
-            cur.execute("SELECT id FROM usuario WHERE email = %s AND id != %s", (field.data, user_id))
-            existing_email = cur.fetchone()
-            cur.close()
-            if existing_email:
-                raise ValidationError('Ya existe o ya esta ocupado este mail.')
-
-@app.route('/edit_profile', methods=['GET', 'POST'])
-def edit_profile():
+@app.route('/modify_depto/<int:depto_id>', methods=['GET', 'POST'])
+def modify_depto(depto_id):
     if 'user_id' not in session:
         flash('Debes iniciar sesión primero', 'warning')
         return redirect(url_for('login'))
-    
-    user_id = session['user_id']
+
     cursor = mysql.connection.cursor()
-    cursor.execute('SELECT name, email, telefono, fecha_ultima_modificacion FROM usuario WHERE id = %s', (user_id,))
-    user = cursor.fetchone()
+    cursor.execute('''
+        SELECT d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.id_localidad, d.rol_inmo_dir,
+               GROUP_CONCAT(f.url_foto) AS fotos
+        FROM departamento d
+        LEFT JOIN foto f ON d.id_departamento = f.id_departamento
+        WHERE d.id_departamento = %s AND d.id_usuario = %s
+        GROUP BY d.id_departamento
+    ''', (depto_id, session['user_id']))
+    depto_data = cursor.fetchone()
+
+    if not depto_data:
+        flash('Departamento no encontrado o no tienes permisos para editarlo.', 'danger')
+        cursor.close()
+        return redirect(url_for('user_panel'))
+
+    current_photos_str = depto_data[12]
+    current_photos_list = current_photos_str.split(',') if current_photos_str else []
+
+    cursor.execute('SELECT id_localidad, nombre FROM localidad')
+    localidades = cursor.fetchall()
+
+    cursor.execute('SELECT latitud, longitud FROM coordenadas WHERE id_departamento = %s', (depto_id,))
+    coords = cursor.fetchone()
     cursor.close()
 
-    # user = (name, email, telefono, fecha_ultima_modificacion)
-    fecha_ultima_modificacion = user[3]
-    now = datetime.datetime.now()
-    puede_modificar = True
-    dias_restantes = 0
+    latitud = coords[0] if coords else ''
+    longitud = coords[1] if coords else ''
 
-    if fecha_ultima_modificacion:
-        # Si es string, intenta convertir a datetime
-        if isinstance(fecha_ultima_modificacion, str):
-            try:
-                fecha_ultima_modificacion = datetime.datetime.strptime(fecha_ultima_modificacion, "%Y-%m-%d %H:%M:%S")
-            except ValueError:
-                try:
-                    fecha_ultima_modificacion = datetime.datetime.strptime(fecha_ultima_modificacion, "%Y-%m-%d")
-                except Exception:
-                    fecha_ultima_modificacion = None
-        # Si es date, conviértelo a datetime
-        if isinstance(fecha_ultima_modificacion, datetime.date) and not isinstance(fecha_ultima_modificacion, datetime.datetime):
-            fecha_ultima_modificacion = datetime.datetime.combine(fecha_ultima_modificacion, datetime.time.min)
-        if isinstance(fecha_ultima_modificacion, datetime.datetime):
-            diferencia = now - fecha_ultima_modificacion
-            if diferencia.days < 2:
-                puede_modificar = False
-                dias_restantes = 2 - diferencia.days
+    form = PublishDeptoForm() # Usamos el mismo formulario, pero la lógica de fotos será diferente
+    form.localidad.choices = [(str(id_loc), nombre) for id_loc, nombre in localidades]
+    # Hacemos que el campo de fotos no sea obligatorio para la modificación si no se quieren cambiar
+    form.photos.validators = [FileAllowed(['jpg', 'png', 'webp', 'jpeg'], 'Solo se permiten imágenes')]
 
-    form = EditProfileForm()
+
     if request.method == 'GET':
-        form.username.data = user[0]
-        form.email.data = user[1]
-        form.telefono.data = user[2] if user[2] is not None else ""
-
-    if not puede_modificar:
-        flash(f'Solo puedes modificar tus datos cada 2 días. Intenta nuevamente en {dias_restantes} día(s).', 'warning')
-        return render_template('edit_profile.html', form=form, puede_modificar=puede_modificar)
+        form.title.data = depto_data[0]
+        form.description.data = depto_data[1]
+        form.tipo_publicacion.data = depto_data[2]
+        form.price.data = depto_data[3]
+        form.moneda.data = depto_data[4]
+        form.ambientes.data = depto_data[5]
+        form.dormitorios.data = depto_data[6]
+        form.banos.data = depto_data[7]
+        form.superficie.data = depto_data[8]
+        form.direccion.data = depto_data[9]
+        form.localidad.data = str(depto_data[10])
+        form.rol_inmo_dir.data = depto_data[11]
 
     if form.validate_on_submit():
-        new_username = form.username.data if form.username.data else user[0]
-        new_email = form.email.data if form.email.data else user[1]
-        new_telefono = form.telefono.data if form.telefono.data else ""
-        new_password = form.password.data
+        cursor = mysql.connection.cursor()
+        try:
+            # Actualizar los datos del departamento
+            cursor.execute('''
+                UPDATE departamento SET titulo=%s, descripcion=%s, tipo_publicacion=%s, precio=%s, moneda=%s,
+                    ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, id_localidad=%s, rol_inmo_dir=%s
+                WHERE id_departamento=%s AND id_usuario=%s
+            ''', (
+                form.title.data, form.description.data, form.tipo_publicacion.data, form.price.data, form.moneda.data,
+                form.ambientes.data, form.dormitorios.data, form.banos.data, form.superficie.data, form.direccion.data,
+                form.localidad.data, form.rol_inmo_dir.data, depto_id, session['user_id']
+            ))
+            
+            # Actualizar coordenadas
+            lat = request.form.get('latitud')
+            lon = request.form.get('longitud')
+            cursor.execute('UPDATE coordenadas SET latitud=%s, longitud=%s WHERE id_departamento=%s', (lat, lon, depto_id))
 
-        if new_password:
-            hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-            cursor = mysql.connection.cursor()
-            cursor.execute('UPDATE usuario SET name = %s, email = %s, password = %s, telefono = %s, fecha_ultima_modificacion = NOW() WHERE id = %s', 
-                        (new_username, new_email, hashed_password, new_telefono, user_id))
-            mysql.connection.commit()
-            cursor.close()
-        else:
-            cursor = mysql.connection.cursor()
-            cursor.execute('UPDATE usuario SET name = %s, email = %s, telefono = %s, fecha_ultima_modificacion = NOW() WHERE id = %s', 
-                        (new_username, new_email, new_telefono, user_id))
-            mysql.connection.commit()
-            cursor.close()
-        
-        session['user_name'] = new_username
-        flash('Perfil actualizado con éxito', 'success')
-        return redirect(url_for('user_panel'))
-    
-    return render_template('edit_profile.html', form=form, puede_modificar=puede_modificar)
+            # Procesar imágenes si se subieron nuevas
+            new_photos = request.files.getlist(form.photos.name)
+            if new_photos and new_photos[0].filename: # Verificar si se subió al menos un archivo con nombre
+                # Eliminar fotos antiguas de la DB y del sistema de archivos
+                if current_photos_list:
+                    for old_photo_filename in current_photos_list:
+                        try:
+                            os.remove(os.path.join(app.root_path, 'static', 'image', old_photo_filename))
+                        except OSError as e:
+                            app.logger.error(f"Error eliminando archivo antiguo {old_photo_filename}: {e}")
+                    cursor.execute('DELETE FROM foto WHERE id_departamento = %s', (depto_id,))
 
-@app.route('/generate_password')
-def generate_password():
-    secure_password = bcrypt.gensalt().decode('utf-8')
-    return render_template('generate_password.html', secure_password=secure_password)
+                # Guardar nuevas fotos
+                if len(new_photos) > 5:
+                    flash('Puedes subir un máximo de 5 imágenes.', 'danger')
+                    # No hacer rollback aquí, los datos del depto ya se actualizaron.
+                    # Podríamos redirigir o manejarlo de otra forma.
+                    # Por ahora, se guardarán las primeras 5.
+                    new_photos = new_photos[:5]
+
+                for photo_file in new_photos:
+                    if photo_file.filename: # Asegurarse de que el archivo tiene nombre
+                        original_filename = secure_filename(photo_file.filename)
+                        # Generar un nombre de archivo único
+                        unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
+                        photo_path = os.path.join(app.root_path, 'static', 'image', unique_filename)
+                        try:
+                            photo_file.save(photo_path)
+                            cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
+                                        (depto_id, unique_filename)) # Guardar el nombre único
+                        except Exception as e:
+                            # Si falla el guardado de una imagen, podríamos querer hacer rollback de las fotos
+                            # o al menos loguear el error y continuar.
+                            app.logger.error(f"Error guardando nueva imagen {original_filename}: {e}")
+                            flash(f'Error al guardar la imagen {original_filename}.', 'warning')
+
+
+            mysql.connection.commit()
+            flash('Departamento actualizado correctamente.', 'success')
+            return redirect(url_for('user_panel'))
+        except Exception as e:
+            mysql.connection.rollback()
+            app.logger.error(f"Error actualizando departamento {depto_id}: {e}")
+            flash(f'Error al actualizar el departamento: {str(e)}', 'danger')
+        finally:
+            cursor.close()
+
+    return render_template('modify_depto.html', form=form, depto_id=depto_id, latitud=latitud, longitud=longitud, current_photos=current_photos_list)
 
 @app.route('/about')
 def about():
@@ -1041,8 +1109,11 @@ def favorites():
         return redirect(url_for('login'))
 
     user_id = session['user_id']
-    cursor = mysql.connection.cursor()
+    page = int(request.args.get('page', 1))
+    per_page = 6
+    offset = (page - 1) * per_page
 
+    cursor = mysql.connection.cursor()
     cursor.execute('''
         SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes,
             d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir,
@@ -1053,20 +1124,35 @@ def favorites():
         WHERE f.id_usuario = %s
         GROUP BY d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, 
             d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir
-    ''', (user_id,))
+        LIMIT %s OFFSET %s
+    ''', (user_id, per_page, offset))
 
     favoritos = cursor.fetchall()
+
+    # Cambia esta consulta:
+    # cursor.execute('SELECT COUNT(*) FROM favorito WHERE id_usuario = %s', (user_id,))
+    # total = cursor.fetchone()[0]
+
+    # Por esta (solo cuenta favoritos con departamento válido):
+    cursor.execute('''
+        SELECT COUNT(*) FROM favorito f
+        JOIN departamento d ON f.id_departamento = d.id_departamento
+        WHERE f.id_usuario = %s
+    ''', (user_id,))
+    total = cursor.fetchone()[0]
+    total_pages = (total + per_page - 1) // per_page
+
     cursor.close()
 
     favoritos = [
         (
             id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir,
-            fotos.split(',') if fotos else []  # Si hay imágenes, las convierte en lista
+            fotos.split(',') if fotos else []
         )
         for id_dep, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos in favoritos
     ]
 
-    return render_template('favorites.html', favoritos=favoritos)
+    return render_template('favorites.html', favoritos=favoritos, page=page, total_pages=total_pages)
 
 @app.route('/get_localidades')
 def get_localidades():
@@ -1135,128 +1221,85 @@ def load_user(user_id):
         return User(id=user[0], username=user[1], email=user[2])
     return None
 
-@app.route('/modify_depto/<int:depto_id>', methods=['GET', 'POST'])
-def modify_depto(depto_id):
+@app.route('/edit_profile', methods=['GET', 'POST'])
+def edit_profile():
     if 'user_id' not in session:
         flash('Debes iniciar sesión primero', 'warning')
         return redirect(url_for('login'))
+    user_id = session['user_id']
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT name, email, telefono, fecha_ultima_modificacion, ediciones_ultimos_dos_dias FROM usuario WHERE id = %s", (user_id,))
+    user = cur.fetchone()
+    cur.close()
+    if not user:
+        flash('Usuario no encontrado', 'danger')
+        return redirect(url_for('home'))
 
-    cursor = mysql.connection.cursor()
-    cursor.execute('''
-        SELECT d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.id_localidad, d.rol_inmo_dir,
-               GROUP_CONCAT(f.url_foto) AS fotos
-        FROM departamento d
-        LEFT JOIN foto f ON d.id_departamento = f.id_departamento
-        WHERE d.id_departamento = %s AND d.id_usuario = %s
-        GROUP BY d.id_departamento
-    ''', (depto_id, session['user_id']))
-    depto_data = cursor.fetchone()
+    last_edit = user[3]
+    edit_count = user[4] if user[4] is not None else 0
+    now = datetime.now()
+    puede_modificar = True
 
-    if not depto_data:
-        flash('Departamento no encontrado o no tienes permisos para editarlo.', 'danger')
-        cursor.close()
-        return redirect(url_for('user_panel'))
+    # Lógica de control de ediciones
+    if last_edit:
+        # Manejo robusto de formatos de fecha
+        if isinstance(last_edit, datetime):
+            last_edit_dt = last_edit
+        else:
+            last_edit_str = str(last_edit)
+            try:
+                last_edit_dt = datetime.strptime(last_edit_str, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                try:
+                    last_edit_dt = datetime.strptime(last_edit_str, "%Y-%m-%d")
+                except ValueError:
+                    # Si no se puede parsear, permitir modificar (o puedes poner puede_modificar = True)
+                    last_edit_dt = now - timedelta(days=3)  # fuerza a permitir modificar
+        if now - last_edit_dt > timedelta(days=2):
+            edit_count = 0
+        if edit_count >= 2 and now - last_edit_dt <= timedelta(days=2):
+            puede_modificar = False
 
-    current_photos_str = depto_data[12]
-    current_photos_list = current_photos_str.split(',') if current_photos_str else []
-
-    cursor.execute('SELECT id_localidad, nombre FROM localidad')
-    localidades = cursor.fetchall()
-
-    cursor.execute('SELECT latitud, longitud FROM coordenadas WHERE id_departamento = %s', (depto_id,))
-    coords = cursor.fetchone()
-    cursor.close()
-
-    latitud = coords[0] if coords else ''
-    longitud = coords[1] if coords else ''
-
-    form = PublishDeptoForm() # Usamos el mismo formulario, pero la lógica de fotos será diferente
-    form.localidad.choices = [(str(id_loc), nombre) for id_loc, nombre in localidades]
-    # Hacemos que el campo de fotos no sea obligatorio para la modificación si no se quieren cambiar
-    form.photos.validators = [FileAllowed(['jpg', 'png', 'webp', 'jpeg'], 'Solo se permiten imágenes')]
-
-
+    form = EditProfileForm(original_username=user[0])
+    # --- Inicializar los datos del formulario en GET ---
     if request.method == 'GET':
-        form.title.data = depto_data[0]
-        form.description.data = depto_data[1]
-        form.tipo_publicacion.data = depto_data[2]
-        form.price.data = depto_data[3]
-        form.moneda.data = depto_data[4]
-        form.ambientes.data = depto_data[5]
-        form.dormitorios.data = depto_data[6]
-        form.banos.data = depto_data[7]
-        form.superficie.data = depto_data[8]
-        form.direccion.data = depto_data[9]
-        form.localidad.data = str(depto_data[10])
-        form.rol_inmo_dir.data = depto_data[11]
+        form.username.data = user[0]
+        form.email.data = user[1]
+        form.telefono.data = user[2] if user[2] else ""
+        # No se inicializa password ni current_password
 
-    if form.validate_on_submit():
-        cursor = mysql.connection.cursor()
-        try:
-            # Actualizar los datos del departamento
-            cursor.execute('''
-                UPDATE departamento SET titulo=%s, descripcion=%s, tipo_publicacion=%s, precio=%s, moneda=%s,
-                    ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, id_localidad=%s, rol_inmo_dir=%s
-                WHERE id_departamento=%s AND id_usuario=%s
-            ''', (
-                form.title.data, form.description.data, form.tipo_publicacion.data, form.price.data, form.moneda.data,
-                form.ambientes.data, form.dormitorios.data, form.banos.data, form.superficie.data, form.direccion.data,
-                form.localidad.data, form.rol_inmo_dir.data, depto_id, session['user_id']
-            ))
-            
-            # Actualizar coordenadas
-            lat = request.form.get('latitud')
-            lon = request.form.get('longitud')
-            cursor.execute('UPDATE coordenadas SET latitud=%s, longitud=%s WHERE id_departamento=%s', (lat, lon, depto_id))
+    if form.validate_on_submit() and puede_modificar:
+        new_username = form.username.data if form.username.data else user[0]
+        new_email = form.email.data if form.email.data else user[1]
+        new_telefono = form.telefono.data if form.telefono.data else ""
+        new_password = form.password.data
 
-            # Procesar imágenes si se subieron nuevas
-            new_photos = request.files.getlist(form.photos.name)
-            if new_photos and new_photos[0].filename: # Verificar si se subió al menos un archivo con nombre
-                # Eliminar fotos antiguas de la DB y del sistema de archivos
-                if current_photos_list:
-                    for old_photo_filename in current_photos_list:
-                        try:
-                            os.remove(os.path.join(app.root_path, 'static', 'image', old_photo_filename))
-                        except OSError as e:
-                            app.logger.error(f"Error eliminando archivo antiguo {old_photo_filename}: {e}")
-                    cursor.execute('DELETE FROM foto WHERE id_departamento = %s', (depto_id,))
-
-                # Guardar nuevas fotos
-                if len(new_photos) > 5:
-                    flash('Puedes subir un máximo de 5 imágenes.', 'danger')
-                    # No hacer rollback aquí, los datos del depto ya se actualizaron.
-                    # Podríamos redirigir o manejarlo de otra forma.
-                    # Por ahora, se guardarán las primeras 5.
-                    new_photos = new_photos[:5]
-
-                for photo_file in new_photos:
-                    if photo_file.filename: # Asegurarse de que el archivo tiene nombre
-                        original_filename = secure_filename(photo_file.filename)
-                        # Generar un nombre de archivo único
-                        unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
-                        photo_path = os.path.join(app.root_path, 'static', 'image', unique_filename)
-                        try:
-                            photo_file.save(photo_path)
-                            cursor.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
-                                        (depto_id, unique_filename)) # Guardar el nombre único
-                        except Exception as e:
-                            # Si falla el guardado de una imagen, podríamos querer hacer rollback de las fotos
-                            # o al menos loguear el error y continuar.
-                            app.logger.error(f"Error guardando nueva imagen {original_filename}: {e}")
-                            flash(f'Error al guardar la imagen {original_filename}.', 'warning')
-
-
+        if new_password:
+            hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            cursor = mysql.connection.cursor()
+            cursor.execute('UPDATE usuario SET name = %s, email = %s, password = %s, telefono = %s, fecha_ultima_modificacion = %s, ediciones_ultimos_dos_dias = %s WHERE id = %s', 
+                        (new_username, new_email, hashed_password, new_telefono, now, edit_count + 1, user_id))
             mysql.connection.commit()
-            flash('Departamento actualizado correctamente.', 'success')
-            return redirect(url_for('user_panel'))
-        except Exception as e:
-            mysql.connection.rollback()
-            app.logger.error(f"Error actualizando departamento {depto_id}: {e}")
-            flash(f'Error al actualizar el departamento: {str(e)}', 'danger')
-        finally:
             cursor.close()
+        else:
+            cursor = mysql.connection.cursor()
+            cursor.execute('UPDATE usuario SET name = %s, email = %s, telefono = %s, fecha_ultima_modificacion = %s, ediciones_ultimos_dos_dias = %s WHERE id = %s', 
+                        (new_username, new_email, new_telefono, now, edit_count + 1, user_id))
+            mysql.connection.commit()
+            cursor.close()
+        
+        session['user_name'] = new_username
+        flash('Perfil actualizado con éxito', 'success')
+        return redirect(url_for('user_panel'))
+    elif not puede_modificar and request.method == 'POST':
+        flash('Solo puedes editar tu perfil hasta dos veces cada 2 días. Intenta nuevamente más adelante.', 'warning')
+    
+    return render_template('edit_profile.html', form=form, puede_modificar=puede_modificar)
 
-    return render_template('modify_depto.html', form=form, depto_id=depto_id, latitud=latitud, longitud=longitud, current_photos=current_photos_list)
+@app.route('/generate_password')
+def generate_password():
+    secure_password = bcrypt.gensalt().decode('utf-8')
+    return render_template('generate_password.html', secure_password=secure_password)
 
 @app.route('/notifications')
 def notifications():
@@ -1389,6 +1432,155 @@ def mark_all_notifications_read():
         app.logger.error(f"Error marcando todas las notificaciones como leídas: {e}")
         flash('Error al marcar las notificaciones como leídas.', 'danger')
     return redirect(url_for('notifications'))
+
+# -----------------------
+# Rutas de administración
+# -----------------------
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Debes iniciar sesión como administrador.', 'warning')
+            return redirect(url_for('login'))
+        user_id = session['user_id']
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT rol FROM usuario WHERE id = %s", (user_id,))
+        user = cur.fetchone()
+        cur.close()
+        if not user or user[0] != 'admin':
+            flash('Acceso restringido solo para administradores.', 'danger')
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/admin_panel')
+@admin_required
+def admin_panel():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id, name, email, telefono, rol FROM usuario")
+    usuarios = cur.fetchall()
+    # Listar departamentos con fotos
+    cur.execute('''
+        SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir, u.name,
+               GROUP_CONCAT(f.url_foto) AS fotos
+        FROM departamento d
+        JOIN usuario u ON d.id_usuario = u.id
+        LEFT JOIN foto f ON d.id_departamento = f.id_departamento
+        GROUP BY d.id_departamento
+    ''')
+    departamentos = cur.fetchall()
+    cur.close()
+    return render_template('admin_panel.html', usuarios=usuarios, departamentos=departamentos)
+
+@app.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_user(user_id):
+    cur = mysql.connection.cursor()
+    # Cambia is_admin por rol
+    cur.execute("SELECT id, name, email, telefono, rol FROM usuario WHERE id = %s", (user_id,))
+    user = cur.fetchone()
+    if not user:
+        cur.close()
+        flash('Usuario no encontrado.', 'danger')
+        return redirect(url_for('admin_panel'))
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        telefono = request.form.get('telefono')
+        # Cambia is_admin por rol (checkbox: si está marcado, admin; si no, user)
+        rol = 'admin' if request.form.get('rol') == 'on' else 'user'
+        cur.execute("UPDATE usuario SET name=%s, email=%s, telefono=%s, rol=%s WHERE id=%s",
+                    (name, email, telefono, rol, user_id))
+        mysql.connection.commit()
+        cur.close()
+        flash('Usuario actualizado.', 'success')
+        return redirect(url_for('admin_panel'))
+    cur.close()
+    return render_template('admin_edit_user.html', user=user)
+
+@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@csrf.exempt
+@admin_required
+def admin_delete_user(user_id):
+    cur = mysql.connection.cursor()
+    # Eliminar favoritos del usuario
+    cur.execute("DELETE FROM favorito WHERE id_usuario = %s", (user_id,))
+    # Eliminar reseñas hechas por el usuario
+    cur.execute("DELETE FROM resena WHERE id_usuario_calificador = %s", (user_id,))
+    # Eliminar notificaciones recibidas por el usuario
+    cur.execute("DELETE FROM notificaciones WHERE id_usuario_receptor = %s", (user_id,))
+    # Eliminar configuraciones de usuario si existen
+    cur.execute("DELETE FROM configuracion_usuario WHERE id_usuario = %s", (user_id,))
+    # Finalmente, eliminar el usuario
+    cur.execute("DELETE FROM usuario WHERE id = %s", (user_id,))
+    mysql.connection.commit()
+    cur.close()
+    flash('Usuario eliminado.', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/depto/<int:depto_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_depto(depto_id):
+    cur = mysql.connection.cursor()
+    cur.execute('''SELECT id_departamento, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir FROM departamento WHERE id_departamento = %s''', (depto_id,))
+    depto = cur.fetchone()
+    if not depto:
+        cur.close()
+        flash('Departamento no encontrado.', 'danger')
+        return redirect(url_for('admin_panel'))
+    if request.method == 'POST':
+        titulo = request.form.get('titulo')
+        descripcion = request.form.get('descripcion')
+        precio = request.form.get('precio')
+        moneda = request.form.get('moneda')
+        ambientes = request.form.get('ambientes')
+        dormitorios = request.form.get('dormitorios')
+        banos = request.form.get('banos')
+        superficie = request.form.get('superficie')
+        direccion = request.form.get('direccion')
+        rol_inmo_dir = request.form.get('rol_inmo_dir')
+        cur.execute('''UPDATE departamento SET titulo=%s, descripcion=%s, precio=%s, moneda=%s, ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, rol_inmo_dir=%s WHERE id_departamento=%s''',
+                    (titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, depto_id))
+        mysql.connection.commit()
+        cur.close()
+        flash('Departamento actualizado.', 'success')
+        return redirect(url_for('admin_panel'))
+    cur.close()
+    return render_template('admin_edit_depto.html', depto=depto)
+
+@app.route('/admin/depto/<int:depto_id>/delete', methods=['POST'])
+@csrf.exempt
+@admin_required
+def admin_delete_depto(depto_id):
+    cur = mysql.connection.cursor()
+    # Eliminar coordenadas asociadas primero
+    cur.execute("DELETE FROM coordenadas WHERE id_departamento = %s", (depto_id,))
+    # Eliminar fotos asociadas (opcional, pero recomendable)
+    cur.execute("DELETE FROM foto WHERE id_departamento = %s", (depto_id,))
+    # Ahora sí, eliminar el departamento
+    cur.execute("DELETE FROM departamento WHERE id_departamento = %s", (depto_id,))
+    mysql.connection.commit()
+    cur.close()
+    flash('Departamento eliminado.', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/foto/<int:depto_id>/<foto_nombre>/delete', methods=['POST'])
+@csrf.exempt
+@admin_required
+def admin_delete_foto(depto_id, foto_nombre):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM foto WHERE id_departamento = %s AND url_foto = %s", (depto_id, foto_nombre))
+    mysql.connection.commit()
+    cur.close()
+    # Elimina el archivo físico si existe
+    foto_path = os.path.join(app.root_path, 'static', 'image', foto_nombre)
+    if os.path.exists(foto_path):
+        try:
+            os.remove(foto_path)
+        except Exception:
+            pass
+    flash('Foto eliminada.', 'success')
+    return redirect(url_for('admin_panel'))
 
 if __name__ == '__main__':
     app.run(debug=True)

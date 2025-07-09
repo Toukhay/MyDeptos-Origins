@@ -123,6 +123,7 @@
                     <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
                     <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
                     <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn btn-danger" style="color:#fff;">Cerrar sesión</a></li>
                 {% else %}
                     <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
                     <li><a href="{{ url_for('register') }}">Registrarse</a></li>
