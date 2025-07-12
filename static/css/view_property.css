@@ -237,7 +237,7 @@ button:hover {
 
 .view-property-page .property-details {
     max-width: 800px;
-    margin: 2rem auto;
+    margin: 1rem auto;
     padding: 1.5rem;
     background-color: white;
     border-radius: var(--border-radius);
@@ -368,38 +368,39 @@ button:hover {
 }
 
 .whatsapp-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 0.7rem;
+    width: 35px;
+    height: 35px;
     vertical-align: middle;
 }
 
 /* Layout de columnas para la vista de propiedad */
 .property-columns {
     display: flex;
-    gap: 2rem;
+    gap: 24px;
     align-items: flex-start;
-    flex-wrap: wrap;
 }
+
 .property-main {
-    flex: 1 1 55%;
-    min-width: 340px;
-}
-.property-side {
-    flex: 1 1 40%;
-    min-width: 320px;
+    flex: 2;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 24px;
+}
+
+.property-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
 /* Mejoras para la sección de reseñas */
 .reviews-section {
-    background: #f8f9fa;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 1.5rem 1.2rem;
-    margin-top: 0;
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    margin-bottom: 0;
 }
 
 .reviews-section h2 {
@@ -538,116 +539,210 @@ button:hover {
 /* Galería tipo "imagen pegada" */
 .property-gallery-grid {
     display: flex;
-    flex-direction: row;
-    gap: 12px;
-    margin-bottom: 1.2rem;
-    width: 100%;
-    min-height: 180px;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 24px;
 }
 
 .gallery-main-img {
-    flex: 2 1 0;
-    min-width: 0;
+    flex: 2;
     display: flex;
     align-items: stretch;
-    justify-content: stretch;
+    justify-content: center;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    background: #fff;
+    margin-right: 8px;
+    height: 100%;
 }
 
 .gallery-main-img img {
     width: 100%;
-    height: 220px;
+    height: 100%;
     object-fit: cover;
-    border-radius: 10px;
-    box-shadow: 0 1px 6px rgba(74,144,226,0.10);
+    border-radius: 12px;
 }
 
 .gallery-side-thumbs {
-    flex: 1 1 0;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    justify-content: flex-start;
+    gap: 12px;
+    justify-content: stretch;
+    height: 100%;
+}
+
+.gallery-thumb-wrapper {
+    flex: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    margin: 0;
+    display: flex;
     align-items: stretch;
 }
 
 .gallery-thumb-img {
     width: 100%;
-    height: 50px;
+    height: 100%;
     object-fit: cover;
     border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(74,144,226,0.08);
-    border: 1px solid #e0e0e0;
-    background: #fafbfc;
-    cursor: pointer;
-    transition: transform 0.18s;
-}
-
-.gallery-thumb-img:hover {
-    transform: scale(1.04);
-    box-shadow: 0 4px 12px rgba(74,144,226,0.18);
+    display: block;
 }
 
 .gallery-thumb-more {
-    width: 100%;
-    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(74,144,226,0.08);
+    height: 100%;
+    background: #f5f5f5;
     border-radius: 8px;
-    color: #4A90E2;
     font-weight: bold;
-    font-size: 1rem;
-    border: 1px solid #e0e0e0;
+    color: #555;
     cursor: pointer;
+    margin-top: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
-.gallery-thumb-more span {
+/* Ajusta la columna lateral para el intercambio */
+.property-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.reviews-section {
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    margin-bottom: 0;
+}
+
+#map {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    background: #fff;
+    min-height: 320px;
+    height: 320px;
+}
+
+/* Galería moderna tipo grid */
+.property-gallery-ideal {
+    margin-bottom: -14px;
+    border: 0px solid #e0e7ef;
+    border-radius: 0px;
+    box-shadow: 1 18px 18px #0d6efd;
+    background: #ffffff;
+    padding: 0px 80px -1px 0px;
+}
+
+/* Galería grid interna */
+.gallery-grid {
+    display: grid;
+    grid-template-areas:
+        "main main thumb1"
+        "main main thumb2"
+        "main main thumb3"
+        "main main thumb4";
+    grid-template-columns: 2fr 2fr 1fr;
+    grid-template-rows: repeat(4, 80px);
+    gap: 12px;
+    height: 340px;
+    max-width: 700px;
+    margin: 0 auto;
+    border-radius: 12px;
+    /* El borde externo ya lo tiene el contenedor */
+}
+
+.gallery-grid-item {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
     display: flex;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    height: 100%;
 }
 
-/* Ajuste para columnas principales */
-.property-columns {
-    display: flex;
-    gap: 2rem;
-    align-items: flex-start;
-    flex-wrap: wrap;
+.gallery-grid-main {
+    grid-area: main;
+    grid-row: 1 / span 4;
+    grid-column: 1 / span 2;
+    height: 100%;
+}
+.gallery-grid-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
 }
 
-.property-main {
-    flex: 1 1 55%;
-    min-width: 340px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
+.gallery-grid-item:not(.gallery-grid-main) {
+    width: 100%;
+    height: 80px;
+}
+.gallery-grid-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
 }
 
-.property-side {
-    flex: 1 1 40%;
-    min-width: 320px;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    align-items: stretch;
+.gallery-grid-item.gallery-grid-more {
+    background: #f5f5f5;
+    color: #555;
+    font-weight: bold;
+    font-size: 1.1em;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 2px dashed #ccc;
 }
 
-/* Responsive para galería */
+/* Responsive para pantallas pequeñas */
+@media (max-width: 900px) {
+    .gallery-grid {
+        grid-template-areas:
+            "main"
+            "thumb1"
+            "thumb2"
+            "thumb3"
+            "thumb4";
+        grid-template-columns: 1fr;
+        grid-template-rows: 180px repeat(4, 60px);
+        height: auto;
+        max-width: 100%;
+    }
+    .gallery-grid-main {
+        grid-row: 1;
+        grid-column: 1;
+        height: 180px;
+    }
+    .gallery-grid-item:not(.gallery-grid-main) {
+        height: 60px;
+    }
+}
+
+/* Responsive para pantallas pequeñas */
 @media (max-width: 900px) {
     .property-columns {
         flex-direction: column;
     }
-    .property-main, .property-side {
-        min-width: 0;
-        width: 100%;
-    }
-    .property-side {
-        margin-top: 2rem;
+    .property-gallery-grid.gallery-fill-space,
+    #map {
+        height: 220px;
+        min-height: 220px;
     }
     .property-gallery-grid {
         flex-direction: column;
         gap: 8px;
+        margin-top: 2rem;
     }
     .gallery-main-img img {
         height: 160px;
@@ -660,4 +755,44 @@ button:hover {
         width: 60px;
         height: 40px;
     }
+}
+
+.property-gallery-grid-static {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+    align-items: stretch; /* Estira ambas columnas */
+    margin-bottom: 1.2rem;
+    width: 100%;
+    /* El alto lo determina la columna derecha */
+}
+
+.main-img-container {
+    width: 100%;
+    height: 100%; /* Ocupa todo el alto del grid */
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(74,144,226,0.13);
+    background: #f4f8fc;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.main-gallery-img {
+    width: 100%;
+    height: 100%; /* Ocupa todo el alto del contenedor */
+    object-fit: cover;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform 0.18s;
+}
+
+.thumbs-container {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: flex-start;
+    justify-content: flex-start;
+    height: 100%; /* Ocupa todo el alto de la columna */
 }

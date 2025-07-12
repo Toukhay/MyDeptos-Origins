@@ -135,14 +135,14 @@
     </header>
     <!-- Bienvenida arriba de todo, centrada, con espacio debajo del nav -->
     <h1 class="welcome-title">
-        ¡Bienvenido!
+        ¡Bienvenid@!
     </h1>
     <p class="welcome-desc">
         {% if is_authenticated and user_name %}
-            {{ user_name }}, el portal más completo para encontrar departamentos y casas en Oberá y alrededores.<br>
-            Explora, filtra y encuentra tu próximo hogar de manera fácil y segura.
+            {{ user_name }}. La web-app mas dedicada a tus busquedas mas necesitadas MyDeptos vino a quedarse<br>
+            Explora, filtra y encontra tu próximo departamento cerca de tus lugares y de la manera fácil y segura.
         {% else %}
-            El portal más completo para encontrar departamentos y casas en Oberá y alrededores.<br>
+            La web-app mas dedicada a tus busquedas mas necesitadas MyDeptos vino a quedarse<br>
             Explora, filtra y encuentra tu próximo hogar de manera fácil y segura.
         {% endif %}
     </p>
@@ -192,7 +192,7 @@
         </div>
         <!-- Contenido principal a la derecha -->
         <div class="container home-bottom-container" style="margin-top: 1.2rem;">
-            <h2 class="listings-header">Últimos Departamentos</h2>
+            <h2 class="listings-header">¡Últimos Departamentos publicados y las novedades recientes!</h2>
             <div class="listings home-listings">
                 {% for depto in ultimos_departamentos %}
                 <div class="listing-card">

@@ -33,30 +33,32 @@
     </header>
     <div class="container">
         <div class="property-columns">
-            <!-- Primera columna: Galería tipo "imagen pegada" -->
+            <!-- Columna principal: Galería y detalles -->
             <div class="property-main">
-                <div class="property-details">
-                    <h1>{{ departamento['titulo'] }}</h1>
+                <!-- Galería moderna tipo grid -->
+                <div class="property-gallery-ideal">
                     {% if departamento['fotos'] %}
-                    <div class="property-gallery-grid">
+                    <div class="gallery-grid">
                         {% set total = departamento['fotos']|length %}
-                        {% if total > 0 %}
-                            <div class="gallery-main-img">
-                                <img src="{{ url_for('static', filename='image/' + departamento['fotos'][0]) }}" alt="Imagen principal" />
+                        {% for foto in departamento['fotos'][:5] %}
+                            <div class="gallery-grid-item {% if loop.index0 == 0 %}gallery-grid-main{% endif %}">
+                                <img src="{{ url_for('static', filename='image/' + foto) }}"
+                                     alt="Foto {{ loop.index }}"
+                                     onclick="openImageModal('{{ url_for('static', filename='image/' + foto) }}')"
+                                     style="cursor:pointer;" />
                             </div>
-                            <div class="gallery-side-thumbs">
-                                {% for foto in departamento['fotos'][1:5] %}
-                                    <img src="{{ url_for('static', filename='image/' + foto) }}" class="gallery-thumb-img" alt="Miniatura {{ loop.index }}">
-                                {% endfor %}
-                                {% if total > 5 %}
-                                    <div class="gallery-thumb-more">
-                                        <span>Ver todas las fotos</span>
-                                    </div>
-                                {% endif %}
+                        {% endfor %}
+                        {% if total > 5 %}
+                            <div class="gallery-grid-item gallery-grid-more" onclick="window.location.href='#'">
+                                <span>+{{ total - 5 }} fotos</span>
                             </div>
                         {% endif %}
                     </div>
                     {% endif %}
+                </div>
+                <!-- Información separada -->
+                <div class="property-details">
+                    <h1>{{ departamento['titulo'] }}</h1>
                     <p>{{ departamento['descripcion'] }}</p>
                     <p class="price">Precio: ${{ departamento['precio'] }} {{ departamento['moneda'] }}</p>
                     <p>Ambientes: {{ departamento['ambientes'] }}</p>
@@ -68,6 +70,7 @@
                         <h3>Publicado por:</h3>
                         <p>Nombre: {{ publicador['nombre'] }}</p>
                         <p>Email: {{ publicador['email'] }}</p>
+                        <p>Tipo: <strong>{{ departamento['rol_inmo_dir'] }}</strong></p>
                         <!-- Botón WhatsApp -->
                         <a href="https://wa.me/{{ publicador['telefono'] }}?text=Hola, estoy interesado en tu departamento publicado en MyDeptos: {{ departamento['titulo'] }}" 
                             target="_blank" class="whatsapp-btn" title="Contactar por WhatsApp">
@@ -86,12 +89,10 @@
                     {% endif %}
                 </div>
             </div>
-            <!-- Segunda columna: Mapa y reseñas -->
+            <!-- Columna lateral: Reseñas y mapa -->
             <div class="property-side">
-                <!-- Contenedor del mapa -->
-                <div id="map" style="height: 400px; margin-bottom: 20px;"></div>
-                <!-- Sección de Reseñas -->
-                <div class="reviews-section">
+                <!-- Sección de Reseñas (ahora arriba) -->
+                <div class="reviews-section" style="margin-bottom:20px;">
                     <h2>Reseñas</h2>
                     {% if current_user.is_authenticated and current_user_id != departamento.propietario_id and not user_has_reviewed %}
                         <div class="card review-form-card custom-review-form">
@@ -153,7 +154,8 @@
                         {% endif %}
                     </div>
                 </div>
-                <!-- Fin Sección de Reseñas -->
+                <!-- Contenedor del mapa (ahora abajo) -->
+                <div id="map" style="height: 400px; margin-bottom: 0;"></div>
             </div>
         </div>
     </div>
@@ -183,6 +185,16 @@
                         {{ edit_resena_form.submit(class="btn btn-primary") }}
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para imagen ampliada -->
+    <div id="imageModal" class="modal fade" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="background:transparent; border:none;">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar" style="position:absolute;top:10px;right:10px;z-index:2;"></button>
+                <img id="modalImage" src="" alt="Imagen ampliada" style="width:100%;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,0.25);" />
             </div>
         </div>
     </div>
@@ -292,6 +304,13 @@
                 console.error('Error en toggleFavorite:', error);
                 alert('No se pudo procesar la solicitud: ' + error.message);
             });
+        }
+
+        function openImageModal(imgSrc) {
+            const modalImg = document.getElementById('modalImage');
+            modalImg.src = imgSrc;
+            const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+            modal.show();
         }
     </script>
 </body>

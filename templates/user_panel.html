@@ -229,6 +229,11 @@
                         <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Editar Perfil</a>
                         <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar Sesión</a>
                     </div>
+                    {% if session.get('user_rol') == 'admin' %}
+                    <div style="margin-top:1rem;">
+                        <a href="{{ url_for('admin_panel') }}" class="btn btn-edit" style="background:#8e44ad;color:#fff;width:100%;">Panel de Administración</a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             <!-- Historial de Notificaciones -->

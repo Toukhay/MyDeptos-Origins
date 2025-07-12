@@ -1548,20 +1548,23 @@ def admin_edit_depto(depto_id):
     cur.close()
     return render_template('admin_edit_depto.html', depto=depto)
 
-@app.route('/admin/depto/<int:depto_id>/delete', methods=['POST'])
-@csrf.exempt
+@app.route('/admin/depto/<int:depto_id>/delete', methods=['POST', 'GET'])
 @admin_required
 def admin_delete_depto(depto_id):
     cur = mysql.connection.cursor()
-    # Eliminar coordenadas asociadas primero
-    cur.execute("DELETE FROM coordenadas WHERE id_departamento = %s", (depto_id,))
-    # Eliminar fotos asociadas (opcional, pero recomendable)
+    # Elimina primero los registros relacionados en las tablas hijas
+    cur.execute("DELETE FROM clicks WHERE id_departamento = %s", (depto_id,))
+    cur.execute("DELETE FROM resena WHERE id_departamento = %s", (depto_id,))
+    cur.execute("DELETE FROM favorito WHERE id_departamento = %s", (depto_id,))
     cur.execute("DELETE FROM foto WHERE id_departamento = %s", (depto_id,))
-    # Ahora sí, eliminar el departamento
+    cur.execute("DELETE FROM coordenadas WHERE id_departamento = %s", (depto_id,))
+    # Si tienes otras tablas con FK a departamento, agrégalas aquí
+
+    # Ahora elimina el departamento
     cur.execute("DELETE FROM departamento WHERE id_departamento = %s", (depto_id,))
     mysql.connection.commit()
     cur.close()
-    flash('Departamento eliminado.', 'success')
+    flash('Departamento eliminado correctamente.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/foto/<int:depto_id>/<foto_nombre>/delete', methods=['POST'])
