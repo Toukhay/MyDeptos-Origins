@@ -15,7 +15,6 @@ lxml==5.4.0
 MarkupSafe==3.0.2
 mysql-connector-python==9.2.0
 mysqlclient==2.2.7
-psycopg2-binary==2.9.10
 python-docx==1.2.0
 python-dotenv==1.1.1
 typing_extensions==4.14.0

@@ -1,56 +1,53 @@
 # MyDeptosFinal
 
-**MyDeptosFinal** es un proyecto *WEB-APP* que trata de una página de departamentos desarrollado utilizando HTML, CSS, JavaScript, y Flask como backend, con MySQL como base de datos. El proposito surgio en el intentar siendo un estudiante junto con mi compañera poder lograr resolver la famosa pregunta cuando estas en una ciudad siendo trabajador, estudiante, ¿Donde puedo encontrar un departamento disponible cerca de la zona? 
+**MyDeptosFinal** es una *WEB-APP* para encontrar y publicar departamentos, pensada para estudiantes y trabajadores que buscan alojamiento en una ciudad.
 
 ## Tecnologías Utilizadas
 
-- **HTML**: Para la estructura de las páginas web.
-- **CSS**: Para el estilo y diseño de la interfaz de usuario.
-- **JavaScript**: Para la interactividad en el lado del cliente.
-- **Flask**: Framework de Python para el backend.
-- **MySQL**: Base de datos relacional para almacenar la información de los departamentos.
-- **XAMPP**: Herramienta utilizada para crear un servidor local que facilita la ejecución de MySQL y PHP.
+- **HTML, CSS, JavaScript**: Frontend.
+- **Flask**: Backend en Python.
+- **MySQL**: Base de datos.
+- **XAMPP**: Servidor local para MySQL.
 
+## Estructura del Proyecto
 
-### Pasos para ejecutar el proyecto
+- `/static/css/`: Hojas de estilo.
+- `/templates/`: Archivos HTML de las vistas.
+- `app.py`: Lógica principal de la aplicación.
+- `requirements.txt`: Dependencias de Python.
+- `SECURITY.md`: Política de seguridad.
+- `README.md`: Documentación principal.
 
-1. **Clona el repositorio** en tu máquina local:
+## Funcionalidades Principales
+
+- Registro y login de usuarios.
+- Recuperación y cambio de contraseña.
+- Publicación, edición y eliminación de departamentos.
+- Favoritos y notificaciones.
+- Panel de administración para gestión de usuarios y departamentos.
+- Paginación y búsqueda avanzada.
+- Seguridad: hash de contraseñas, protección CSRF, validación de datos.
+
+## Instalación y Ejecución
+
+1. **Clona el repositorio**:
 
     ```bash
     git clone https://github.com/Toukhay/MyDeptosFinal.git
     ```
 
 2. **Configura la base de datos**:
-   - Asegúrate de que XAMPP esté ejecutándose y MySQL esté activo.
-   - Accede a phpMyAdmin (usualmente en `http://localhost/phpmyadmin`) y crea una base de datos para el proyecto.
-   - Configura la conexión a la base de datos en el proyecto (probablemente en un archivo de configuración de Flask).
-   - Si tienes un archivo SQL de ejemplo, impórtalo en la base de datos.
+   - Usa XAMPP y phpMyAdmin para crear la base de datos.
+   - Importa el archivo SQL si está disponible.
 
-3. **Instala las dependencias de Python**:
-   - Navega a la carpeta del proyecto:
+3. **Instala dependencias**:
 
-     ```bash
-     cd MyDeptosFinal
-     ```
-
-   - Crea un entorno virtual (opcional, pero recomendado):
-
-     ```bash
-     python -m venv venv
-     ```
-
-   - Activa el entorno virtual:
-     - En Windows:
-
-       ```bash
-       venv\Scripts\activate
-       ```
-
-   - Instala las dependencias necesarias:
-
-     ```bash
-     pip install -r requirements.txt
-     ```
+    ```bash
+    cd MyDeptosFinal
+    python -m venv venv
+    venv\Scripts\activate
+    pip install -r requirements.txt
+    ```
 
 4. **Ejecuta el servidor Flask**:
 
@@ -58,21 +55,66 @@
     python app.py
     ```
 
-    Esto iniciará el servidor Flask, y podrás acceder al proyecto en tu navegador en:
+    Accede en [http://localhost:5000](http://localhost:5000)
 
-    ```
-    http://localhost:5000
-    ```
+## Pruebas
+
+Actualmente las pruebas son manuales. Para contribuir con tests automáticos, crea archivos en `/tests/` y usa `pytest`.
+
+## Seguridad
+
+Consulta [SECURITY.md](SECURITY.md) para detalles sobre prácticas y reporte de vulnerabilidades.
 
 ## Contribuciones
 
-Si deseas contribuir al proyecto, por favor sigue estos pasos:
-
-1. Haz un fork de este repositorio.
-2. Crea una nueva rama para tus cambios.
-3. Realiza tus cambios y haz un commit con una descripción clara.
-4. Envía un pull request.
+1. Haz un fork.
+2. Crea una rama.
+3. Haz tus cambios y crea un pull request.
 
 ## Licencia
 
-Este proyecto está licenciado bajo la [MIT License](LICENSE).
+MIT License.
+
+## Preguntas Frecuentes (FAQ)
+
+**¿Qué hago si la aplicación no inicia?**  
+- Verifica que tengas Python 3 instalado y que hayas activado el entorno virtual.
+- Revisa que la base de datos esté creada y configurada correctamente en XAMPP.
+
+**¿Cómo recupero mi contraseña?**  
+- Haz clic en "¿Olvidaste tu contraseña?" en la página de login y sigue los pasos.
+
+**¿Puedo publicar más de un departamento?**  
+- Sí, cada usuario puede publicar varios departamentos desde su panel.
+
+**¿Cómo elimino mi cuenta?**  
+- Solicita la eliminación desde el panel de usuario o contacta al administrador.
+
+**¿Dónde reporto errores o sugerencias?**  
+- Crea un "Issue" en GitHub o envía un correo a facu-202020@hotmail.com.
+
+---
+
+## Ejemplos de Uso
+
+**Registro de usuario:**
+1. Accede a la página principal.
+2. Haz clic en "Registrarse".
+3. Completa el formulario y confirma tu correo.
+
+**Publicar un departamento:**
+1. Inicia sesión.
+2. Ve al panel de usuario y selecciona "Publicar departamento".
+3. Completa los datos y sube imágenes.
+
+**Agregar a favoritos:**
+1. Busca departamentos en la página principal.
+2. Haz clic en el ícono de "favorito" para guardar el departamento en tu lista.
+
+**Recuperar contraseña:**
+1. Haz clic en "¿Olvidaste tu contraseña?".
+2. Ingresa tu correo y sigue las instrucciones enviadas.
+
+**Acceso como administrador:**
+1. Inicia sesión con una cuenta de administrador.
+2. Accede al panel de administración para gestionar usuarios y departamentos.

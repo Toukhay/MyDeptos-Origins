@@ -1,21 +1,33 @@
-# Security Policy
+# Política de Seguridad
 
-## Supported Versions
+## Versiones Soportadas
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Actualmente, el proyecto **MyDeptosFinal** está en desarrollo activo. Se recomienda usar siempre la última versión disponible en el repositorio.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Versión | Soporte de Seguridad |
+| ------- | ------------------- |
+| 1.x     | :white_check_mark:  |
+| < 1.0   | :x:                 |
 
-## Reporting a Vulnerability
+## Reporte de Vulnerabilidades
 
-Use this section to tell people how to report a vulnerability.
+Si encuentras una vulnerabilidad o problema de seguridad, por favor repórtalo de la siguiente manera:
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+- Envía un correo a: **facu-202020@hotmail.com** o a **moramaia18@gmail.com**
+- O crea un "Issue" en el repositorio de GitHub con el título `[SECURITY] Descripción breve del problema`.
+
+Nos comprometemos a responder en un plazo máximo de 72 horas. Si la vulnerabilidad es confirmada, se publicará una actualización y se notificará a los usuarios.
+
+## Prácticas de Seguridad Implementadas
+
+- Hash de contraseñas con bcrypt.
+- Protección CSRF en formularios.
+- Validación de datos de entrada.
+- Gestión de sesiones segura.
+- Restricción de acceso por roles (usuario/admin).
+
+## Recomendaciones para Usuarios
+
+- Usa contraseñas seguras y cámbialas periódicamente.
+- No compartas tus credenciales.
+- Mantén tu navegador y sistema operativo actualizados.

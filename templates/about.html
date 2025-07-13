@@ -31,8 +31,34 @@
     <div class="container">
         <div class="about-content">
             <h1>Sobre MyDeptos</h1>
-            <p>Bienvenido a MyDeptos, tu plataforma de confianza para encontrar el departamento o la casa de tus sueños en la región. Nuestra misión es facilitar la conexión entre quienes buscan un nuevo hogar y quienes ofrecen propiedades, ya sean dueños directos o inmobiliarias.</p>
-            
+            <section class="who-we-are">
+                <h2>¿Quiénes Somos?</h2>
+                <p>
+                    Somos <strong>Facundo Barrios Schallmoser</strong> y <strong>Maia Lujan Mora</strong>, estudiantes de la carrera Analista Programador con conocimientos integrales en Back End y Front End. MyDeptos es el resultado de nuestro proyecto final universitario, pensado para resolver una necesidad real en Oberá, Misiones: facilitar la búsqueda y publicación de departamentos para estudiantes y trabajadores.
+                </p>
+                <p>
+                    A lo largo del desarrollo, aplicamos conocimientos en <strong>programación, diseño de bases de datos, seguridad informática, experiencia de usuario y gestión de proyectos</strong>. Nos enfrentamos a desafíos técnicos y de diseño, buscando siempre la mejor solución para que la plataforma sea intuitiva, segura y útil para todos.
+                </p>
+                <p>
+                    Nuestra motivación principal fue crear una herramienta que ayude a la comunidad, conectando personas que buscan alojamiento con quienes ofrecen propiedades, y promoviendo la confianza y el crecimiento local.
+                </p>
+                <div class="team-section">
+                    <h3 style="text-align:center; margin-bottom: 2rem;">Equipo de Desarrollo</h3>
+                    <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
+                        <div class="team-member" style="text-align:center;">
+                            <img src="{{ url_for('static', filename='image/facufoto.jpeg') }}" alt="Facundo Barrios Schallmoser" width="180" height="180">
+                            <h3>Facundo Barrios Schallmoser</h3>
+                            <p>Desarrollador Backend, gestor de base de datos y seguridad.</p>
+                        </div>
+                        <div class="team-member" style="text-align:center;">
+                            <img src="{{ url_for('static', filename='image/maiafoto.jpg') }}" alt="Maia Lujan Mora" width="180" height="180">
+                            <h3>Maia Lujan Mora</h3>
+                            <p>Desarrolladora Frontend, diseño de experiencia de usuario y documentación.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section class="mission-vision">
                 <h2>Nuestra Misión</h2>
                 <p>Proveer una herramienta intuitiva, segura y eficiente que simplifique el proceso de búsqueda y publicación de propiedades inmobiliarias, fomentando transacciones transparentes y satisfactorias para todos nuestros usuarios.</p>
@@ -51,11 +77,25 @@
                 </ul>
             </section>
 
+            <section class="project-goal">
+                <h2>Finalidad y Objetivo del Proyecto</h2>
+                <p>
+                    MyDeptos fue creado para responder a la pregunta: <em>¿Dónde puedo encontrar un departamento disponible cerca de la zona?</em> La plataforma permite buscar propiedades con filtros avanzados, publicar departamentos con fotos y ubicación en mapa, gestionar favoritos y recibir notificaciones. Además, integra sistema de reseñas y contacto directo con propietarios vía WhatsApp, asegurando una experiencia completa y segura.
+                </p>
+                <p>
+                    El objetivo principal es <strong>facilitar el acceso a la vivienda</strong> y mejorar la comunicación entre propietarios y quienes buscan un nuevo hogar, utilizando tecnología moderna y buenas prácticas de desarrollo. Aspiramos a que MyDeptos sea una referencia para estudiantes, trabajadores y propietarios de la región.
+                </p>
+            </section>
+
             <section class="contact-info">
                 <h2>Contáctanos</h2>
-                <p>Si tienes alguna pregunta, sugerencia o necesitas asistencia, no dudes en ponerte en contacto con nuestro equipo. Estamos aquí para ayudarte.</p>
+                <p>¿Tienes dudas, sugerencias o necesitas ayuda? Estamos para escucharte y mejorar juntos la plataforma.</p>
                 <p>Email: <a href="mailto:contacto@mydeptos.com">contacto@mydeptos.com</a></p>
-                <!-- Puedes añadir más información de contacto si lo deseas -->
+                <p>También puedes encontrarnos en nuestras redes sociales:</p>
+                <ul>
+                    <li><a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a></li>
+                    <li><a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a></li>
+                </ul>
             </section>
         </div>
     </div>
