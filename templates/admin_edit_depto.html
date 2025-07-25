@@ -3,24 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <title>Editar Departamento</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_edit_depto.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_panel.css') }}">
+    <style>
+        .admin-form-container {
+            max-width: 480px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+            padding: 2.5rem 2rem 2rem 2rem;
+        }
+        .admin-form-container h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2563eb;
+        }
+        .admin-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #222;
+        }
+        .admin-form input[type="text"],
+        .admin-form input[type="number"] {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid #cfd8dc;
+            border-radius: 5px;
+            font-size: 1rem;
+            background: #f8fafc;
+            transition: border 0.2s;
+        }
+        .admin-form button, .admin-form a {
+            display: inline-block;
+            margin-right: 0.7rem;
+            margin-top: 0.5rem;
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background: #2563eb;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .admin-form button:hover, .admin-form a:hover {
+            background: #174ea6;
+        }
+    </style>
 </head>
-<body>
-    <h1>Editar Departamento</h1>
-    <form method="post" action="{{ url_for('admin_edit_depto', depto_id=depto[0]) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label>Título: <input type="text" name="titulo" value="{{ depto[1] }}" required></label><br>
-        <label>Descripción: <input type="text" name="descripcion" value="{{ depto[2] }}" required></label><br>
-        <label>Precio: <input type="number" name="precio" value="{{ depto[3] }}" required></label><br>
-        <label>Moneda: <input type="text" name="moneda" value="{{ depto[4] }}" required></label><br>
-        <label>Ambientes: <input type="number" name="ambientes" value="{{ depto[5] }}" required></label><br>
-        <label>Dormitorios: <input type="number" name="dormitorios" value="{{ depto[6] }}" required></label><br>
-        <label>Baños: <input type="number" name="banos" value="{{ depto[7] }}" required></label><br>
-        <label>Superficie: <input type="number" name="superficie" value="{{ depto[8] }}" required></label><br>
-        <label>Dirección: <input type="text" name="direccion" value="{{ depto[9] }}" required></label><br>
-        <label>Rol Inmobiliario: <input type="text" name="rol_inmo_dir" value="{{ depto[10] }}" required></label><br>
-        <button type="submit">Guardar</button>
-        <a href="{{ url_for('admin_panel') }}">Cancelar</a>
-    </form>
+<body style="background: #f3f6fa;">
+    <div class="admin-form-container">
+        <h1>Editar Departamento</h1>
+        <form class="admin-form" method="post" action="{{ url_for('admin_edit_depto', depto_id=depto[0]) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>Título:
+                <input type="text" name="titulo" value="{{ depto[1] }}" required>
+            </label>
+            <label>Descripción:
+                <input type="text" name="descripcion" value="{{ depto[2] }}" required>
+            </label>
+            <label>Precio:
+                <input type="number" name="precio" value="{{ depto[3] }}" required>
+            </label>
+            <label>Moneda:
+                <input type="text" name="moneda" value="{{ depto[4] }}" required>
+            </label>
+            <label>Ambientes:
+                <input type="number" name="ambientes" value="{{ depto[5] }}" required>
+            </label>
+            <label>Dormitorios:
+                <input type="number" name="dormitorios" value="{{ depto[6] }}" required>
+            </label>
+            <label>Baños:
+                <input type="number" name="banos" value="{{ depto[7] }}" required>
+            </label>
+            <label>Superficie:
+                <input type="number" name="superficie" value="{{ depto[8] }}" required>
+            </label>
+            <label>Dirección:
+                <input type="text" name="direccion" value="{{ depto[9] }}" required>
+            </label>
+            <label>Rol Inmobiliario:
+                <input type="text" name="rol_inmo_dir" value="{{ depto[10] }}" required>
+            </label>
+            <div style="margin-top: 1.5rem;">
+                <button type="submit">Guardar</button>
+                <a href="{{ url_for('admin_panel') }}">Cancelar</a>
+            </div>
+        </form>
+    </div>
 </body>
 </html>

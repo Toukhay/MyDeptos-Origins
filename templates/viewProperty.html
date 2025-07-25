@@ -43,9 +43,9 @@
                         {% for foto in departamento['fotos'][:5] %}
                             <div class="gallery-grid-item {% if loop.index0 == 0 %}gallery-grid-main{% endif %}">
                                 <img src="{{ url_for('static', filename='image/' + foto) }}"
-                                     alt="Foto {{ loop.index }}"
-                                     onclick="openImageModal('{{ url_for('static', filename='image/' + foto) }}')"
-                                     style="cursor:pointer;" />
+                                    alt="Foto {{ loop.index }}"
+                                    onclick="openImageModal('{{ url_for('static', filename='image/' + foto) }}')"
+                                    style="cursor:pointer;" />
                             </div>
                         {% endfor %}
                         {% if total > 5 %}
@@ -64,7 +64,14 @@
                     <p>Ambientes: {{ departamento['ambientes'] }}</p>
                     <p>Dormitorios: {{ departamento['dormitorios'] }}</p>
                     <p>Baños: {{ departamento['banos'] }}</p>
-                    <p>Superficie: {{ departamento['superficie'] }} m²</p>
+                    <p>
+                        Superficie:
+                        {% if departamento['superficie'] is not none %}
+                            {{ departamento['superficie'] }} m²
+                        {% else %}
+                            No se mencionó
+                        {% endif %}
+                    </p>
                     <p>Dirección: {{ departamento['direccion'] }}</p>
                     <div class="publisher-info">
                         <h3>Publicado por:</h3>
@@ -74,7 +81,7 @@
                         <!-- Botón WhatsApp -->
                         <a href="https://wa.me/{{ publicador['telefono'] }}?text=Hola, estoy interesado en tu departamento publicado en MyDeptos: {{ departamento['titulo'] }}" 
                             target="_blank" class="whatsapp-btn" title="Contactar por WhatsApp">
-                            <img src="{{ url_for('static', filename='image/whatsapp.png') }}" alt="WhatsApp" class="whatsapp-icon" style="width:20px; height:20px;">
+                            <img src="{{ url_for('static', filename='image/whatsapp.png') }}" alt="WhatsApp" class="whatsapp-icon" style="width:70px; height: 80px;">
                             <span class="whatsapp-text">Contactar por WhatsApp</span>
                         </a>
                     </div>

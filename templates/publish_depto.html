@@ -54,7 +54,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="title">Título</label>
-                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), id="title", placeholder="Ej: Acogedor departamento en el centro") }}
+                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), id="title", placeholder="Ej: Departamento en el centro, Departamento cerca del banco") }}
                             {% if form.title.errors %}
                                 <div class="invalid-feedback">
                                     {% for error in form.title.errors %}<span>{{ error }}</span>{% endfor %}
@@ -64,7 +64,7 @@
                         <div class="form-group">
                             <label for="price">Precio</label>
                             <div class="price-input-group">
-                                {{ form.price(class="form-control" + (" is-invalid" if form.price.errors else ""), id="price", placeholder="Ej: 150000") }}
+                                {{ form.price(class="form-control" + (" is-invalid" if form.price.errors else ""), id="price", placeholder="Ej: 150.000") }}
                                 {{ form.moneda(class="form-control" + (" is-invalid" if form.moneda.errors else ""), id="moneda") }}
                             </div>
                             {% if form.price.errors %}
@@ -124,7 +124,7 @@
                         </div>
                         <div class="form-group">
                             <label for="superficie">Superficie (m²)</label>
-                            {{ form.superficie(class="form-control" + (" is-invalid" if form.superficie.errors else ""), placeholder="Ej: 65") }}
+                            {{ form.superficie(class="form-control" + (" is-invalid" if form.superficie.errors else ""), placeholder="Ej: 65", required=False) }}
                             {% if form.superficie.errors %}
                                 <div class="invalid-feedback">
                                     {% for error in form.superficie.errors %}<span>{{ error }}</span>{% endfor %}
@@ -283,11 +283,22 @@
         // Subida de imágenes
         document.getElementById('photos').addEventListener('change', function(e) {
             const preview = document.getElementById('preview-container');
-            preview.innerHTML = ''; // Limpiar previsualizaciones anteriores
-            
+            // Acumular archivos nuevos sin reemplazar los anteriores
             Array.from(e.target.files).forEach(file => {
+                // Evitar duplicados por nombre y tamaño
+                if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                    selectedFiles.push(file);
+                }
+            });
+            // Limitar a 5 imágenes
+            if (selectedFiles.length > 5) {
+                selectedFiles = selectedFiles.slice(0, 5);
+                alert('Solo puedes seleccionar hasta 5 imágenes.');
+            }
+            // Mostrar previsualización
+            preview.innerHTML = '';
+            selectedFiles.forEach(file => {
                 if (!file.type.startsWith('image/')) return;
-                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = document.createElement('img');
@@ -297,6 +308,22 @@
                 };
                 reader.readAsDataURL(file);
             });
+            // Limpiar el input para permitir volver a seleccionar el mismo archivo si se elimina
+            e.target.value = '';
+        });
+
+        // Permitir acumulación de imágenes seleccionadas
+        let selectedFiles = [];
+
+        // Al enviar el formulario, agregar los archivos acumulados al FormData
+        document.getElementById('publishForm').addEventListener('submit', function(event) {
+            // Si el formulario se envía por AJAX, agregar los archivos manualmente
+            // Si es envío normal, reemplazar los archivos del input por los acumulados
+            if (selectedFiles.length > 0) {
+                const dataTransfer = new DataTransfer();
+                selectedFiles.forEach(file => dataTransfer.items.add(file));
+                document.getElementById('photos').files = dataTransfer.files;
+            }
         });
 
         // Animación de carga
@@ -340,6 +367,29 @@
                 showAlert('Por favor, selecciona una ubicación en el mapa.', 'danger'); // Usar 'danger' para errores
             }
             // La validación de cantidad de imágenes ahora se maneja mejor en el servidor.
+        });
+
+        // Formatea el input de precio con puntos de miles al escribir
+        function formatNumberInput(input) {
+            let value = input.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+            if (value === '') {
+                input.value = '';
+                return;
+            }
+            input.value = parseInt(value, 10).toLocaleString('es-AR');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var priceInput = document.getElementById('price');
+            if (priceInput) {
+                priceInput.addEventListener('input', function () {
+                    formatNumberInput(this);
+                });
+                // Al enviar el formulario, limpiar los puntos para enviar solo números
+                priceInput.form && priceInput.form.addEventListener('submit', function () {
+                    priceInput.value = priceInput.value.replace(/\./g, '');
+                });
+            }
         });
     </script>
 </body>

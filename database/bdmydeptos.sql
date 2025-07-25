@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 12-07-2025 a las 23:53:06
+-- Tiempo de generación: 24-07-2025 a las 01:14:58
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -20,27 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `bdmydeptos`
 --
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `clicks`
---
-
-CREATE TABLE `clicks` (
-  `id_click` int(11) NOT NULL,
-  `id_departamento` int(11) NOT NULL,
-  `fecha` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
---
--- Volcado de datos para la tabla `clicks`
---
-
-INSERT INTO `clicks` (`id_click`, `id_departamento`, `fecha`) VALUES
-(1, 129, '2025-07-05'),
-(2, 132, '2025-07-06'),
-(3, 132, '2025-07-06');
 
 -- --------------------------------------------------------
 
@@ -158,7 +137,9 @@ INSERT INTO `favorito` (`id_favorito`, `id_usuario`, `id_departamento`, `fecha_a
 (220, 13, 133, '2025-07-06 22:30:29'),
 (221, 13, 134, '2025-07-06 22:30:30'),
 (223, 13, 117, '2025-07-06 22:30:34'),
-(231, 12, 120, '2025-07-09 17:36:08');
+(231, 12, 120, '2025-07-09 17:36:08'),
+(233, 25, 129, '2025-07-12 22:12:44'),
+(234, 25, 120, '2025-07-12 22:12:45');
 
 -- --------------------------------------------------------
 
@@ -183,9 +164,8 @@ INSERT INTO `foto` (`id_foto`, `id_departamento`, `url_foto`) VALUES
 (193, 132, 'c1257296671d4e20abf7bb5b8f6a9a80_780881-3440x1440-desktop-dual-monitors-mount-fuji-wallpaper-image.jpg'),
 (194, 132, 'e04a019281334784a2e52e47c1c42df5_thumb-1920-1360883.jpeg'),
 (195, 132, '69b1cc83c1274f08b0992e85794c60b8_whatsapp.png'),
-(210, 129, 'a6ac56348fa441d8ba3f6decad44ca5c_LogoTG.jpg'),
-(211, 129, 'f333cc52f76a456d9e8da59a7404e016_logo.jpg'),
-(212, 129, 'cecfac3c524743d4b2abf386eb816cb3_love-death-robots-7680x4320-22564.png');
+(213, 129, '290765ba35514078a8d093e8a9212a42_angel_2.webp'),
+(214, 129, '604b30dbb51644dd8dee1a0dc68e31f5_angel2.webp');
 
 -- --------------------------------------------------------
 
@@ -289,13 +269,6 @@ INSERT INTO `usuario` (`id`, `name`, `email`, `password`, `fecha_registro`, `fec
 --
 
 --
--- Indices de la tabla `clicks`
---
-ALTER TABLE `clicks`
-  ADD PRIMARY KEY (`id_click`),
-  ADD KEY `id_departamento` (`id_departamento`);
-
---
 -- Indices de la tabla `configuracion_usuario`
 --
 ALTER TABLE `configuracion_usuario`
@@ -366,12 +339,6 @@ ALTER TABLE `usuario`
 --
 
 --
--- AUTO_INCREMENT de la tabla `clicks`
---
-ALTER TABLE `clicks`
-  MODIFY `id_click` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
 -- AUTO_INCREMENT de la tabla `configuracion_usuario`
 --
 ALTER TABLE `configuracion_usuario`
@@ -393,13 +360,13 @@ ALTER TABLE `departamento`
 -- AUTO_INCREMENT de la tabla `favorito`
 --
 ALTER TABLE `favorito`
-  MODIFY `id_favorito` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=232;
+  MODIFY `id_favorito` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=236;
 
 --
 -- AUTO_INCREMENT de la tabla `foto`
 --
 ALTER TABLE `foto`
-  MODIFY `id_foto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=213;
+  MODIFY `id_foto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=215;
 
 --
 -- AUTO_INCREMENT de la tabla `localidad`
@@ -428,12 +395,6 @@ ALTER TABLE `usuario`
 --
 -- Restricciones para tablas volcadas
 --
-
---
--- Filtros para la tabla `clicks`
---
-ALTER TABLE `clicks`
-  ADD CONSTRAINT `clicks_ibfk_1` FOREIGN KEY (`id_departamento`) REFERENCES `departamento` (`id_departamento`);
 
 --
 -- Filtros para la tabla `configuracion_usuario`

@@ -207,3 +207,17 @@ label {
     border-radius: var(--border-radius);
     border: 1px solid #ddd;
 }
+
+.footer-content a,
+.footer-content .social-media a,
+.footer-content .navigation-links a {
+    color: #fff !important;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-content a:hover,
+.footer-content .social-media a:hover,
+.footer-content .navigation-links a:hover {
+    color: #ddd !important;
+}

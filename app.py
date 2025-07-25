@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, request, session, f
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DecimalField, SelectField, IntegerField, HiddenField
 from flask_wtf.file import MultipleFileField, FileAllowed
-from wtforms.validators import DataRequired, Email, Length, NumberRange, EqualTo
+from wtforms.validators import DataRequired, Email, Length, NumberRange, EqualTo, Optional
 import bcrypt
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mysqldb import MySQL
@@ -154,7 +154,7 @@ class PublishDeptoForm(FlaskForm):
     ambientes = IntegerField('Ambientes', validators=[DataRequired(), NumberRange(min=1)])
     dormitorios = IntegerField('Dormitorios', validators=[DataRequired(), NumberRange(min=1)])
     banos = IntegerField('Baños', validators=[DataRequired(), NumberRange(min=1)])
-    superficie = DecimalField('Superficie (m²)', validators=[DataRequired(), NumberRange(min=0)])
+    superficie = DecimalField('Superficie (m²)', validators=[Optional(), NumberRange(min=0)], default=None)  # Quita DataRequired
     direccion = StringField('Dirección', validators=[DataRequired(), Length(min=5, max=200)])
     localidad = SelectField('Localidad', choices=[], validators=[DataRequired()])
     photos = MultipleFileField('Fotos del Departamento (máximo 5)', validators=[FileAllowed(['jpg', 'png', 'webp', 'jpeg'], 'Solo se permiten imágenes')])
@@ -448,8 +448,7 @@ def reset_password(token):
     return render_template('resetpassword.html')
 
 # -----------------------
-# Ruta de registro + campo de confirmacion en mi archivo register.html
-
+# Ruta de registro
 # -----------------------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -551,7 +550,7 @@ def modify_depto(depto_id):
     cursor = mysql.connection.cursor()
     cursor.execute('''
         SELECT d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.id_localidad, d.rol_inmo_dir,
-               GROUP_CONCAT(f.url_foto) AS fotos
+            GROUP_CONCAT(f.url_foto) AS fotos
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
         WHERE d.id_departamento = %s AND d.id_usuario = %s
@@ -745,7 +744,7 @@ def publish_depto():
                 ambientes = form.ambientes.data
                 dormitorios = form.dormitorios.data
                 banos = form.banos.data
-                superficie = form.superficie.data
+                superficie = form.superficie.data if form.superficie.data not in (None, '') else None
                 direccion = form.direccion.data
                 localidad = form.localidad.data
                 rol_inmo_dir = form.rol_inmo_dir.data
@@ -1163,7 +1162,6 @@ def get_localidades():
     return jsonify(localidades)
 
 @app.route('/delete_publication/<int:publication_id>', methods=['POST'])
-@csrf.exempt
 def delete_publication(publication_id):
     if 'user_id' not in session:
         flash('Debes iniciar sesión primero', 'warning')
@@ -1335,7 +1333,7 @@ def notifications():
             # Asegúrate de que el orden de los índices (row[X]) coincida con el SELECT
             fecha_envio_obj = row[5]
             fecha_formateada = "Fecha no disponible"
-            if isinstance(fecha_envio_obj, datetime.datetime):
+            if isinstance(fecha_envio_obj, datetime):  # <--- CORREGIDO aquí
                 fecha_formateada = fecha_envio_obj.strftime('%Y-%m-%d %H:%M')
             
             notif = {
@@ -1397,16 +1395,30 @@ def delete_notification(notification_id):
     cursor = None
     try:
         cursor = mysql.connection.cursor()
-        # Verificar que la notificación pertenece al usuario antes de eliminar
-        cursor.execute("DELETE FROM notificaciones WHERE id_notificacion = %s AND id_usuario_receptor = %s", 
-                    (notification_id, user_id))
-        mysql.connection.commit()
+        # Obtener id_resena_ref antes de eliminar la notificación
+        cursor.execute("SELECT id_resena_ref FROM notificaciones WHERE id_notificacion = %s AND id_usuario_receptor = %s", (notification_id, user_id))
+        res = cursor.fetchone()
+        id_resena_ref = res[0] if res else None
 
-        if cursor.rowcount > 0:
-            # flash('Notificación eliminada exitosamente.', 'success') # Opcional si la UI se actualiza con JS
-            return jsonify({'success': True, 'message': 'Notificación eliminada'})
+        # Si la notificación está asociada a una reseña, eliminar la reseña
+        if id_resena_ref:
+            # Eliminar notificaciones asociadas a esa reseña (por si hay más de una)
+            cursor.execute("DELETE FROM notificaciones WHERE id_resena_ref = %s", (id_resena_ref,))
+            # Eliminar la reseña
+            cursor.execute("DELETE FROM resena WHERE id_resena = %s", (id_resena_ref,))
+            mysql.connection.commit()
+            cursor.close()
+            return jsonify({'success': True, 'message': 'Notificación y reseña eliminadas'})
         else:
-            return jsonify({'success': False, 'error': 'Notificación no encontrada o no tienes permiso para eliminarla'}), 404
+            # Solo eliminar la notificación
+            cursor.execute("DELETE FROM notificaciones WHERE id_notificacion = %s AND id_usuario_receptor = %s", 
+                        (notification_id, user_id))
+            mysql.connection.commit()
+
+            if cursor.rowcount > 0:
+                return jsonify({'success': True, 'message': 'Notificación eliminada'})
+            else:
+                return jsonify({'success': False, 'error': 'Notificación no encontrada o no tienes permiso para eliminarla'}), 404
     except Exception as e:
         mysql.connection.rollback()
         app.logger.error(f"Error eliminando notificación {notification_id} para usuario {user_id}: {e}")
@@ -1499,7 +1511,6 @@ def admin_edit_user(user_id):
     return render_template('admin_edit_user.html', user=user)
 
 @app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
-@csrf.exempt
 @admin_required
 def admin_delete_user(user_id):
     cur = mysql.connection.cursor()
@@ -1568,7 +1579,6 @@ def admin_delete_depto(depto_id):
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/foto/<int:depto_id>/<foto_nombre>/delete', methods=['POST'])
-@csrf.exempt
 @admin_required
 def admin_delete_foto(depto_id, foto_nombre):
     cur = mysql.connection.cursor()

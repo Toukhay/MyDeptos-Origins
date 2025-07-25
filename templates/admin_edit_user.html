@@ -3,18 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <title>Editar Usuario</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_edit_user.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_panel.css') }}">
+    <style>
+        .admin-form-container {
+            max-width: 420px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+            padding: 2.5rem 2rem 2rem 2rem;
+        }
+        .admin-form-container h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2563eb;
+        }
+        .admin-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #222;
+        }
+        .admin-form input[type="text"],
+        .admin-form input[type="email"] {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid #cfd8dc;
+            border-radius: 5px;
+            font-size: 1rem;
+            background: #f8fafc;
+            transition: border 0.2s;
+        }
+        .admin-form input[type="checkbox"] {
+            margin-left: 0.5rem;
+            transform: scale(1.2);
+        }
+        .admin-form button, .admin-form a {
+            display: inline-block;
+            margin-right: 0.7rem;
+            margin-top: 0.5rem;
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background: #2563eb;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .admin-form button:hover, .admin-form a:hover {
+            background: #174ea6;
+        }
+    </style>
 </head>
-<body>
-    <h1>Editar Usuario</h1>
-    <form method="post" action="{{ url_for('admin_edit_user', user_id=user[0]) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label>Nombre: <input type="text" name="name" value="{{ user[1] }}" required></label><br>
-        <label>Email: <input type="email" name="email" value="{{ user[2] }}" required></label><br>
-        <label>Teléfono: <input type="text" name="telefono" value="{{ user[3] }}"></label><br>
-        <label>Administrador: <input type="checkbox" name="rol" {% if user[4] == 'admin' %}checked{% endif %}></label><br>
-        <button type="submit">Guardar</button>
-        <a href="{{ url_for('admin_panel') }}">Cancelar</a>
-    </form>
+<body style="background: #f3f6fa;">
+    <div class="admin-form-container">
+        <h1>Editar Usuario</h1>
+        <form class="admin-form" method="post" action="{{ url_for('admin_edit_user', user_id=user[0]) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>Nombre:
+                <input type="text" name="name" value="{{ user[1] }}" required>
+            </label>
+            <label>Email:
+                <input type="email" name="email" value="{{ user[2] }}" required>
+            </label>
+            <label>Teléfono:
+                <input type="text" name="telefono" value="{{ user[3] }}">
+            </label>
+            <label>
+                Administrador:
+                <input type="checkbox" name="rol" {% if user[4] == 'admin' %}checked{% endif %}>
+            </label>
+            <div style="margin-top: 1.5rem;">
+                <button type="submit">Guardar</button>
+                <a href="{{ url_for('admin_panel') }}">Cancelar</a>
+            </div>
+        </form>
+    </div>
 </body>
 </html>

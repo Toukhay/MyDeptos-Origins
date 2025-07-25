@@ -102,6 +102,37 @@
             }
         });
     });
+
+    // Formatea el input de precio con puntos de miles al escribir
+    function formatNumberInput(input) {
+        let value = input.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+        if (value === '') {
+            input.value = '';
+            return;
+        }
+        input.value = parseInt(value, 10).toLocaleString('es-AR');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Formatear los inputs de precio al escribir
+        ['precio_min', 'precio_max'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', function () {
+                    formatNumberInput(this);
+                });
+                // Al enviar el formulario, limpiar los puntos para enviar solo números
+                input.form && input.form.addEventListener('submit', function (e) {
+                    ['precio_min', 'precio_max'].forEach(fid => {
+                        const finput = document.getElementById(fid);
+                        if (finput) {
+                            finput.value = finput.value.replace(/\./g, '');
+                        }
+                    });
+                });
+            }
+        });
+    });
     </script>
 </head>
 <body class="home-page">
@@ -109,7 +140,7 @@
     <div id="auth-modal" class="auth-modal-hidden">
         <div class="auth-modal-content">
             <h2>Para usar estas opciones debe autenticarse y registrarse por seguridad</h2>
-            <button onclick="window.location.href=&quot;{{ url_for('register') }}&quot;" class="register-btn">Registrarse</button>
+            <button onclick="window.location.href='{{ url_for('register') }}'" class="register-btn">Registrarse</button>
             <button onclick="window.location.href='{{ url_for('login') }}'" class="login-btn">Iniciar sesión</button>
             <button onclick="closeAuthModal()" class="close-btn">Cerrar</button>
         </div>
@@ -168,11 +199,11 @@
                 </div>
                 <div class="form-group">
                     <label for="precio_min">Precio mínimo:</label>
-                    <input type="number" name="precio_min" id="precio_min" placeholder="Ej: 100000">
+                    <input type="text" name="precio_min" id="precio_min" placeholder="Ej: 150.000">
                 </div>
                 <div class="form-group">
                     <label for="precio_max">Precio máximo:</label>
-                    <input type="number" name="precio_max" id="precio_max" placeholder="Ej: 500000">
+                    <input type="text" name="precio_max" id="precio_max" placeholder="Ej: 150.000">
                 </div>
                 <div class="form-group">
                     <label for="localidad">Localidad:</label>

@@ -359,6 +359,9 @@ button:hover {
     box-shadow: 0 2px 8px rgba(37, 211, 102, 0.15);
     border: none;
     outline: none;
+    width: 100%; /* <-- Asegura que el botón ocupe todo el ancho disponible */
+    justify-content: center; /* Centra el contenido dentro del botón */
+    max-width: 350px; /* Opcional: limita el ancho máximo para que no sea excesivo */
 }
 
 .whatsapp-btn:hover {
@@ -796,3 +799,6 @@ button:hover {
     justify-content: flex-start;
     height: 100%; /* Ocupa todo el alto de la columna */
 }
+
+/* No es necesario agregar nada, ya que todos los estilos relevantes de viewProperty.html ya están en este archivo.
+   Si en el futuro agregas estilos embebidos en el HTML, muévelos aquí siguiendo la misma estructura. */

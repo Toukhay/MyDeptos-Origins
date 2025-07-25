@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Panel de Administración</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_panel.css') }}">
     <style>
-        /* Slider/tab styles */
+        body {
+            background: #f3f6fa;
+            font-family: 'Open Sans', 'Roboto', Arial, sans-serif;
+        }
+        h1 {
+            text-align: center;
+            color: #2563eb;
+            margin-top: 2rem;
+        }
         .admin-tabs {
             display: flex;
             justify-content: center;
@@ -30,9 +37,123 @@
         }
         .admin-section {
             display: none;
+            margin: 0 auto;
+            max-width: 1200px;
+            background: #fff;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+            padding: 2rem 2rem 2.5rem 2rem;
         }
         .admin-section.active {
             display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.7rem 0.6rem;
+            text-align: left;
+        }
+        th {
+            background: #2563eb;
+            color: #fff;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: #f3f6fa;
+        }
+        tr:hover {
+            background: #e3eafc;
+        }
+        .admin-section h2 {
+            color: #174ea6;
+            margin-bottom: 1rem;
+        }
+        .admin-section .btn, .admin-section button, .admin-section a {
+            display: inline-block;
+            margin: 0.2rem 0.3rem 0.2rem 0;
+            padding: 0.4rem 1.1rem;
+            border: none;
+            border-radius: 5px;
+            background: #2563eb;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.97rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .admin-section .btn:hover, .admin-section button:hover, .admin-section a:hover {
+            background: #174ea6;
+        }
+        .admin-section form {
+            display: inline;
+        }
+        .admin-section img {
+            border: 1px solid #cfd8dc;
+            border-radius: 4px;
+            margin-right: 2px;
+        }
+        .admin-section .foto-delete-btn {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 0.8em;
+            position: absolute;
+            top: 0;
+            right: 0;
+            cursor: pointer;
+        }
+        .admin-section .foto-delete-btn:hover {
+            background: #c0392b;
+        }
+        .admin-section .foto-thumb-container {
+            display: inline-block;
+            position: relative;
+            margin: 2px;
+        }
+        .admin-section .foto-thumb-container img {
+            width: 60px;
+            height: 40px;
+            object-fit: cover;
+        }
+        .admin-section .foto-thumb-container form {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+        .admin-section .actions-cell {
+            min-width: 120px;
+        }
+        .admin-section .actions-cell a, .admin-section .actions-cell button {
+            margin-bottom: 0.2rem;
+        }
+        .admin-section .actions-cell form {
+            display: inline-block;
+        }
+        .admin-section .actions-cell button {
+            margin-left: 0.2rem;
+        }
+        .admin-section .actions-cell a {
+            margin-left: 0.2rem;
+        }
+        .admin-section .actions-cell {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+        @media (max-width: 900px) {
+            .admin-section {
+                padding: 1rem 0.5rem 2rem 0.5rem;
+            }
+            table, th, td {
+                font-size: 0.95rem;
+            }
         }
     </style>
 </head>
@@ -45,7 +166,7 @@
     <div id="admin-usuarios-section" class="admin-section active">
         <h2>Usuarios</h2>
         <div style="max-height: 400px; overflow-y: auto; border-radius: 10px;">
-            <table border="1" cellpadding="6">
+            <table>
                 <tr>
                     <th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Rol</th><th>Acciones</th>
                 </tr>
@@ -56,9 +177,9 @@
                     <td>{{ u[2] }}</td>
                     <td>{{ u[3] }}</td>
                     <td>{{ u[4] }}</td>
-                    <td>
+                    <td class="actions-cell">
                         <a href="{{ url_for('admin_edit_user', user_id=u[0]) }}">Editar</a>
-                        <form action="{{ url_for('admin_delete_user', user_id=u[0]) }}" method="post" style="display:inline;" onsubmit="return confirm('¿Eliminar usuario?');">
+                        <form action="{{ url_for('admin_delete_user', user_id=u[0]) }}" method="post" onsubmit="return confirm('¿Eliminar usuario?');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit">Eliminar</button>
                         </form>
@@ -71,7 +192,7 @@
     <div id="admin-deptos-section" class="admin-section">
         <h2>Departamentos</h2>
         <div style="max-height: 400px; overflow-y: auto; border-radius: 10px;">
-            <table border="1" cellpadding="6">
+            <table>
                 <tr>
                     <th>ID</th><th>Título</th><th>Descripción</th><th>Precio</th><th>Moneda</th>
                     <th>Ambientes</th><th>Dormitorios</th><th>Baños</th><th>Superficie</th>
@@ -97,11 +218,11 @@
                         {% if d[12] %}
                             <div style="max-width:120px;overflow-x:auto;white-space:nowrap;">
                             {% for foto in d[12].split(',') %}
-                                <div style="display:inline-block;position:relative;margin:2px;">
-                                    <img src="{{ url_for('static', filename='image/' ~ foto) }}" alt="foto" style="width:60px;height:40px;object-fit:cover;border-radius:4px;border:1px solid #ccc;">
-                                    <form action="{{ url_for('admin_delete_foto', depto_id=d[0], foto_nombre=foto) }}" method="post" style="display:inline;">
+                                <div class="foto-thumb-container">
+                                    <img src="{{ url_for('static', filename='image/' ~ foto) }}" alt="foto">
+                                    <form action="{{ url_for('admin_delete_foto', depto_id=d[0], foto_nombre=foto) }}" method="post">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" style="background:#e74c3c;color:#fff;border:none;border-radius:3px;padding:2px 6px;font-size:0.8em;position:absolute;top:0;right:0;cursor:pointer;">X</button>
+                                        <button type="submit" class="foto-delete-btn">X</button>
                                     </form>
                                 </div>
                             {% endfor %}
@@ -110,9 +231,9 @@
                             Sin fotos
                         {% endif %}
                     </td>
-                    <td>
+                    <td class="actions-cell">
                         <a href="{{ url_for('admin_edit_depto', depto_id=d[0]) }}">Editar</a>
-                        <form action="{{ url_for('admin_delete_depto', depto_id=d[0]) }}" method="post" style="display:inline;" onsubmit="return confirm('¿Eliminar departamento?');">
+                        <form action="{{ url_for('admin_delete_depto', depto_id=d[0]) }}" method="post" onsubmit="return confirm('¿Eliminar departamento?');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit">Eliminar</button>
                         </form>
@@ -124,10 +245,8 @@
     </div>
     <script>
         function showAdminTab(tab) {
-            // Botones
             document.getElementById('tab-usuarios-btn').classList.remove('active');
             document.getElementById('tab-deptos-btn').classList.remove('active');
-            // Secciones
             document.getElementById('admin-usuarios-section').classList.remove('active');
             document.getElementById('admin-deptos-section').classList.remove('active');
             if (tab === 'usuarios') {
@@ -140,6 +259,8 @@
         }
     </script>
     <br>
-    <a href="{{ url_for('home') }}">Volver al inicio</a>
+    <div style="text-align:center;">
+        <a href="{{ url_for('home') }}" class="btn">Volver al inicio</a>
+    </div>
 </body>
 </html>

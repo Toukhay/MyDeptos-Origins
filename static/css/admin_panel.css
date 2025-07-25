@@ -1,59 +1,108 @@
 body {
-    font-family: 'Roboto', Arial, sans-serif;
-    background: #f4f8fb;
-    margin: 0;
-    padding: 0;
+    background: #f3f6fa;
+    font-family: 'Open Sans', 'Roboto', Arial, sans-serif;
+    color: #222;
 }
 h1, h2 {
     color: #2563eb;
-    text-align: center;
-    margin-top: 1.5rem;
+}
+a, button {
+    transition: background 0.2s, color 0.2s;
+}
+.btn, button, a.btn {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1.2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    margin: 0.2rem 0.3rem 0.2rem 0;
+}
+.btn:hover, button:hover, a.btn:hover {
+    background: #174ea6;
+    color: #fff;
+}
+input[type="text"], input[type="email"], input[type="number"] {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 1.2rem;
+    border: 1px solid #cfd8dc;
+    border-radius: 5px;
+    font-size: 1rem;
+    background: #f8fafc;
+    transition: border 0.2s;
+}
+input[type="text"]:focus, input[type="email"]:focus, input[type="number"]:focus {
+    border: 1.5px solid #2563eb;
+    outline: none;
+}
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+form {
+    margin-bottom: 0;
 }
 table {
     width: 100%;
     border-collapse: collapse;
-    margin: 2rem 0;
     background: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.10);
+    margin-top: 1rem;
 }
 th, td {
-    padding: 0.8rem 1rem;
-    border-bottom: 1px solid #e0e7ef;
+    padding: 0.7rem 0.6rem;
     text-align: left;
 }
 th {
-    background: #e6f0fa;
-    color: #2563eb;
-    font-weight: bold;
-}
-tr:last-child td {
-    border-bottom: none;
-}
-a, button {
     background: #2563eb;
     color: #fff;
+    font-weight: 600;
+}
+tr:nth-child(even) {
+    background: #f3f6fa;
+}
+tr:hover {
+    background: #e3eafc;
+}
+.foto-thumb-container {
+    display: inline-block;
+    position: relative;
+    margin: 2px;
+}
+.foto-thumb-container img {
+    width: 60px;
+    height: 40px;
+    object-fit: cover;
+    border: 1px solid #cfd8dc;
+    border-radius: 4px;
+}
+.foto-delete-btn {
+    background: #e74c3c;
+    color: #fff;
     border: none;
-    border-radius: 6px;
-    padding: 0.4rem 1rem;
-    margin: 0 0.2rem;
-    text-decoration: none;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    position: absolute;
+    top: 0;
+    right: 0;
     cursor: pointer;
-    transition: background 0.2s;
-    font-size: 1rem;
 }
-a:hover, button:hover {
-    background: #174ea6;
+.foto-delete-btn:hover {
+    background: #c0392b;
 }
-form {
-    display: inline;
+.actions-cell {
+    min-width: 120px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
 }
 @media (max-width: 900px) {
-    table, thead, tbody, th, td, tr {
-        display: block;
-    }
-    th, td {
-        padding: 0.7rem 0.5rem;
+    table, th, td {
+        font-size: 0.95rem;
     }
 }

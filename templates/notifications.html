@@ -5,8 +5,163 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Notificaciones</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"> <!-- Un CSS general -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications_page.css') }}"> <!-- CSS específico para esta página -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <style>
+        body.notifications-page {
+            background: #f3f6fa;
+            font-family: 'Open Sans', 'Roboto', Arial, sans-serif;
+            color: #222;
+        }
+        h1 {
+            color: #2563eb;
+            text-align: center;
+            margin-top: 2rem;
+            margin-bottom: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+            padding: 2.5rem 2rem 2rem 2rem;
+        }
+        .notifications-actions-top {
+            text-align: right;
+            margin-bottom: 1.2rem;
+        }
+        .notifications-actions-top button {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 0.5rem 1.2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .notifications-actions-top button:hover {
+            background: #174ea6;
+        }
+        .notifications-list-full {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .notification-item-full {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.2rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 1.1rem;
+            padding: 1.1rem 1.2rem;
+            box-shadow: 0 1px 6px rgba(37,99,235,0.06);
+            border-left: 5px solid #2563eb;
+            transition: background 0.2s;
+        }
+        .notification-item-full.unread {
+            background: #e3eafc;
+            border-left: 5px solid #174ea6;
+        }
+        .notification-icon {
+            font-size: 2.1rem;
+            margin-top: 0.2rem;
+            min-width: 2.5rem;
+            text-align: center;
+        }
+        .notification-content-full {
+            flex: 1;
+        }
+        .notification-message {
+            font-size: 1.08rem;
+            margin: 0 0 0.3rem 0;
+            font-weight: 500;
+        }
+        .notification-date {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+        .notification-actions-full {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-end;
+            min-width: 140px;
+        }
+        .notification-actions-full .btn {
+            width: 100%;
+            margin: 0;
+            padding: 0.45rem 0.7rem;
+            font-size: 0.97rem;
+            border-radius: 5px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-info {
+            background: #2563eb;
+            color: #fff;
+        }
+        .btn-info:hover {
+            background: #174ea6;
+        }
+        .btn-outline-secondary {
+            background: #fff;
+            color: #2563eb;
+            border: 1.5px solid #2563eb;
+        }
+        .btn-outline-secondary:hover {
+            background: #e3eafc;
+        }
+        .btn-success {
+            background: #22c55e;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #15803d;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .flash-messages-container {
+            margin-bottom: 1.2rem;
+        }
+        .flash-popup {
+            padding: 0.7rem 1.2rem;
+            border-radius: 6px;
+            margin-bottom: 0.7rem;
+            font-weight: 500;
+            font-size: 1.05rem;
+        }
+        .flash-popup.success { background: #d1fae5; color: #065f46; }
+        .flash-popup.info { background: #dbeafe; color: #1e40af; }
+        .flash-popup.warning { background: #fef9c3; color: #92400e; }
+        .flash-popup.danger { background: #fee2e2; color: #991b1b; }
+        @media (max-width: 700px) {
+            .container {
+                padding: 1.2rem 0.3rem 1.2rem 0.3rem;
+            }
+            .notification-item-full {
+                flex-direction: column;
+                gap: 0.7rem;
+            }
+            .notification-actions-full {
+                flex-direction: row;
+                gap: 0.5rem;
+                min-width: unset;
+            }
+        }
+    </style>
 </head>
 <body class="notifications-page">
     <header>
@@ -54,16 +209,15 @@
                     <li class="notification-item-full {% if not notif.leida %}unread{% else %}read{% endif %}" id="notif-{{ notif.id }}">
                         <div class="notification-icon">
                             {% if notif.tipo == 'NUEVA_RESENA' %}
-                                <span>⭐</span> <!-- Icono para nueva reseña -->
+                                <span>⭐</span>
                             {% elif notif.tipo == 'NUEVA_PUBLICACION_FAVORITO' %}
-                                <span>🏠</span> <!-- Icono para nueva publicación de un favorito -->
+                                <span>🏠</span>
                             {% else %}
-                                <span>🔔</span> <!-- Icono genérico -->
+                                <span>🔔</span>
                             {% endif %}
                         </div>
                         <div class="notification-content-full">
                             <p class="notification-message">{{ notif.mensaje }}</p>
-                            {# Ahora notif.fecha_envio ya es una cadena formateada o "Fecha no disponible" #}
                             <small class="notification-date">Recibido: {{ notif.fecha_envio }}</small>
                         </div>
                         <div class="notification-actions-full">
