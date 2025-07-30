@@ -140,7 +140,106 @@
                 password: "",
                 telefono: form.telefono.value
             };
+
+            function showConfirmModal(field) {
+                document.getElementById('confirm-modal-msg').innerHTML =
+                    `Solo modificarás/editarás el campo <b>${field}</b>. ¿Deseas continuar?`;
+                document.getElementById('confirm-modal-backdrop').classList.add('show');
+                document.getElementById('confirm-modal').classList.add('show');
+            }
+            
+            document.getElementById('confirm-yes').onclick = function() {
+                document.getElementById('confirm-modal-backdrop').classList.remove('show');
+                document.getElementById('confirm-modal').classList.remove('show');
+                document.getElementById('editProfileForm').submit();
+            };
+            
+            document.getElementById('confirm-no').onclick = function() {
+                document.getElementById('confirm-modal-backdrop').classList.remove('show');
+                document.getElementById('confirm-modal').classList.remove('show');
+            };
+
+            // --- Habilitar campo al hacer click en el lápiz ---
+            window.enableEdit = function(fieldId) {
+                {% if puede_modificar %}
+                const input = document.getElementById(fieldId);
+                input.removeAttribute('readonly');
+                input.removeAttribute('disabled');
+                input.focus();
+                {% endif %}
+            };
+
+            // --- Habilitar nueva contraseña solo si se verifica la actual ---
+            const currentPasswordInput = document.getElementById('current_password');
+            const newPasswordInput = document.getElementById('password');
+            const labelPassword = document.getElementById('label-password');
+            let passwordVerified = false;
+
+            currentPasswordInput.addEventListener('input', function() {
+                if (currentPasswordInput.value.length > 0) {
+                    // Verificar la contraseña actual con el servidor
+                    verifyCurrentPassword(currentPasswordInput.value);
+                } else {
+                    // Si no hay contraseña, deshabilitar campo de nueva contraseña
+                    newPasswordInput.value = '';
+                    newPasswordInput.setAttribute('disabled', true);
+                    labelPassword.className = 'password-field-disabled';
+                    labelPassword.textContent = 'Nueva contraseña';
+                    passwordVerified = false;
+                }
+            });
+
+            function verifyCurrentPassword(password) {
+                // Mostrar indicador de verificación
+                labelPassword.textContent = 'Nueva contraseña (verificando...)';
+                labelPassword.className = 'password-verification-checking';
+
+                fetch('/verify_current_password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                    },
+                    body: JSON.stringify({
+                        current_password: password
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Contraseña correcta - habilitar campo de nueva contraseña
+                        newPasswordInput.removeAttribute('disabled');
+                        labelPassword.className = 'password-verification-success';
+                        labelPassword.textContent = 'Nueva contraseña ✓';
+                        passwordVerified = true;
+                    } else {
+                        // Contraseña incorrecta - mantener deshabilitado
+                        newPasswordInput.value = '';
+                        newPasswordInput.setAttribute('disabled', true);
+                        labelPassword.className = 'password-verification-error';
+                        labelPassword.textContent = 'Nueva contraseña (contraseña actual incorrecta)';
+                        passwordVerified = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error verificando contraseña:', error);
+                    newPasswordInput.value = '';
+                    newPasswordInput.setAttribute('disabled', true);
+                    labelPassword.className = 'password-verification-error';
+                    labelPassword.textContent = 'Nueva contraseña (error de verificación)';
+                    passwordVerified = false;
+                });
+            }
+
+            // Validar formulario antes de enviar
             form.addEventListener('submit', function(e) {
+                // Si se intenta cambiar la contraseña pero no se ha verificado la actual
+                if (currentPasswordInput.value && !passwordVerified) {
+                    e.preventDefault();
+                    alert('Por favor, ingresa una contraseña actual válida antes de establecer una nueva contraseña.');
+                    return false;
+                }
+
                 let changed = [];
                 if (form.username.value !== initial.username) changed.push('usuario');
                 if (form.email.value !== initial.email) changed.push('email');
@@ -149,46 +248,6 @@
                 if (changed.length === 1) {
                     e.preventDefault();
                     showConfirmModal(changed[0]);
-                }
-            });
-
-            function showConfirmModal(field) {
-                document.getElementById('confirm-modal-msg').innerHTML =
-                    `Solo modificarás/editarás el campo <b>${field}</b>. ¿Deseas continuar?`;
-                document.getElementById('confirm-modal-backdrop').classList.add('show');
-                document.getElementById('confirm-modal').classList.add('show');
-            }
-            document.getElementById('confirm-yes').onclick = function() {
-                document.getElementById('confirm-modal-backdrop').classList.remove('show');
-                document.getElementById('confirm-modal').classList.remove('show');
-                document.getElementById('editProfileForm').submit();
-            };
-            document.getElementById('confirm-no').onclick = function() {
-                document.getElementById('confirm-modal-backdrop').classList.remove('show');
-                document.getElementById('confirm-modal').classList.remove('show');
-            };
-
-            // --- Habilitar campo al hacer click en el lápiz ---
-            window.enableEdit = function(fieldId) {
-                if (!{{ 'true' if puede_modificar else 'false' }}) return;
-                const input = document.getElementById(fieldId);
-                input.removeAttribute('readonly');
-                input.removeAttribute('disabled');
-                input.focus();
-            };
-
-            // --- Habilitar nueva contraseña solo si se ingresa la actual ---
-            const currentPasswordInput = document.getElementById('current_password');
-            const newPasswordInput = document.getElementById('password');
-            const labelPassword = document.getElementById('label-password');
-            currentPasswordInput.addEventListener('input', function() {
-                if (currentPasswordInput.value.length > 0) {
-                    newPasswordInput.removeAttribute('disabled');
-                    labelPassword.style.color = '';
-                } else {
-                    newPasswordInput.value = '';
-                    newPasswordInput.setAttribute('disabled', true);
-                    labelPassword.style.color = '#aaa';
                 }
             });
         });

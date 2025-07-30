@@ -224,6 +224,32 @@ h1 {
     color: #0056b3;
 }
 
+/* Estilos para los estados de verificación de contraseña */
+.password-verification-success {
+    color: #28a745 !important;
+    font-weight: 500;
+}
+
+.password-verification-error {
+    color: #dc3545 !important;
+    font-weight: 500;
+}
+
+.password-verification-checking {
+    color: #007bff !important;
+    font-weight: 500;
+}
+
+.password-field-disabled {
+    color: #aaa !important;
+    font-weight: normal;
+}
+
+/* Animación sutil para el cambio de estado del label */
+.edit-profile-form label {
+    transition: color 0.3s ease;
+}
+
 /* Responsive: apilar en móviles */
 @media (max-width: 700px) {
     .container {

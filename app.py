@@ -1299,9 +1299,40 @@ def edit_profile():
         new_email = form.email.data if form.email.data else user[1]
         new_telefono = form.telefono.data if form.telefono.data else ""
         new_password = form.password.data
+        current_password = form.current_password.data
 
+        # Si se quiere cambiar la contraseña, verificar la contraseña actual
         if new_password:
-            hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            if not current_password:
+                flash('Debes ingresar tu contraseña actual para cambiarla.', 'danger')
+                return render_template('edit_profile.html', form=form, puede_modificar=puede_modificar)
+            
+            # Obtener la contraseña almacenada para verificación
+            cursor = mysql.connection.cursor()
+            cursor.execute("SELECT password FROM usuario WHERE id = %s", (user_id,))
+            stored_password_data = cursor.fetchone()
+            cursor.close()
+            
+            if not stored_password_data:
+                flash('Error al verificar la contraseña actual.', 'danger')
+                return render_template('edit_profile.html', form=form, puede_modificar=puede_modificar)
+            
+            stored_password = stored_password_data[0]
+            
+            # Usar la misma lógica de verificación que en login
+            if stored_password.startswith('pbkdf2:') or stored_password.startswith('scrypt:'):
+                valid = check_password_hash(stored_password, current_password)
+            elif stored_password.startswith('$2a$') or stored_password.startswith('$2b$'):
+                valid = bcrypt.checkpw(current_password.encode('utf-8'), stored_password.encode('utf-8'))
+            else:
+                valid = current_password == stored_password
+            
+            if not valid:
+                flash('La contraseña actual es incorrecta.', 'danger')
+                return render_template('edit_profile.html', form=form, puede_modificar=puede_modificar)
+            
+            # Si la verificación es exitosa, actualizar con nueva contraseña
+            hashed_password = generate_password_hash(new_password)
             cursor = mysql.connection.cursor()
             cursor.execute('UPDATE usuario SET name = %s, email = %s, password = %s, telefono = %s, fecha_ultima_modificacion = %s, ediciones_ultimos_dos_dias = %s WHERE id = %s', 
                         (new_username, new_email, hashed_password, new_telefono, now, edit_count + 1, user_id))
@@ -1321,6 +1352,45 @@ def edit_profile():
         flash('Solo puedes editar tu perfil hasta dos veces cada 2 días. Intenta nuevamente más adelante.', 'warning')
     
     return render_template('edit_profile.html', form=form, puede_modificar=puede_modificar)
+
+@app.route('/verify_current_password', methods=['POST'])
+def verify_current_password():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'No autenticado'}), 401
+    
+    user_id = session['user_id']
+    current_password = request.json.get('current_password', '')
+    
+    if not current_password:
+        return jsonify({'success': False, 'error': 'Contraseña requerida'})
+    
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT password FROM usuario WHERE id = %s", (user_id,))
+        user_data = cursor.fetchone()
+        cursor.close()
+        
+        if not user_data:
+            return jsonify({'success': False, 'error': 'Usuario no encontrado'})
+        
+        stored_password = user_data[0]
+        
+        # Usar la misma lógica de verificación que en login
+        if stored_password.startswith('pbkdf2:') or stored_password.startswith('scrypt:'):
+            valid = check_password_hash(stored_password, current_password)
+        elif stored_password.startswith('$2a$') or stored_password.startswith('$2b$'):
+            valid = bcrypt.checkpw(current_password.encode('utf-8'), stored_password.encode('utf-8'))
+        else:
+            valid = current_password == stored_password
+        
+        if valid:
+            return jsonify({'success': True, 'message': 'Contraseña verificada correctamente'})
+        else:
+            return jsonify({'success': False, 'error': 'Contraseña incorrecta'})
+            
+    except Exception as e:
+        app.logger.error(f"Error verificando contraseña para usuario {user_id}: {e}")
+        return jsonify({'success': False, 'error': 'Error interno del servidor'})
 
 @app.route('/generate_password')
 def generate_password():
