@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <title>Editar Departamento</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_panel.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         .admin-form-container {
-            max-width: 480px;
+            max-width: 580px;
             margin: 40px auto;
             background: #fff;
             border-radius: 10px;
@@ -25,7 +26,8 @@
             color: #222;
         }
         .admin-form input[type="text"],
-        .admin-form input[type="number"] {
+        .admin-form input[type="number"],
+        .admin-form select {
             width: 100%;
             padding: 0.6rem 0.8rem;
             margin-bottom: 1.2rem;
@@ -34,6 +36,13 @@
             font-size: 1rem;
             background: #f8fafc;
             transition: border 0.2s;
+            box-sizing: border-box;
+        }
+        .admin-form input[type="text"]:focus,
+        .admin-form input[type="number"]:focus,
+        .admin-form select:focus {
+            border-color: #2563eb;
+            outline: none;
         }
         .admin-form button, .admin-form a {
             display: inline-block;
@@ -53,6 +62,25 @@
         .admin-form button:hover, .admin-form a:hover {
             background: #174ea6;
         }
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        .interactive-map {
+            height: 250px;
+            margin: 1rem 0;
+            border-radius: 5px;
+            border: 1px solid #cfd8dc;
+        }
+        .map-help-text {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body style="background: #f3f6fa;">
@@ -67,34 +95,152 @@
                 <input type="text" name="descripcion" value="{{ depto[2] }}" required>
             </label>
             <label>Precio:
-                <input type="number" name="precio" value="{{ depto[3] }}" required>
+                <input type="text" name="precio" id="precio" value="{{ precio_formateado }}" required>
             </label>
             <label>Moneda:
-                <input type="text" name="moneda" value="{{ depto[4] }}" required>
+                <select name="moneda" required>
+                    <option value="ARS" {% if depto[4] == 'ARS' %}selected{% endif %}>Pesos (ARS)</option>
+                    <option value="USD" {% if depto[4] == 'USD' %}selected{% endif %}>Dólares (USD)</option>
+                </select>
             </label>
             <label>Ambientes:
-                <input type="number" name="ambientes" value="{{ depto[5] }}" required>
+                <input type="number" name="ambientes" value="{{ depto[5] }}" required min="1">
             </label>
             <label>Dormitorios:
-                <input type="number" name="dormitorios" value="{{ depto[6] }}" required>
+                <input type="number" name="dormitorios" value="{{ depto[6] }}" required min="1">
             </label>
             <label>Baños:
-                <input type="number" name="banos" value="{{ depto[7] }}" required>
+                <input type="number" name="banos" value="{{ depto[7] }}" required min="1">
             </label>
-            <label>Superficie:
-                <input type="number" name="superficie" value="{{ depto[8] }}" required>
+            <label>Superficie (m²):
+                <input type="number" name="superficie" value="{{ depto[8] }}" step="0.01" min="0">
             </label>
             <label>Dirección:
-                <input type="text" name="direccion" value="{{ depto[9] }}" required>
+                <input type="text" name="direccion" id="direccion" value="{{ depto[9] }}" required readonly>
             </label>
             <label>Rol Inmobiliario:
-                <input type="text" name="rol_inmo_dir" value="{{ depto[10] }}" required>
+                <select name="rol_inmo_dir" required>
+                    <option value="Dueño directo" {% if depto[10] == 'Dueño directo' %}selected{% endif %}>Dueño Directo</option>
+                    <option value="Inmobiliaria" {% if depto[10] == 'Inmobiliaria' %}selected{% endif %}>Inmobiliaria</option>
+                </select>
             </label>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="latitud">Latitud:</label>
+                    <input type="text" id="latitud" name="latitud" value="{{ latitud if latitud else '' }}" required readonly>
+                </div>
+                <div class="form-group">
+                    <label for="longitud">Longitud:</label>
+                    <input type="text" id="longitud" name="longitud" value="{{ longitud if longitud else '' }}" required readonly>
+                </div>
+            </div>
+            <div id="map" class="interactive-map"></div>
+            <p class="map-help-text">Haz clic en el mapa para seleccionar la ubicación</p>
+            
             <div style="margin-top: 1.5rem;">
                 <button type="submit">Guardar</button>
                 <a href="{{ url_for('admin_panel') }}">Cancelar</a>
             </div>
         </form>
     </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Formatear precio con puntos de miles
+        function formatNumberInput(input) {
+            let value = input.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+            if (value === '') {
+                input.value = '';
+                return;
+            }
+            input.value = formatNumberWithDots(value);
+        }
+
+        function formatNumberWithDots(numberString) {
+            let reversed = numberString.split('').reverse().join('');
+            let formatted = '';
+            
+            for (let i = 0; i < reversed.length; i++) {
+                if (i > 0 && i % 3 === 0) {
+                    formatted += '.';
+                }
+                formatted += reversed[i];
+            }
+            
+            return formatted.split('').reverse().join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Configurar formateo de precio
+            var priceInput = document.getElementById('precio');
+            if (priceInput) {
+                priceInput.addEventListener('input', function() {
+                    formatNumberInput(this);
+                });
+            }
+
+            // Limpiar precio antes del envío
+            document.querySelector('form').addEventListener('submit', function(event) {
+                const priceInput = document.getElementById('precio');
+                if (priceInput && priceInput.value) {
+                    priceInput.value = priceInput.value.replace(/\./g, '');
+                }
+            });
+
+            // Configurar mapa
+            let lat = parseFloat(document.getElementById('latitud').value) || -27.485104;
+            let lon = parseFloat(document.getElementById('longitud').value) || -55.119835;
+            
+            const map = L.map('map').setView([lat, lon], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            const marker = L.marker([lat, lon], {
+                draggable: true,
+                icon: L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+                    iconSize: [32, 32],
+                })
+            }).addTo(map);
+
+            function reverseGeocode(lat, lon) {
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.address) {
+                            const addr = data.address;
+                            let direccion = '';
+                            if (addr.road) direccion += addr.road;
+                            if (addr.house_number) direccion += ' ' + addr.house_number;
+                            if (addr.city) direccion += ', ' + addr.city;
+                            else if (addr.town) direccion += ', ' + addr.town;
+                            else if (addr.village) direccion += ', ' + addr.village;
+                            if (addr.municipality) direccion += ', ' + addr.municipality;
+                            if (addr.state) direccion += ', ' + addr.state;
+                            if (addr.country) direccion += ', ' + addr.country;
+                            document.getElementById('direccion').value = direccion.trim();
+                        }
+                    })
+                    .catch(() => {});
+            }
+
+            marker.on('dragend', function (e) {
+                const position = marker.getLatLng();
+                document.getElementById('latitud').value = position.lat.toFixed(6);
+                document.getElementById('longitud').value = position.lng.toFixed(6);
+                reverseGeocode(position.lat, position.lng);
+            });
+
+            map.on('click', function (e) {
+                const position = e.latlng;
+                marker.setLatLng(position);
+                document.getElementById('latitud').value = position.lat.toFixed(6);
+                document.getElementById('longitud').value = position.lng.toFixed(6);
+                reverseGeocode(position.lat, position.lng);
+            });
+        });
+    </script>
 </body>
 </html>

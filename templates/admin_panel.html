@@ -252,11 +252,25 @@
             if (tab === 'usuarios') {
                 document.getElementById('tab-usuarios-btn').classList.add('active');
                 document.getElementById('admin-usuarios-section').classList.add('active');
+                // Guardar la sección activa en localStorage
+                localStorage.setItem('activeAdminTab', 'usuarios');
             } else {
                 document.getElementById('tab-deptos-btn').classList.add('active');
                 document.getElementById('admin-deptos-section').classList.add('active');
+                // Guardar la sección activa en localStorage
+                localStorage.setItem('activeAdminTab', 'deptos');
             }
         }
+
+        // Al cargar la página, restaurar la sección activa
+        document.addEventListener('DOMContentLoaded', function() {
+            const activeTab = localStorage.getItem('activeAdminTab') || 'usuarios';
+            if (activeTab === 'deptos') {
+                showAdminTab('deptos');
+            } else {
+                showAdminTab('usuarios');
+            }
+        });
     </script>
     <br>
     <div style="text-align:center;">

@@ -1631,18 +1631,37 @@ def admin_delete_user(user_id):
 @admin_required
 def admin_edit_depto(depto_id):
     cur = mysql.connection.cursor()
-    cur.execute('''SELECT id_departamento, titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir FROM departamento WHERE id_departamento = %s''', (depto_id,))
-    depto = cur.fetchone()
-    if not depto:
+    
+    # Obtener datos del departamento con coordenadas
+    cur.execute('''
+        SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, 
+               d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir,
+               c.latitud, c.longitud
+        FROM departamento d
+        LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento
+        WHERE d.id_departamento = %s
+    ''', (depto_id,))
+    depto_data = cur.fetchone()
+    
+    if not depto_data:
         cur.close()
         flash('Departamento no encontrado.', 'danger')
         return redirect(url_for('admin_panel'))
+    
+    # Formatear el precio con puntos de miles para mostrar
+    precio_value = int(depto_data[3])
+    precio_formateado = f"{precio_value:,}".replace(',', '.')
+    
+    # Obtener coordenadas
+    latitud = depto_data[11] if depto_data[11] else -27.485104
+    longitud = depto_data[12] if depto_data[12] else -55.119835
+    
     if request.method == 'POST':
         titulo = request.form.get('titulo')
         descripcion = request.form.get('descripcion')
-        precio_str = request.form.get('precio')
+        precio_str = request.form.get('precio', '')
         # Limpiar el precio: remover puntos de separación de miles
-        precio = float(precio_str.replace('.', '').replace(',', ''))
+        precio = float(precio_str.replace('.', '').replace(',', '')) if precio_str else 0
         moneda = request.form.get('moneda')
         ambientes = request.form.get('ambientes')
         dormitorios = request.form.get('dormitorios')
@@ -1650,14 +1669,42 @@ def admin_edit_depto(depto_id):
         superficie = request.form.get('superficie')
         direccion = request.form.get('direccion')
         rol_inmo_dir = request.form.get('rol_inmo_dir')
-        cur.execute('''UPDATE departamento SET titulo=%s, descripcion=%s, precio=%s, moneda=%s, ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, rol_inmo_dir=%s WHERE id_departamento=%s''',
-                    (titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, depto_id))
-        mysql.connection.commit()
-        cur.close()
-        flash('Departamento actualizado.', 'success')
-        return redirect(url_for('admin_panel'))
+        
+        # Obtener coordenadas del formulario
+        lat = request.form.get('latitud')
+        lon = request.form.get('longitud')
+        
+        try:
+            # Actualizar departamento
+            cur.execute('''
+                UPDATE departamento SET titulo=%s, descripcion=%s, precio=%s, moneda=%s, 
+                       ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, rol_inmo_dir=%s 
+                WHERE id_departamento=%s
+            ''', (titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, depto_id))
+            
+            # Actualizar o insertar coordenadas
+            if lat and lon:
+                # Verificar si ya existen coordenadas
+                cur.execute("SELECT id_departamento FROM coordenadas WHERE id_departamento = %s", (depto_id,))
+                if cur.fetchone():
+                    # Actualizar coordenadas existentes
+                    cur.execute("UPDATE coordenadas SET latitud=%s, longitud=%s WHERE id_departamento=%s", (lat, lon, depto_id))
+                else:
+                    # Insertar nuevas coordenadas
+                    cur.execute("INSERT INTO coordenadas (id_departamento, latitud, longitud) VALUES (%s, %s, %s)", (depto_id, lat, lon))
+            
+            mysql.connection.commit()
+            cur.close()
+            flash('Departamento actualizado correctamente.', 'success')
+            return redirect(url_for('admin_panel'))
+        except Exception as e:
+            mysql.connection.rollback()
+            cur.close()
+            flash(f'Error al actualizar el departamento: {str(e)}', 'danger')
+            return redirect(url_for('admin_panel'))
+    
     cur.close()
-    return render_template('admin_edit_depto.html', depto=depto)
+    return render_template('admin_edit_depto.html', depto=depto_data, precio_formateado=precio_formateado, latitud=latitud, longitud=longitud)
 
 @app.route('/admin/depto/<int:depto_id>/delete', methods=['POST', 'GET'])
 @admin_required
