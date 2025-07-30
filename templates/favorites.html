@@ -80,7 +80,7 @@
                 <div class="listing-info">
                     <h3>{{ favorito[1] }}</h3>
                     <p>{{ favorito[2] }}</p>
-                    <p>Precio: {{ favorito[3] }} {{ favorito[4] }}</p>
+                    <p class="price">Precio: {{ favorito[3] }} {{ favorito[4] }}</p>
                     <p>Ambientes: {{ favorito[5] }}</p>
                     <p>Dormitorios: {{ favorito[6] }}</p>
                     <p>Baños: {{ favorito[7] }}</p>
@@ -162,6 +162,24 @@
                 });
 
                 showSlide(currentIndex);
+            });
+            
+            // Formatear precios con puntos de miles
+            document.querySelectorAll('.price').forEach(priceElement => {
+                let priceText = priceElement.textContent;
+                // Busca números con o sin decimales en el texto
+                let priceValue = priceText.match(/\d+(?:\.\d+)?/);
+                if (priceValue) {
+                    priceValue = priceValue[0];
+                    // Formatea el número (sin decimales para precios enteros)
+                    let numericValue = parseFloat(priceValue);
+                    let formatted = numericValue.toLocaleString('es-AR', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+                    // Reemplaza en el texto original
+                    priceElement.textContent = priceElement.textContent.replace(priceValue, formatted);
+                }
             });
         });
     </script>

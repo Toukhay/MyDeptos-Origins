@@ -251,6 +251,24 @@
                     .bindPopup('Ubicación del departamento')
                     .openPopup();
             }
+            
+            // Formatear precios con puntos de miles
+            document.querySelectorAll('.price').forEach(priceElement => {
+                let priceText = priceElement.textContent;
+                // Busca números con o sin decimales en el texto
+                let priceValue = priceText.match(/\d+(?:\.\d+)?/);
+                if (priceValue) {
+                    priceValue = priceValue[0];
+                    // Formatea el número (sin decimales para precios enteros)
+                    let numericValue = parseFloat(priceValue);
+                    let formatted = numericValue.toLocaleString('es-AR', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+                    // Reemplaza en el texto original
+                    priceElement.textContent = priceElement.textContent.replace(priceValue, formatted);
+                }
+            });
         });
 
         function openEditReviewModal(resenaId, puntaje, comentario) {

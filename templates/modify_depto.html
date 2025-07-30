@@ -90,6 +90,9 @@
             <div class="form-group">
                 <label for="price">Precio</label>
                 {{ form.price(class="form-control", id="price") }}
+                {% if form.price.errors %}
+                    <span class="error-message">{{ form.price.errors[0] }}</span>
+                {% endif %}
             </div>
             <div class="form-group">
                 <label for="moneda">Moneda</label>
@@ -180,7 +183,58 @@
     </footer>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // Formatea el input de precio con puntos de miles al escribir
+        function formatNumberInput(input) {
+            let value = input.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+            if (value === '') {
+                input.value = '';
+                return;
+            }
+            // Usar formateo manual para evitar limitaciones de parseInt
+            input.value = formatNumberWithDots(value);
+        }
+
+        // Función auxiliar para formatear números con puntos de miles
+        function formatNumberWithDots(numberString) {
+            // Reversar el string para insertar puntos desde la derecha
+            let reversed = numberString.split('').reverse().join('');
+            let formatted = '';
+            
+            for (let i = 0; i < reversed.length; i++) {
+                if (i > 0 && i % 3 === 0) {
+                    formatted += '.';
+                }
+                formatted += reversed[i];
+            }
+            
+            // Reversar de nuevo para obtener el formato correcto
+            return formatted.split('').reverse().join('');
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
+            // Configuración del formateo de precio
+            var priceInput = document.getElementById('price');
+            if (priceInput) {
+                // Formatear el precio actual al cargar la página
+                if (priceInput.value && !priceInput.value.includes('.')) {
+                    formatNumberInput(priceInput);
+                }
+                
+                // Agregar event listener para formatear mientras se escribe
+                priceInput.addEventListener('input', function() {
+                    formatNumberInput(this);
+                });
+            }
+
+            // Agregar event listener al formulario para limpiar el precio antes del envío
+            document.querySelector('form').addEventListener('submit', function(event) {
+                // Limpiar el precio antes del envío para evitar problemas de validación
+                const priceInput = document.getElementById('price');
+                if (priceInput && priceInput.value) {
+                    priceInput.value = priceInput.value.replace(/\./g, '');
+                }
+            });
+
             // Obtener valores iniciales de lat/lon
             let lat = parseFloat(document.getElementById('latitud').value) || -27.485104;
             let lon = parseFloat(document.getElementById('longitud').value) || -55.119835;

@@ -149,7 +149,7 @@ class PublishDeptoForm(FlaskForm):
     title = StringField('Título', validators=[DataRequired(), Length(min=5, max=200)])
     description = TextAreaField('Descripción', validators=[DataRequired(), Length(min=10, max=500)])
     tipo_publicacion = SelectField('Tipo de Publicación', choices=[('venta', 'Venta'), ('alquiler', 'Alquiler')], validators=[DataRequired()])
-    price = DecimalField('Precio', validators=[DataRequired(), NumberRange(min=0)])
+    price = StringField('Precio', validators=[DataRequired()])
     moneda = SelectField('Moneda', choices=[('ARS', 'Pesos'), ('USD', 'Dólares')], validators=[DataRequired()])
     ambientes = IntegerField('Ambientes', validators=[DataRequired(), NumberRange(min=1)])
     dormitorios = IntegerField('Dormitorios', validators=[DataRequired(), NumberRange(min=1)])
@@ -160,6 +160,27 @@ class PublishDeptoForm(FlaskForm):
     photos = MultipleFileField('Fotos del Departamento (máximo 5)', validators=[FileAllowed(['jpg', 'png', 'webp', 'jpeg'], 'Solo se permiten imágenes')])
     rol_inmo_dir = SelectField('Rol Inmobiliario', choices=[('Dueño directo', 'Dueño Directo'), ('Inmobiliaria', 'Inmobiliaria')], validators=[DataRequired()])
     submit = SubmitField('Publicar Departamento')
+
+    def validate_price(self, field):
+        # El JavaScript ya limpia los puntos antes del submit, pero por si acaso
+        price_str = str(field.data).replace('.', '').replace(',', '').strip()
+        
+        # Verificar que no esté vacío
+        if not price_str:
+            raise ValidationError('El precio es requerido.')
+            
+        # Verificar que solo contenga dígitos
+        if not price_str.isdigit():
+            raise ValidationError('El precio debe contener solo números.')
+            
+        try:
+            price_value = float(price_str)
+            if price_value <= 0:
+                raise ValidationError('El precio debe ser mayor a 0.')
+            if price_value > 999999999:  # Límite razonable para float
+                raise ValidationError('El precio es demasiado alto.')
+        except (ValueError, TypeError):
+            raise ValidationError('El precio debe ser un número válido.')
 
 class ForgotPasswordForm(FlaskForm):
     email = StringField('Correo Electrónico', validators=[DataRequired(), Email()])
@@ -586,7 +607,9 @@ def modify_depto(depto_id):
         form.title.data = depto_data[0]
         form.description.data = depto_data[1]
         form.tipo_publicacion.data = depto_data[2]
-        form.price.data = depto_data[3]
+        # Formatear el precio con puntos de miles para mostrar en el formulario
+        price_value = int(depto_data[3])
+        form.price.data = f"{price_value:,}".replace(',', '.')
         form.moneda.data = depto_data[4]
         form.ambientes.data = depto_data[5]
         form.dormitorios.data = depto_data[6]
@@ -600,12 +623,15 @@ def modify_depto(depto_id):
         cursor = mysql.connection.cursor()
         try:
             # Actualizar los datos del departamento
+            # Limpiar el precio: remover puntos de separación de miles
+            price_str = form.price.data.replace('.', '').replace(',', '')
+            price = float(price_str)
             cursor.execute('''
                 UPDATE departamento SET titulo=%s, descripcion=%s, tipo_publicacion=%s, precio=%s, moneda=%s,
                     ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, id_localidad=%s, rol_inmo_dir=%s
                 WHERE id_departamento=%s AND id_usuario=%s
             ''', (
-                form.title.data, form.description.data, form.tipo_publicacion.data, form.price.data, form.moneda.data,
+                form.title.data, form.description.data, form.tipo_publicacion.data, price, form.moneda.data,
                 form.ambientes.data, form.dormitorios.data, form.banos.data, form.superficie.data, form.direccion.data,
                 form.localidad.data, form.rol_inmo_dir.data, depto_id, session['user_id']
             ))
@@ -739,7 +765,9 @@ def publish_depto():
                 title = form.title.data
                 description = form.description.data
                 tipo_publicacion = form.tipo_publicacion.data
-                price = form.price.data
+                # Limpiar el precio: remover puntos de separación de miles
+                price_str = form.price.data.replace('.', '').replace(',', '')
+                price = float(price_str)
                 moneda = form.moneda.data
                 ambientes = form.ambientes.data
                 dormitorios = form.dormitorios.data
@@ -1542,7 +1570,9 @@ def admin_edit_depto(depto_id):
     if request.method == 'POST':
         titulo = request.form.get('titulo')
         descripcion = request.form.get('descripcion')
-        precio = request.form.get('precio')
+        precio_str = request.form.get('precio')
+        # Limpiar el precio: remover puntos de separación de miles
+        precio = float(precio_str.replace('.', '').replace(',', ''))
         moneda = request.form.get('moneda')
         ambientes = request.form.get('ambientes')
         dormitorios = request.form.get('dormitorios')

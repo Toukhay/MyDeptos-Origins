@@ -315,8 +315,24 @@
         // Permitir acumulación de imágenes seleccionadas
         let selectedFiles = [];
 
-        // Al enviar el formulario, agregar los archivos acumulados al FormData
+        // Validación de formulario al enviar
         document.getElementById('publishForm').addEventListener('submit', function(event) {
+            // Limpiar el precio antes del envío para evitar problemas de validación
+            const priceInput = document.getElementById('price');
+            if (priceInput && priceInput.value) {
+                priceInput.value = priceInput.value.replace(/\./g, '');
+            }
+            
+            // Validar ubicación
+            const latitud = document.getElementById('latitud').value;
+            const longitud = document.getElementById('longitud').value;
+
+            if (!latitud || !longitud) {
+                event.preventDefault(); // Detener el envío del formulario
+                showAlert('Por favor, selecciona una ubicación en el mapa.', 'danger');
+                return;
+            }
+            
             // Si el formulario se envía por AJAX, agregar los archivos manualmente
             // Si es envío normal, reemplazar los archivos del input por los acumulados
             if (selectedFiles.length > 0) {
@@ -358,16 +374,6 @@
         // El script actual de showAlert en el HTML puede coexistir o ser reemplazado por los flashes del servidor.
         // Por ahora, lo mantendré, pero los flashes del servidor son más robustos.
         // La validación de latitud/longitud en JS sigue siendo útil para feedback inmediato.
-        document.getElementById('publishForm').addEventListener('submit', function(event) {
-            const latitud = document.getElementById('latitud').value;
-            const longitud = document.getElementById('longitud').value;
-
-            if (!latitud || !longitud) {
-                event.preventDefault(); // Detener el envío del formulario
-                showAlert('Por favor, selecciona una ubicación en el mapa.', 'danger'); // Usar 'danger' para errores
-            }
-            // La validación de cantidad de imágenes ahora se maneja mejor en el servidor.
-        });
 
         // Formatea el input de precio con puntos de miles al escribir
         function formatNumberInput(input) {
@@ -376,7 +382,25 @@
                 input.value = '';
                 return;
             }
-            input.value = parseInt(value, 10).toLocaleString('es-AR');
+            // Usar formateo manual para evitar limitaciones de parseInt
+            input.value = formatNumberWithDots(value);
+        }
+
+        // Función auxiliar para formatear números con puntos de miles
+        function formatNumberWithDots(numberString) {
+            // Reversar el string para insertar puntos desde la derecha
+            let reversed = numberString.split('').reverse().join('');
+            let formatted = '';
+            
+            for (let i = 0; i < reversed.length; i++) {
+                if (i > 0 && i % 3 === 0) {
+                    formatted += '.';
+                }
+                formatted += reversed[i];
+            }
+            
+            // Reversar de nuevo para obtener el formato correcto
+            return formatted.split('').reverse().join('');
         }
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -384,10 +408,6 @@
             if (priceInput) {
                 priceInput.addEventListener('input', function () {
                     formatNumberInput(this);
-                });
-                // Al enviar el formulario, limpiar los puntos para enviar solo números
-                priceInput.form && priceInput.form.addEventListener('submit', function () {
-                    priceInput.value = priceInput.value.replace(/\./g, '');
                 });
             }
         });

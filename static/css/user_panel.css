@@ -477,6 +477,16 @@ footer {
     .container.full-width {
         grid-template-columns: 1fr; /* Una columna en pantallas pequeñas */
     }
+
+    .pagination {
+        flex-wrap: wrap;
+        gap: 0.3rem;
+    }
+    
+    .page-link {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+    }
 }
 
 @media (max-width: 1100px) {
@@ -491,4 +501,84 @@ footer {
         flex: 1;
         margin-bottom: 2rem;
     }
+}
+
+/* Estilos para la paginación */
+.pagination-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0 1rem 0;
+}
+
+.pagination-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 0.5rem;
+    align-items: center;
+    background: #fff;
+    border-radius: 12px;
+    padding: 0.5rem;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+}
+
+.page-item {
+    display: inline-block;
+}
+
+.page-link {
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    background: var(--primary-color);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    border: 2px solid var(--primary-color);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.2);
+    font-size: 1rem;
+    min-width: 45px;
+    text-align: center;
+}
+
+.page-item.active .page-link,
+.page-link.active {
+    background: #2c5aa0;
+    color: #fff;
+    font-weight: bold;
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(74, 144, 226, 0.4);
+    border-color: #2c5aa0;
+}
+
+.page-item.disabled .page-link,
+.page-link[tabindex="-1"] {
+    background: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+    pointer-events: none;
+    border-color: #e9ecef;
+    box-shadow: none;
+}
+
+.page-link:hover:not([tabindex="-1"]):not(.active) {
+    background: #357ABD;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.page-link:active:not([tabindex="-1"]):not(.active) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.2);
 }
