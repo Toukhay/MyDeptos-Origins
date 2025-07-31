@@ -1597,14 +1597,31 @@ def admin_edit_user(user_id):
         name = request.form.get('name')
         email = request.form.get('email')
         telefono = request.form.get('telefono')
+        new_password = request.form.get('new_password')
         # Cambia is_admin por rol (checkbox: si está marcado, admin; si no, user)
         rol = 'admin' if request.form.get('rol') == 'on' else 'user'
-        cur.execute("UPDATE usuario SET name=%s, email=%s, telefono=%s, rol=%s WHERE id=%s",
-                    (name, email, telefono, rol, user_id))
-        mysql.connection.commit()
-        cur.close()
-        flash('Usuario actualizado.', 'success')
-        return redirect(url_for('admin_panel'))
+        
+        try:
+            # Si se proporciona una nueva contraseña, actualizarla
+            if new_password and new_password.strip():
+                hashed_password = generate_password_hash(new_password)
+                cur.execute("UPDATE usuario SET name=%s, email=%s, telefono=%s, rol=%s, password=%s WHERE id=%s",
+                           (name, email, telefono, rol, hashed_password, user_id))
+                flash('Usuario actualizado con nueva contraseña.', 'success')
+            else:
+                # Solo actualizar los otros campos sin cambiar la contraseña
+                cur.execute("UPDATE usuario SET name=%s, email=%s, telefono=%s, rol=%s WHERE id=%s",
+                           (name, email, telefono, rol, user_id))
+                flash('Usuario actualizado.', 'success')
+            
+            mysql.connection.commit()
+            cur.close()
+            return redirect(url_for('admin_panel'))
+        except Exception as e:
+            mysql.connection.rollback()
+            cur.close()
+            flash(f'Error al actualizar el usuario: {str(e)}', 'danger')
+            return redirect(url_for('admin_panel'))
     cur.close()
     return render_template('admin_edit_user.html', user=user)
 
