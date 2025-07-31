@@ -277,16 +277,25 @@ def search():
     precio_min = request.args.get('precio_min')
     precio_max = request.args.get('precio_max')
     ambientes = request.args.get('ambientes')
+    localidad = request.args.get('localidad')
+    rol_inmobiliario = request.args.get('rol_inmobiliario')
+    
+    # Filtros de ubicación
+    filter_lat = request.args.get('filter_lat')
+    filter_lng = request.args.get('filter_lng')
+    filter_radius = request.args.get('filter_radius', '2')  # Radio en km
 
     page = int(request.args.get('page', 1))
     per_page = 6  
     offset = (page - 1) * per_page
 
-    # Construir la consulta dinámica
+    # Construir la consulta dinámica con coordenadas
     query = '''
-        SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, GROUP_CONCAT(f.url_foto) AS fotos
+        SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, 
+               GROUP_CONCAT(f.url_foto) AS fotos, c.latitud, c.longitud
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
+        LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento
         WHERE 1=1
     '''
     params = []
@@ -295,14 +304,38 @@ def search():
         query += ' AND d.tipo_publicacion = %s'
         params.append(tipo_publicacion)
     if precio_min:
+        precio_min_clean = precio_min.replace('.', '').replace(',', '')
         query += ' AND d.precio >= %s'
-        params.append(precio_min)
+        params.append(precio_min_clean)
     if precio_max:
+        precio_max_clean = precio_max.replace('.', '').replace(',', '')
         query += ' AND d.precio <= %s'
-        params.append(precio_max)
+        params.append(precio_max_clean)
     if ambientes:
         query += ' AND d.ambientes = %s'
         params.append(ambientes)
+    if localidad:
+        query += ' AND d.id_localidad = %s'
+        params.append(localidad)
+    if rol_inmobiliario:
+        query += ' AND d.rol_inmo_dir = %s'
+        params.append(rol_inmobiliario)
+    
+    # Filtro de ubicación usando fórmula de distancia Haversine
+    if filter_lat and filter_lng:
+        try:
+            lat = float(filter_lat)
+            lng = float(filter_lng)
+            radius = float(filter_radius)
+            
+            # Fórmula Haversine para calcular distancia
+            query += ''' AND c.latitud IS NOT NULL AND c.longitud IS NOT NULL
+                        AND (6371 * acos(cos(radians(%s)) * cos(radians(c.latitud)) * 
+                        cos(radians(c.longitud) - radians(%s)) + sin(radians(%s)) * 
+                        sin(radians(c.latitud)))) <= %s'''
+            params.extend([lat, lng, lat, radius])
+        except (ValueError, TypeError):
+            pass  # Ignorar filtro de ubicación si los valores no son válidos
 
     query += ' GROUP BY d.id_departamento'
     query += ' LIMIT %s OFFSET %s'
@@ -314,20 +347,46 @@ def search():
     cursor.close()
 
     # Obtener el total de resultados para la paginación
-    count_query = 'SELECT COUNT(*) FROM departamento d WHERE 1=1'
+    count_query = '''SELECT COUNT(*) FROM departamento d 
+                     LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento 
+                     WHERE 1=1'''
     count_params = []
+    
     if tipo_publicacion:
         count_query += ' AND d.tipo_publicacion = %s'
         count_params.append(tipo_publicacion)
     if precio_min:
+        precio_min_clean = precio_min.replace('.', '').replace(',', '')
         count_query += ' AND d.precio >= %s'
-        count_params.append(precio_min)
+        count_params.append(precio_min_clean)
     if precio_max:
+        precio_max_clean = precio_max.replace('.', '').replace(',', '')
         count_query += ' AND d.precio <= %s'
-        count_params.append(precio_max)
+        count_params.append(precio_max_clean)
     if ambientes:
         count_query += ' AND d.ambientes = %s'
         count_params.append(ambientes)
+    if localidad:
+        count_query += ' AND d.id_localidad = %s'
+        count_params.append(localidad)
+    if rol_inmobiliario:
+        count_query += ' AND d.rol_inmo_dir = %s'
+        count_params.append(rol_inmobiliario)
+        
+    # Filtro de ubicación para conteo
+    if filter_lat and filter_lng:
+        try:
+            lat = float(filter_lat)
+            lng = float(filter_lng)
+            radius = float(filter_radius)
+            
+            count_query += ''' AND c.latitud IS NOT NULL AND c.longitud IS NOT NULL
+                              AND (6371 * acos(cos(radians(%s)) * cos(radians(c.latitud)) * 
+                              cos(radians(c.longitud) - radians(%s)) + sin(radians(%s)) * 
+                              sin(radians(c.latitud)))) <= %s'''
+            count_params.extend([lat, lng, lat, radius])
+        except (ValueError, TypeError):
+            pass
 
     cursor = mysql.connection.cursor()
     cursor.execute(count_query, count_params)
@@ -335,10 +394,10 @@ def search():
     cursor.close()
     total_pages = (total + per_page - 1) // per_page
 
-    # Procesar resultados with manejo seguro de precios
+    # Procesar resultados with manejo seguro de precios y coordenadas
     resultados_procesados = []
     for row in resultados:
-        id_departamento, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, fotos = row
+        id_departamento, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, fotos, latitud, longitud = row
         
         # Manejo seguro de la conversión de precio
         try:
@@ -358,7 +417,7 @@ def search():
         resultados_procesados.append((
             id_departamento, titulo, descripcion, tipo_publicacion, 
             precio_float, moneda, ambientes, dormitorios, banos, superficie, direccion, 
-            fotos.split(',') if fotos else []
+            fotos.split(',') if fotos else [], latitud, longitud
         ))
 
     # Renderizar resultados y paginación

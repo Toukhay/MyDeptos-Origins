@@ -189,7 +189,7 @@
                         </div>
                     </div>
                     <div id="map" class="interactive-map"></div>
-                    <p class="map-help-text">Haz clic en el mapa para seleccionar la ubicación</p>
+                    <p class="map-help-text">Haz clic en el mapa para seleccionar la ubicación dentro de Oberá, Misiones</p>
 
                     <!-- Imágenes -->
                     <div class="form-group full-width">
@@ -225,14 +225,35 @@
     <div id="alert-message" class="alert-hidden"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Mapa interactivo
+        // Mapa interactivo - Restringido a Oberá
         document.addEventListener('DOMContentLoaded', function () {
-            const map = L.map('map').setView([-27.485104, -55.119835], 13);
+            // Coordenadas y límites de Oberá, Misiones
+            const oberaCenter = [-27.485104, -55.119835];
+            const oberaBounds = [
+                [-27.530000, -55.170000], // Suroeste
+                [-27.440000, -55.070000]  // Noreste
+            ];
+            
+            const map = L.map('map', {
+                maxBounds: oberaBounds,
+                maxBoundsViscosity: 1.0
+            }).setView(oberaCenter, 14);
+            
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                minZoom: 12,
+                maxZoom: 18
             }).addTo(map);
 
-            const marker = L.marker([-27.485104, -55.119835], {
+            // Agregar polígono para mostrar los límites de Oberá
+            const oberaPolygon = L.rectangle(oberaBounds, {
+                color: '#4A90E2',
+                weight: 2,
+                opacity: 0.8,
+                fillOpacity: 0.1
+            }).addTo(map);
+
+            const marker = L.marker(oberaCenter, {
                 draggable: true,
                 icon: L.icon({
                     iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
@@ -241,11 +262,33 @@
             }).addTo(map);
 
             function reverseGeocode(lat, lon) {
+                // Validar que esté dentro de los límites de Oberá
+                if (lat < oberaBounds[0][0] || lat > oberaBounds[1][0] || 
+                    lon < oberaBounds[0][1] || lon > oberaBounds[1][1]) {
+                    alert('La ubicación debe estar dentro de los límites de Oberá, Misiones.');
+                    marker.setLatLng(oberaCenter);
+                    document.getElementById('latitud').value = oberaCenter[0].toFixed(6);
+                    document.getElementById('longitud').value = oberaCenter[1].toFixed(6);
+                    return;
+                }
+                
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data && data.address) {
                             const addr = data.address;
+                            // Verificar que sea Oberá
+                            const isObera = addr.city === 'Oberá' || addr.town === 'Oberá' || 
+                                          addr.municipality === 'Oberá' || addr.village === 'Oberá';
+                            
+                            if (!isObera) {
+                                alert('Solo se permiten ubicaciones dentro de Oberá, Misiones.');
+                                marker.setLatLng(oberaCenter);
+                                document.getElementById('latitud').value = oberaCenter[0].toFixed(6);
+                                document.getElementById('longitud').value = oberaCenter[1].toFixed(6);
+                                return;
+                            }
+                            
                             // Construir dirección personalizada
                             let direccion = '';
                             if (addr.road) direccion += addr.road;

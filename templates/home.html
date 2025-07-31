@@ -6,6 +6,8 @@
     <title>MyDeptos - Búsqueda de Departamentos en Misiones</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <!-- Leaflet CSS para el mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script>
         function toggleFavorite(element, propertyId) {
             const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
@@ -214,6 +216,25 @@
                         {% endfor %}
                     </select>
                 </div>
+                
+                <!-- Filtro de Ubicación con Mapa -->
+                <div class="form-group">
+                    <label for="ubicacion">Filtrar por Ubicación:</label>
+                    <button type="button" id="toggle-map-btn" onclick="toggleLocationMap()">🗺️ Buscar en Mapa</button>
+                    <div id="location-map-container" style="display: none;">
+                        <div id="search-map" style="height: 250px; margin: 10px 0; border-radius: 8px;"></div>
+                        <input type="text" id="search-address" placeholder="Buscar dirección, barrio, calle..." style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                            <button type="button" onclick="clearLocationFilter()" style="background: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 12px;">Limpiar</button>
+                            <button type="button" onclick="useCurrentLocation()" style="background: #28a745; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 12px;">Mi Ubicación</button>
+                        </div>
+                        <small style="color: #666;">Haz clic en el mapa o busca una dirección para filtrar departamentos por zona</small>
+                        <input type="hidden" id="filter_lat" name="filter_lat">
+                        <input type="hidden" id="filter_lng" name="filter_lng">
+                        <input type="hidden" id="filter_radius" name="filter_radius" value="2">
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label for="ambientes">Ambientes:</label>
                     <input type="number" name="ambientes" id="ambientes" placeholder="Número de ambientes">
@@ -534,5 +555,148 @@
 
 /* ...resto de estilos existentes... */
 </style>
+
+<!-- Script de Leaflet para el mapa -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Variables globales para el mapa de búsqueda
+let searchMap = null;
+let searchMarker = null;
+let searchCircle = null;
+
+// Toggle del mapa de ubicación
+function toggleLocationMap() {
+    const container = document.getElementById('location-map-container');
+    const btn = document.getElementById('toggle-map-btn');
+    
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        btn.textContent = '🗺️ Ocultar Mapa';
+        setTimeout(initSearchMap, 100); // Delay para que el container esté visible
+    } else {
+        container.style.display = 'none';
+        btn.textContent = '🗺️ Buscar en Mapa';
+    }
+}
+
+// Inicializar mapa de búsqueda
+function initSearchMap() {
+    if (searchMap) return; // Ya inicializado
+    
+    // Centrar en Oberá
+    const oberaCenter = [-27.485104, -55.119835];
+    searchMap = L.map('search-map').setView(oberaCenter, 13);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(searchMap);
+    
+    // Click en el mapa
+    searchMap.on('click', function(e) {
+        setSearchLocation(e.latlng.lat, e.latlng.lng);
+    });
+    
+    // Buscar direcciones
+    const searchInput = document.getElementById('search-address');
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchAddress(this.value);
+        }
+    });
+}
+
+// Establecer ubicación de búsqueda
+function setSearchLocation(lat, lng) {
+    // Remover marcador anterior
+    if (searchMarker) {
+        searchMap.removeLayer(searchMarker);
+    }
+    if (searchCircle) {
+        searchMap.removeLayer(searchCircle);
+    }
+    
+    // Crear nuevo marcador
+    searchMarker = L.marker([lat, lng]).addTo(searchMap);
+    
+    // Crear círculo de búsqueda (radio 2km)
+    searchCircle = L.circle([lat, lng], {
+        radius: 2000, // 2km
+        color: '#4A90E2',
+        fillColor: '#4A90E2',
+        fillOpacity: 0.2
+    }).addTo(searchMap);
+    
+    // Guardar coordenadas
+    document.getElementById('filter_lat').value = lat.toFixed(6);
+    document.getElementById('filter_lng').value = lng.toFixed(6);
+    
+    // Obtener dirección
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.display_name) {
+                document.getElementById('search-address').value = data.display_name;
+            }
+        });
+}
+
+// Buscar dirección
+function searchAddress(address) {
+    if (!address.trim()) return;
+    
+    // Buscar con bias hacia Oberá
+    const query = address + ', Oberá, Misiones, Argentina';
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data[0]) {
+                const lat = parseFloat(data[0].lat);
+                const lng = parseFloat(data[0].lon);
+                setSearchLocation(lat, lng);
+                searchMap.setView([lat, lng], 15);
+            } else {
+                alert('No se encontró la dirección especificada');
+            }
+        })
+        .catch(() => {
+            alert('Error al buscar la dirección');
+        });
+}
+
+// Limpiar filtro de ubicación
+function clearLocationFilter() {
+    if (searchMarker) {
+        searchMap.removeLayer(searchMarker);
+        searchMarker = null;
+    }
+    if (searchCircle) {
+        searchMap.removeLayer(searchCircle);
+        searchCircle = null;
+    }
+    
+    document.getElementById('filter_lat').value = '';
+    document.getElementById('filter_lng').value = '';
+    document.getElementById('search-address').value = '';
+}
+
+// Usar ubicación actual
+function useCurrentLocation() {
+    if (!navigator.geolocation) {
+        alert('Tu navegador no soporta geolocalización');
+        return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(function(position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setSearchLocation(lat, lng);
+        searchMap.setView([lat, lng], 15);
+    }, function() {
+        alert('No se pudo obtener tu ubicación');
+    });
+}
+</script>
+
 </body>
 </html>
