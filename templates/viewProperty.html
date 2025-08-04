@@ -59,6 +59,15 @@
                 <!-- Información separada -->
                 <div class="property-details">
                     <h1>{{ departamento['titulo'] }}</h1>
+                    <div class="publication-type">
+                        <span class="publication-badge {% if departamento['tipo_publicacion'] == 'venta' %}badge-venta{% else %}badge-alquiler{% endif %}">
+                            {% if departamento['tipo_publicacion'] == 'venta' %}
+                                En Venta
+                            {% else %}
+                                En Alquiler
+                            {% endif %}
+                        </span>
+                    </div>
                     <p>{{ departamento['descripcion'] }}</p>
                     <p class="price">Precio: ${{ departamento['precio'] }} {{ departamento['moneda'] }}</p>
                     <p>Ambientes: {{ departamento['ambientes'] }}</p>

@@ -256,6 +256,32 @@ button:hover {
     color: var(--text-color);
 }
 
+/* Estilos para el badge del tipo de publicación */
+.publication-type {
+    margin: 1rem 0;
+}
+
+.publication-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.badge-venta {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-alquiler {
+    background-color: #007bff;
+    color: white;
+}
+
 .view-property-page .property-details img {
     width: 100%;
     height: auto;

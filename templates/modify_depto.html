@@ -132,18 +132,35 @@
                 <div class="current-images">
                     {% if current_photos %}
                         {% for photo_url in current_photos %}
-                            <img src="{{ url_for('static', filename='image/' + photo_url) }}" alt="Imagen actual" class="current-photo-thumbnail">
+                            <div class="image-container" data-photo="{{ photo_url }}">
+                                <img src="{{ url_for('static', filename='image/' + photo_url) }}" alt="Imagen actual" class="current-photo-thumbnail">
+                                <button type="button" class="delete-image-btn" onclick="deleteImage('{{ photo_url }}', {{ depto_id }})" title="Eliminar imagen">
+                                    <span>&times;</span>
+                                </button>
+                            </div>
                         {% endfor %}
+                        <div class="image-counter">
+                            <span class="counter-text">{{ current_photos|length }}/5 imágenes</span>
+                            {% if current_photos|length < 5 %}
+                                <span class="can-add-text">Puedes agregar {{ 5 - current_photos|length }} más</span>
+                            {% else %}
+                                <span class="max-reached-text">Máximo alcanzado</span>
+                            {% endif %}
+                        </div>
                     {% else %}
                         <p>No hay imágenes cargadas para este departamento.</p>
+                        <div class="image-counter">
+                            <span class="counter-text">0/5 imágenes</span>
+                            <span class="can-add-text">Puedes agregar hasta 5 imágenes</span>
+                        </div>
                     {% endif %}
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="photos">Nuevas Imágenes (opcional, reemplazará las actuales)</label>
+                <label for="photos">Agregar Más Imágenes (opcional)</label>
                 {{ form.photos(class="form-control", id="photos") }}
-                <small class="form-text text-muted">Sube entre 1 y 5 imágenes (JPG, PNG, WEBP, JPEG). Si no seleccionas nuevas imágenes, se conservarán las actuales.</small>
+                <small class="form-text text-muted">Agrega entre 1 y 5 imágenes adicionales (JPG, PNG, WEBP, JPEG). Las nuevas imágenes se agregarán a las existentes. Máximo 5 imágenes total por departamento.</small>
                 {% if form.photos.errors %}
                     <span class="error-message">{{ form.photos.errors[0] }}</span>
                 {% endif %}
@@ -299,6 +316,66 @@
                 reverseGeocode(position.lat, position.lng);
             });
         });
+
+        // Función para eliminar imagen individual
+        function deleteImage(photoUrl, deptoId) {
+            if (confirm('¿Estás seguro de que deseas eliminar esta imagen?')) {
+                fetch('/delete_photo/' + deptoId + '/' + photoUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Eliminar la imagen del DOM
+                        const imageContainer = document.querySelector(`[data-photo="${photoUrl}"]`);
+                        if (imageContainer) {
+                            imageContainer.remove();
+                        }
+                        
+                        // Verificar si quedan imágenes y actualizar contador
+                        const remainingImages = document.querySelectorAll('.image-container');
+                        const currentImagesDiv = document.querySelector('.current-images');
+                        
+                        if (remainingImages.length === 0) {
+                            currentImagesDiv.innerHTML = `
+                                <p>No hay imágenes cargadas para este departamento.</p>
+                                <div class="image-counter">
+                                    <span class="counter-text">0/5 imágenes</span>
+                                    <span class="can-add-text">Puedes agregar hasta 5 imágenes</span>
+                                </div>
+                            `;
+                        } else {
+                            // Actualizar contador
+                            const counterDiv = document.querySelector('.image-counter');
+                            const newCount = remainingImages.length;
+                            const canAdd = 5 - newCount;
+                            
+                            if (counterDiv) {
+                                counterDiv.innerHTML = `
+                                    <span class="counter-text">${newCount}/5 imágenes</span>
+                                    ${canAdd > 0 
+                                        ? `<span class="can-add-text">Puedes agregar ${canAdd} más</span>`
+                                        : `<span class="max-reached-text">Máximo alcanzado</span>`
+                                    }
+                                `;
+                            }
+                        }
+                        
+                        alert('Imagen eliminada correctamente');
+                    } else {
+                        alert('Error al eliminar la imagen: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al eliminar la imagen');
+                });
+            }
+        }
     </script>
 </body>
 </html>

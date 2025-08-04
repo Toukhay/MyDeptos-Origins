@@ -704,24 +704,25 @@ def modify_depto(depto_id):
             # Procesar imágenes si se subieron nuevas
             new_photos = request.files.getlist(form.photos.name)
             if new_photos and new_photos[0].filename: # Verificar si se subió al menos un archivo con nombre
-                # Eliminar fotos antiguas de la DB y del sistema de archivos
-                if current_photos_list:
-                    for old_photo_filename in current_photos_list:
-                        try:
-                            os.remove(os.path.join(app.root_path, 'static', 'image', old_photo_filename))
-                        except OSError as e:
-                            app.logger.error(f"Error eliminando archivo antiguo {old_photo_filename}: {e}")
-                    cursor.execute('DELETE FROM foto WHERE id_departamento = %s', (depto_id,))
+                # Contar imágenes actuales
+                cursor.execute('SELECT COUNT(*) FROM foto WHERE id_departamento = %s', (depto_id,))
+                current_photo_count = cursor.fetchone()[0]
+                
+                # Verificar límite de imágenes totales
+                total_photos_after = current_photo_count + len(new_photos)
+                if total_photos_after > 5:
+                    max_new_photos = 5 - current_photo_count
+                    if max_new_photos <= 0:
+                        flash('Ya tienes el máximo de 5 imágenes. Elimina algunas para agregar nuevas.', 'warning')
+                    else:
+                        flash(f'Solo puedes agregar {max_new_photos} imagen(es) más. Máximo 5 imágenes por departamento.', 'warning')
+                        new_photos = new_photos[:max_new_photos]
+                else:
+                    # Todas las imágenes se pueden agregar
+                    pass
 
-                # Guardar nuevas fotos
-                if len(new_photos) > 5:
-                    flash('Puedes subir un máximo de 5 imágenes.', 'danger')
-                    # No hacer rollback aquí, los datos del depto ya se actualizaron.
-                    # Podríamos redirigir o manejarlo de otra forma.
-                    # Por ahora, se guardarán las primeras 5.
-                    new_photos = new_photos[:5]
-
-                for photo_file in new_photos:
+                # Agregar nuevas fotos (sin eliminar las existentes)
+                for photo_file in new_photos[:5-current_photo_count]:  # Asegurar que no exceda el límite
                     if photo_file.filename: # Asegurarse de que el archivo tiene nombre
                         original_filename = secure_filename(photo_file.filename)
                         # Generar un nombre de archivo único
@@ -950,7 +951,7 @@ def remove_favorite():
 def view_property(property_id):
     cursor = mysql.connection.cursor()
     cursor.execute('''
-        SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, 
+        SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, 
             d.superficie, d.direccion, d.rol_inmo_dir, GROUP_CONCAT(f.url_foto) AS fotos, 
             c.latitud, c.longitud, u.id AS user_id, u.name AS user_name, u.email AS user_email, u.telefono AS user_telefono
         FROM departamento d
@@ -971,24 +972,25 @@ def view_property(property_id):
         "id": departamento_data[0],
         "titulo": departamento_data[1],
         "descripcion": departamento_data[2],
-        "precio": departamento_data[3],
-        "moneda": departamento_data[4],
-        "ambientes": departamento_data[5],
-        "dormitorios": departamento_data[6],
-        "banos": departamento_data[7],
-        "superficie": departamento_data[8],
-        "direccion": departamento_data[9],
-        "rol_inmo_dir": departamento_data[10],
-        "fotos": departamento_data[11].split(',') if departamento_data[11] else [],
-        "latitud": float(departamento_data[12]) if departamento_data[12] else 0.0,
-        "longitud": float(departamento_data[13]) if departamento_data[13] else 0.0,
-        "propietario_id": departamento_data[14]
+        "tipo_publicacion": departamento_data[3],
+        "precio": departamento_data[4],
+        "moneda": departamento_data[5],
+        "ambientes": departamento_data[6],
+        "dormitorios": departamento_data[7],
+        "banos": departamento_data[8],
+        "superficie": departamento_data[9],
+        "direccion": departamento_data[10],
+        "rol_inmo_dir": departamento_data[11],
+        "fotos": departamento_data[12].split(',') if departamento_data[12] else [],
+        "latitud": float(departamento_data[13]) if departamento_data[13] else 0.0,
+        "longitud": float(departamento_data[14]) if departamento_data[14] else 0.0,
+        "propietario_id": departamento_data[15]
     }
     publicador = {
-        "id": departamento_data[14],
-        "nombre": departamento_data[15],
-        "email": departamento_data[16],
-        "telefono": departamento_data[17]
+        "id": departamento_data[15],
+        "nombre": departamento_data[16],
+        "email": departamento_data[17],
+        "telefono": departamento_data[18]
     }
 
     # Obtener reseñas
@@ -1300,6 +1302,50 @@ def update_status(publication_id):
         mysql.connection.rollback()
         flash(f'Error al actualizar el estado: {e}', 'danger')
         return redirect(url_for('user_panel'))
+
+@app.route('/delete_photo/<int:depto_id>/<photo_name>', methods=['POST'])
+def delete_photo(depto_id, photo_name):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Debes iniciar sesión primero'})
+
+    try:
+        user_id = session['user_id']
+        cursor = mysql.connection.cursor()
+        
+        # Verificar que el departamento pertenece al usuario
+        cursor.execute('SELECT id_departamento FROM departamento WHERE id_departamento = %s AND id_usuario = %s', 
+                      (depto_id, user_id))
+        if not cursor.fetchone():
+            cursor.close()
+            return jsonify({'success': False, 'message': 'No tienes permisos para eliminar esta imagen'})
+        
+        # Verificar que la foto existe
+        cursor.execute('SELECT url_foto FROM foto WHERE id_departamento = %s AND url_foto = %s', 
+                      (depto_id, photo_name))
+        if not cursor.fetchone():
+            cursor.close()
+            return jsonify({'success': False, 'message': 'La imagen no existe'})
+        
+        # Eliminar la foto de la base de datos
+        cursor.execute('DELETE FROM foto WHERE id_departamento = %s AND url_foto = %s', 
+                      (depto_id, photo_name))
+        mysql.connection.commit()
+        cursor.close()
+        
+        # Eliminar el archivo físico
+        foto_path = os.path.join(app.root_path, 'static', 'image', photo_name)
+        if os.path.exists(foto_path):
+            try:
+                os.remove(foto_path)
+            except Exception as e:
+                app.logger.warning(f"No se pudo eliminar el archivo físico {photo_name}: {e}")
+        
+        return jsonify({'success': True, 'message': 'Imagen eliminada correctamente'})
+        
+    except Exception as e:
+        mysql.connection.rollback()
+        app.logger.error(f"Error eliminando foto {photo_name} del departamento {depto_id}: {e}")
+        return jsonify({'success': False, 'message': 'Error interno del servidor'})
 
 @app.route('/delete_confirmation')
 def delete_confirmation():
