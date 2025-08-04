@@ -1802,6 +1802,11 @@ def admin_edit_depto(depto_id):
         flash('Departamento no encontrado.', 'danger')
         return redirect(url_for('admin_panel'))
     
+    # Obtener fotos del departamento
+    cur.execute('SELECT url_foto FROM foto WHERE id_departamento = %s', (depto_id,))
+    fotos_data = cur.fetchall()
+    current_photos = [foto[0] for foto in fotos_data] if fotos_data else []
+    
     # Formatear el precio con puntos de miles para mostrar
     precio_value = int(depto_data[3])
     precio_formateado = f"{precio_value:,}".replace(',', '.')
@@ -1848,6 +1853,46 @@ def admin_edit_depto(depto_id):
                     # Insertar nuevas coordenadas
                     cur.execute("INSERT INTO coordenadas (id_departamento, latitud, longitud) VALUES (%s, %s, %s)", (depto_id, lat, lon))
             
+            # Procesar nuevas imágenes si se subieron
+            if 'new_photos' in request.files:
+                new_photos = request.files.getlist('new_photos')
+                # Filtrar solo las fotos que realmente tienen un archivo subido
+                valid_new_photos = [p for p in new_photos if p and p.filename and p.filename.strip()]
+                
+                if valid_new_photos:
+                    # Contar fotos actuales
+                    cur.execute('SELECT COUNT(*) FROM foto WHERE id_departamento = %s', (depto_id,))
+                    current_photo_count = cur.fetchone()[0]
+                    
+                    # Verificar límite de imágenes totales
+                    total_photos_after = current_photo_count + len(valid_new_photos)
+                    if total_photos_after > 5:
+                        max_new_photos = 5 - current_photo_count
+                        if max_new_photos <= 0:
+                            flash('Ya tienes el máximo de 5 imágenes. Elimina algunas para agregar nuevas.', 'warning')
+                        else:
+                            flash(f'Solo puedes agregar {max_new_photos} imagen(es) más. Máximo 5 imágenes por departamento.', 'warning')
+                            valid_new_photos = valid_new_photos[:max_new_photos]
+                    
+                    # Agregar nuevas fotos
+                    for photo_file in valid_new_photos[:5-current_photo_count]:
+                        if photo_file.filename:
+                            import uuid
+                            from werkzeug.utils import secure_filename
+                            import os
+                            
+                            original_filename = secure_filename(photo_file.filename)
+                            unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
+                            photo_path = os.path.join(app.root_path, 'static', 'image', unique_filename)
+                            
+                            try:
+                                photo_file.save(photo_path)
+                                cur.execute('INSERT INTO foto (id_departamento, url_foto) VALUES (%s, %s)', 
+                                          (depto_id, unique_filename))
+                            except Exception as e:
+                                app.logger.error(f"Error guardando nueva imagen {original_filename}: {e}")
+                                flash(f'Error al guardar la imagen {original_filename}.', 'warning')
+            
             mysql.connection.commit()
             cur.close()
             flash('Departamento actualizado correctamente.', 'success')
@@ -1859,7 +1904,7 @@ def admin_edit_depto(depto_id):
             return redirect(url_for('admin_panel'))
     
     cur.close()
-    return render_template('admin_edit_depto.html', depto=depto_data, precio_formateado=precio_formateado, latitud=latitud, longitud=longitud)
+    return render_template('admin_edit_depto.html', depto=depto_data, precio_formateado=precio_formateado, latitud=latitud, longitud=longitud, current_photos=current_photos)
 
 @app.route('/admin/depto/<int:depto_id>/delete', methods=['POST', 'GET'])
 @admin_required
@@ -1883,19 +1928,34 @@ def admin_delete_depto(depto_id):
 @app.route('/admin/foto/<int:depto_id>/<foto_nombre>/delete', methods=['POST'])
 @admin_required
 def admin_delete_foto(depto_id, foto_nombre):
-    cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM foto WHERE id_departamento = %s AND url_foto = %s", (depto_id, foto_nombre))
-    mysql.connection.commit()
-    cur.close()
-    # Elimina el archivo físico si existe
-    foto_path = os.path.join(app.root_path, 'static', 'image', foto_nombre)
-    if os.path.exists(foto_path):
-        try:
-            os.remove(foto_path)
-        except Exception:
-            pass
-    flash('Foto eliminada.', 'success')
-    return redirect(url_for('admin_panel'))
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("DELETE FROM foto WHERE id_departamento = %s AND url_foto = %s", (depto_id, foto_nombre))
+        mysql.connection.commit()
+        cur.close()
+        
+        # Elimina el archivo físico si existe
+        foto_path = os.path.join(app.root_path, 'static', 'image', foto_nombre)
+        if os.path.exists(foto_path):
+            try:
+                os.remove(foto_path)
+            except Exception:
+                pass
+        
+        # Si es una petición AJAX (fetch), devolver JSON
+        if request.headers.get('Content-Type') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True, 'message': 'Foto eliminada correctamente'})
+        
+        flash('Foto eliminada.', 'success')
+        return redirect(url_for('admin_panel'))
+        
+    except Exception as e:
+        # Si es una petición AJAX, devolver error JSON
+        if request.headers.get('Content-Type') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': str(e)})
+        
+        flash('Error al eliminar la foto.', 'danger')
+        return redirect(url_for('admin_panel'))
 
 @app.errorhandler(404)
 def page_not_found(e):

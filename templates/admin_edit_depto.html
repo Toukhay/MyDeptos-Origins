@@ -81,12 +81,102 @@
             color: #666;
             margin-bottom: 1rem;
         }
+        
+        /* Estilos para gestión de imágenes */
+        .images-section {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        
+        .current-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .image-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .current-photo-thumbnail {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            transition: transform 0.2s ease;
+        }
+        
+        .current-photo-thumbnail:hover {
+            transform: scale(1.05);
+        }
+        
+        .delete-image-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #dc3545;
+            color: white;
+            border: 2px solid white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .delete-image-btn:hover {
+            background-color: #c82333;
+            transform: scale(1.1);
+        }
+        
+        .delete-image-btn span {
+            line-height: 1;
+        }
+        
+        .image-counter {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #e9ecef;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            font-size: 0.9rem;
+        }
+        
+        .counter-text {
+            font-weight: bold;
+            color: #2563eb;
+        }
+        
+        .can-add-text {
+            color: #28a745;
+            margin-left: 10px;
+            font-size: 0.85rem;
+        }
+        
+        .max-reached-text {
+            color: #dc3545;
+            margin-left: 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body style="background: #f3f6fa;">
     <div class="admin-form-container">
         <h1>Editar Departamento</h1>
-        <form class="admin-form" method="post" action="{{ url_for('admin_edit_depto', depto_id=depto[0]) }}">
+        <form class="admin-form" method="post" action="{{ url_for('admin_edit_depto', depto_id=depto[0]) }}" enctype="multipart/form-data">>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>Título:
                 <input type="text" name="titulo" value="{{ depto[1] }}" required>
@@ -133,6 +223,43 @@
                     <option value="alquilado" {% if depto[11] == 'alquilado' %}selected{% endif %}>Alquilado</option>
                 </select>
             </label>
+            
+            <!-- Sección de gestión de imágenes -->
+            <div class="images-section">
+                <label>Imágenes Actuales:</label>
+                <div class="current-images">
+                    {% if current_photos %}
+                        {% for photo_url in current_photos %}
+                            <div class="image-container" data-photo="{{ photo_url }}">
+                                <img src="{{ url_for('static', filename='image/' + photo_url) }}" alt="Imagen actual" class="current-photo-thumbnail">
+                                <button type="button" class="delete-image-btn" onclick="deleteAdminImage('{{ photo_url }}', {{ depto[0] }})" title="Eliminar imagen">
+                                    <span>&times;</span>
+                                </button>
+                            </div>
+                        {% endfor %}
+                        <div class="image-counter">
+                            <span class="counter-text">{{ current_photos|length }}/5 imágenes</span>
+                            {% if current_photos|length < 5 %}
+                                <span class="can-add-text">Puedes agregar {{ 5 - current_photos|length }} más</span>
+                            {% else %}
+                                <span class="max-reached-text">Máximo alcanzado</span>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p>No hay imágenes cargadas para este departamento.</p>
+                        <div class="image-counter">
+                            <span class="counter-text">0/5 imágenes</span>
+                            <span class="can-add-text">Puedes agregar hasta 5 imágenes</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <label>Agregar Nuevas Imágenes (opcional):</label>
+                <input type="file" name="new_photos" multiple accept="image/*" style="margin-bottom: 10px;">
+                <small style="display: block; color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+                    Máximo 5 imágenes totales por departamento. Formatos: JPG, PNG, WEBP, JPEG.
+                </small>
+            </div>
             
             <div class="form-row">
                 <div class="form-group">
@@ -250,6 +377,67 @@
                 reverseGeocode(position.lat, position.lng);
             });
         });
+        
+        // Función para eliminar imagen individual (admin)
+        function deleteAdminImage(photoUrl, deptoId) {
+            if (confirm('¿Estás seguro de que deseas eliminar esta imagen?')) {
+                // Usar la ruta admin específica para eliminar fotos
+                fetch(`/admin/foto/${deptoId}/${photoUrl}/delete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Eliminar la imagen del DOM
+                        const imageContainer = document.querySelector(`[data-photo="${photoUrl}"]`);
+                        if (imageContainer) {
+                            imageContainer.remove();
+                        }
+                        
+                        // Verificar si quedan imágenes y actualizar contador
+                        const remainingImages = document.querySelectorAll('.image-container');
+                        const currentImagesDiv = document.querySelector('.current-images');
+                        
+                        if (remainingImages.length === 0) {
+                            currentImagesDiv.innerHTML = `
+                                <p>No hay imágenes cargadas para este departamento.</p>
+                                <div class="image-counter">
+                                    <span class="counter-text">0/5 imágenes</span>
+                                    <span class="can-add-text">Puedes agregar hasta 5 imágenes</span>
+                                </div>
+                            `;
+                        } else {
+                            // Actualizar contador
+                            const counterDiv = document.querySelector('.image-counter');
+                            const newCount = remainingImages.length;
+                            const canAdd = 5 - newCount;
+                            
+                            if (counterDiv) {
+                                counterDiv.innerHTML = `
+                                    <span class="counter-text">${newCount}/5 imágenes</span>
+                                    ${canAdd > 0 
+                                        ? `<span class="can-add-text">Puedes agregar ${canAdd} más</span>`
+                                        : `<span class="max-reached-text">Máximo alcanzado</span>`
+                                    }
+                                `;
+                            }
+                        }
+                        
+                        alert('Imagen eliminada correctamente');
+                    } else {
+                        alert('Error al eliminar la imagen: ' + (data.message || 'Error desconocido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al eliminar la imagen');
+                });
+            }
+        }
     </script>
 </body>
 </html>
