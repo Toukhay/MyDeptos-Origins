@@ -163,6 +163,18 @@
             </div>
             <div id="map" class="interactive-map"></div>
             <p class="map-help-text">Haz clic en el mapa para seleccionar la ubicación</p>
+            
+            <div class="form-group">
+                <label for="estado">Estado del Departamento</label>
+                <select name="estado" id="estado" class="form-control" required>
+                    <option value="disponible" {% if current_status == 'disponible' %}selected{% endif %}>Disponible</option>
+                    <option value="reservado" {% if current_status == 'reservado' %}selected{% endif %}>Reservado</option>
+                    <option value="vendido" {% if current_status == 'vendido' %}selected{% endif %}>Vendido</option>
+                    <option value="alquilado" {% if current_status == 'alquilado' %}selected{% endif %}>Alquilado</option>
+                </select>
+                <small class="form-text text-muted">Los departamentos marcados como "Vendido" o "Alquilado" no aparecerán en las búsquedas públicas.</small>
+            </div>
+            
             <div class="button-group">
                 <button type="submit" class="btn-submit">Guardar Cambios</button>
                 <a href="{{ url_for('user_panel') }}" class="btn-cancel">Cancelar</a>

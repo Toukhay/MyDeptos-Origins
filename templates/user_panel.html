@@ -185,6 +185,33 @@
         .btn-secondary:hover {
             background-color: #5a6268;
         }
+
+        /* Estilos para las badges de estado */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .status-disponible {
+            background-color: #28a745;
+        }
+
+        .status-reservado {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .status-vendido {
+            background-color: #dc3545;
+        }
+
+        .status-alquilado {
+            background-color: #6c757d;
+        }
     </style>
 </head>
 <body class="user-panel-page">
@@ -280,8 +307,8 @@
                             <div class="listing card"> <!-- Añadida clase card para consistencia de estilo -->
                                 <div class="carousel-container">
                                     <div class="carousel">
-                                        {% if publicacion[12] %}
-                                            {% for image in publicacion[12] %}
+                                        {% if publicacion[13] %}
+                                            {% for image in publicacion[13] %}
                                                 <div class="carousel-item"><img src="{{ url_for('static', filename='image/' + image) }}" alt="Imagen del departamento"></div>
                                             {% endfor %}
                                         {% else %}
@@ -302,8 +329,11 @@
                                     <p><strong>Superficie:</strong> {{ publicacion[9] }} m²</p>
                                     <p><strong>Dirección: </strong> {{ publicacion[10] }}</p>
                                     <p><strong>Publicado por: </strong> {{ publicacion[11] }}</p>
-                                    <p><strong>Latitud:</strong> {{ publicacion[13] }}</p>
-                                    <p><strong>Longitud:</strong> {{ publicacion[14] }}</p>
+                                    <p><strong>Estado:</strong> 
+                                        <span class="status-badge status-{{ publicacion[12] }}">{{ publicacion[12]|title }}</span>
+                                    </p>
+                                    <p><strong>Latitud:</strong> {{ publicacion[14] }}</p>
+                                    <p><strong>Longitud:</strong> {{ publicacion[15] }}</p>
                                     <div class="btn-group-vertical">
                                         <a href="{{ url_for('view_property', property_id=publicacion[0]) }}" class="btn btn-primary">Ver Publicación</a>
                                         <a href="{{ url_for('modify_depto', depto_id=publicacion[0]) }}" class="btn btn-edit">Editar</a>

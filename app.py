@@ -230,6 +230,7 @@ def home():
                 GROUP_CONCAT(f.url_foto) AS url_foto
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
+        WHERE d.estado = 'disponible'
         GROUP BY d.id_departamento
         ORDER BY d.fecha_publicacion DESC
         LIMIT 3
@@ -296,7 +297,7 @@ def search():
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
         LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento
-        WHERE 1=1
+        WHERE d.estado = 'disponible'
     '''
     params = []
 
@@ -349,7 +350,7 @@ def search():
     # Obtener el total de resultados para la paginación
     count_query = '''SELECT COUNT(*) FROM departamento d 
                      LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento 
-                     WHERE 1=1'''
+                     WHERE d.estado = 'disponible' '''
     count_params = []
     
     if tipo_publicacion:
@@ -570,7 +571,7 @@ def user_panel():
 
         cur.execute('''
             SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, 
-                d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir, 
+                d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir, d.estado,
                 GROUP_CONCAT(f.url_foto) AS fotos, c.latitud, c.longitud
             FROM departamento d
             LEFT JOIN foto f ON d.id_departamento = f.id_departamento
@@ -604,8 +605,8 @@ def user_panel():
             cur.close()
 
     mis_publicaciones = [
-        (id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos.split(',') if fotos else [], latitud, longitud)
-        for id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, fotos, latitud, longitud in mis_publicaciones_data
+        (id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, estado, fotos.split(',') if fotos else [], latitud, longitud)
+        for id_dep, titulo, descripcion, tipo_publicacion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, estado, fotos, latitud, longitud in mis_publicaciones_data
     ]
 
     notificaciones_list = []
@@ -629,7 +630,7 @@ def modify_depto(depto_id):
 
     cursor = mysql.connection.cursor()
     cursor.execute('''
-        SELECT d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.id_localidad, d.rol_inmo_dir,
+        SELECT d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.id_localidad, d.rol_inmo_dir, d.estado,
             GROUP_CONCAT(f.url_foto) AS fotos
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
@@ -643,7 +644,7 @@ def modify_depto(depto_id):
         cursor.close()
         return redirect(url_for('user_panel'))
 
-    current_photos_str = depto_data[12]
+    current_photos_str = depto_data[13]  # Actualizado índice porque agregamos estado
     current_photos_list = current_photos_str.split(',') if current_photos_str else []
 
     cursor.execute('SELECT id_localidad, nombre FROM localidad')
@@ -687,12 +688,12 @@ def modify_depto(depto_id):
             price = float(price_str)
             cursor.execute('''
                 UPDATE departamento SET titulo=%s, descripcion=%s, tipo_publicacion=%s, precio=%s, moneda=%s,
-                    ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, id_localidad=%s, rol_inmo_dir=%s
+                    ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, id_localidad=%s, rol_inmo_dir=%s, estado=%s
                 WHERE id_departamento=%s AND id_usuario=%s
             ''', (
                 form.title.data, form.description.data, form.tipo_publicacion.data, price, form.moneda.data,
                 form.ambientes.data, form.dormitorios.data, form.banos.data, form.superficie.data, form.direccion.data,
-                form.localidad.data, form.rol_inmo_dir.data, depto_id, session['user_id']
+                form.localidad.data, form.rol_inmo_dir.data, request.form.get('estado'), depto_id, session['user_id']
             ))
             
             # Actualizar coordenadas
@@ -747,7 +748,7 @@ def modify_depto(depto_id):
         finally:
             cursor.close()
 
-    return render_template('modify_depto.html', form=form, depto_id=depto_id, latitud=latitud, longitud=longitud, current_photos=current_photos_list)
+    return render_template('modify_depto.html', form=form, depto_id=depto_id, latitud=latitud, longitud=longitud, current_photos=current_photos_list, current_status=depto_data[12])
 
 @app.route('/about')
 def about():
@@ -762,18 +763,19 @@ def listings():
     offset = (page - 1) * per_page
 
     cursor = mysql.connection.cursor()
-    # Consulta paginada
+    # Consulta paginada - solo departamentos disponibles
     cursor.execute('''
         SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir, GROUP_CONCAT(f.url_foto) AS fotos
         FROM departamento d
         LEFT JOIN foto f ON d.id_departamento = f.id_departamento
+        WHERE d.estado = 'disponible'
         GROUP BY d.id_departamento
         LIMIT %s OFFSET %s
     ''', (per_page, offset))
     departamentos = cursor.fetchall()
 
-    # Obtener el total de departamentos para paginación
-    cursor.execute('SELECT COUNT(*) FROM departamento')
+    # Obtener el total de departamentos disponibles para paginación
+    cursor.execute('SELECT COUNT(*) FROM departamento WHERE estado = "disponible"')
     total = cursor.fetchone()[0]
     total_pages = (total + per_page - 1) // per_page
 
@@ -1269,6 +1271,36 @@ def delete_publication(publication_id):
         flash(f'Error al eliminar la publicación: {e}', 'danger')
         return redirect(url_for('user_panel'))
 
+@app.route('/update_status/<int:publication_id>', methods=['POST'])
+def update_status(publication_id):
+    if 'user_id' not in session:
+        flash('Debes iniciar sesión primero', 'warning')
+        return redirect(url_for('login'))
+
+    new_status = request.form.get('estado')
+    if not new_status or new_status not in ['disponible', 'reservado', 'vendido', 'alquilado']:
+        flash('Estado inválido', 'danger')
+        return redirect(url_for('user_panel'))
+
+    try:
+        user_id = session['user_id']
+        cursor = mysql.connection.cursor()
+        cursor.execute('UPDATE departamento SET estado = %s WHERE id_departamento = %s AND id_usuario = %s', 
+                      (new_status, publication_id, user_id))
+        
+        if cursor.rowcount > 0:
+            mysql.connection.commit()
+            flash(f'Estado actualizado a: {new_status}', 'success')
+        else:
+            flash('No se pudo actualizar el estado. Verifica que el departamento te pertenezca.', 'danger')
+        
+        cursor.close()
+        return redirect(url_for('user_panel'))
+    except Exception as e:
+        mysql.connection.rollback()
+        flash(f'Error al actualizar el estado: {e}', 'danger')
+        return redirect(url_for('user_panel'))
+
 @app.route('/delete_confirmation')
 def delete_confirmation():
     return render_template('delete_confirmation.html')
@@ -1628,9 +1660,9 @@ def admin_panel():
     cur = mysql.connection.cursor()
     cur.execute("SELECT id, name, email, telefono, rol FROM usuario")
     usuarios = cur.fetchall()
-    # Listar departamentos con fotos
+    # Listar departamentos con fotos y estado
     cur.execute('''
-        SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir, u.name,
+        SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir, d.estado, u.name,
                GROUP_CONCAT(f.url_foto) AS fotos
         FROM departamento d
         JOIN usuario u ON d.id_usuario = u.id
@@ -1708,10 +1740,10 @@ def admin_delete_user(user_id):
 def admin_edit_depto(depto_id):
     cur = mysql.connection.cursor()
     
-    # Obtener datos del departamento con coordenadas
+    # Obtener datos del departamento con coordenadas y estado
     cur.execute('''
         SELECT d.id_departamento, d.titulo, d.descripcion, d.precio, d.moneda, d.ambientes, 
-               d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir,
+               d.dormitorios, d.banos, d.superficie, d.direccion, d.rol_inmo_dir, d.estado,
                c.latitud, c.longitud
         FROM departamento d
         LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento
@@ -1728,9 +1760,9 @@ def admin_edit_depto(depto_id):
     precio_value = int(depto_data[3])
     precio_formateado = f"{precio_value:,}".replace(',', '.')
     
-    # Obtener coordenadas
-    latitud = depto_data[11] if depto_data[11] else -27.485104
-    longitud = depto_data[12] if depto_data[12] else -55.119835
+    # Obtener coordenadas (actualizando índices por el nuevo campo estado)
+    latitud = depto_data[12] if depto_data[12] else -27.485104
+    longitud = depto_data[13] if depto_data[13] else -55.119835
     
     if request.method == 'POST':
         titulo = request.form.get('titulo')
@@ -1745,18 +1777,19 @@ def admin_edit_depto(depto_id):
         superficie = request.form.get('superficie')
         direccion = request.form.get('direccion')
         rol_inmo_dir = request.form.get('rol_inmo_dir')
+        estado = request.form.get('estado')
         
         # Obtener coordenadas del formulario
         lat = request.form.get('latitud')
         lon = request.form.get('longitud')
         
         try:
-            # Actualizar departamento
+            # Actualizar departamento incluyendo estado
             cur.execute('''
                 UPDATE departamento SET titulo=%s, descripcion=%s, precio=%s, moneda=%s, 
-                       ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, rol_inmo_dir=%s 
+                       ambientes=%s, dormitorios=%s, banos=%s, superficie=%s, direccion=%s, rol_inmo_dir=%s, estado=%s 
                 WHERE id_departamento=%s
-            ''', (titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, depto_id))
+            ''', (titulo, descripcion, precio, moneda, ambientes, dormitorios, banos, superficie, direccion, rol_inmo_dir, estado, depto_id))
             
             # Actualizar o insertar coordenadas
             if lat and lon:

@@ -125,6 +125,15 @@
                 </select>
             </label>
             
+            <label>Estado:
+                <select name="estado" required>
+                    <option value="disponible" {% if depto[11] == 'disponible' %}selected{% endif %}>Disponible</option>
+                    <option value="reservado" {% if depto[11] == 'reservado' %}selected{% endif %}>Reservado</option>
+                    <option value="vendido" {% if depto[11] == 'vendido' %}selected{% endif %}>Vendido</option>
+                    <option value="alquilado" {% if depto[11] == 'alquilado' %}selected{% endif %}>Alquilado</option>
+                </select>
+            </label>
+            
             <div class="form-row">
                 <div class="form-group">
                     <label for="latitud">Latitud:</label>
