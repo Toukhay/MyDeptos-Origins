@@ -59,3 +59,5 @@
 2025-08-04 13:37:39,557 INFO: Precio después de limpiar: '80000' [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:692]
 2025-08-04 13:37:39,557 INFO: Precio convertido a float: 80000.0 [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:697]
 2025-08-04 13:38:27,307 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:71]
+2025-08-04 13:45:45,147 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:71]
+2025-08-04 13:45:45,413 INFO: MyDeptos iniciado [in C:\Users\facu-\Desktop\MyDeptosFlask\app.py:71]

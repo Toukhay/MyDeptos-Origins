@@ -126,11 +126,23 @@
                 <a href="{{ url_for('search', page=page+1) }}">Siguiente &raquo;</a>
             {% endif %}
         </div>
+        <!-- Botón Volver al Filtro -->
+        <div class="back-to-filter">
+            <a href="{{ url_for('home') }}" class="btn-back-filter">
+                <i class="fas fa-arrow-left"></i> Volver al Filtro
+            </a>
+        </div>
         {% else %}
         <div class="no-results">
             <img src="{{ url_for('static', filename='image/no_data.png') }}" alt="No se encontraron resultados">
-            <h2>No encontramos propiedades con esos filtros</h2>
-            <p>Intenta ajustar tus criterios de búsqueda o <a href="/">volver al inicio</a></p>
+            <!-- <h2>No encontramos propiedades con esos filtros</h2>
+            <p>Intenta ajustar tus criterios de búsqueda o <a href="/">volver al inicio</a></p> -->
+            <!-- Botón Volver al Filtro para cuando no hay resultados -->
+            <div class="back-to-filter">
+                <a href="{{ url_for('home') }}" class="btn-back-filter">
+                    <i class="fas fa-arrow-left"></i> Volver al Filtro
+                </a>
+            </div>
         </div>
         {% endif %}
     </div>
