@@ -188,8 +188,16 @@
                             <input type="text" id="longitud" name="longitud" class="form-control" placeholder="-55.119830" value="{{ request.form.get('longitud', '') }}" required readonly>
                         </div>
                     </div>
+
+                    <!-- Campo de búsqueda de dirección -->
+                    <div class="form-group full-width">
+                        <label for="search-address">Buscar Dirección</label>
+                        <input type="text" id="search-address" class="form-control" placeholder="Buscar dirección, barrio, calle... en Oberá">
+                        <small class="form-text text-muted">Escribe una dirección y presiona Enter para buscarla en el mapa</small>
+                    </div>
+
                     <div id="map" class="interactive-map"></div>
-                    <p class="map-help-text">Haz clic en el mapa para seleccionar la ubicación dentro de Oberá, Misiones</p>
+                    <p class="map-help-text">Haz clic en el mapa o busca una dirección para seleccionar la ubicación dentro de Oberá, Misiones</p>
 
                     <!-- Imágenes -->
                     <div class="form-group full-width">
@@ -261,6 +269,7 @@
                 })
             }).addTo(map);
 
+            // Función de geocodificación inversa
             function reverseGeocode(lat, lon) {
                 // Validar que esté dentro de los límites de Oberá
                 if (lat < oberaBounds[0][0] || lat > oberaBounds[1][0] || 
@@ -307,6 +316,41 @@
                     });
             }
 
+            // Función para buscar dirección por texto
+            function searchAddress(address) {
+                if (!address.trim()) return;
+                
+                // Buscar con bias hacia Oberá
+                const query = address + ', Oberá, Misiones, Argentina';
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&viewbox=${oberaBounds[0][1]},${oberaBounds[1][0]},${oberaBounds[1][1]},${oberaBounds[0][0]}&bounded=1`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data[0]) {
+                            const lat = parseFloat(data[0].lat);
+                            const lng = parseFloat(data[0].lon);
+                            
+                            // Verificar que esté dentro de los límites
+                            if (lat >= oberaBounds[0][0] && lat <= oberaBounds[1][0] && 
+                                lng >= oberaBounds[0][1] && lng <= oberaBounds[1][1]) {
+                                
+                                marker.setLatLng([lat, lng]);
+                                map.setView([lat, lng], 16);
+                                document.getElementById('latitud').value = lat.toFixed(6);
+                                document.getElementById('longitud').value = lng.toFixed(6);
+                                reverseGeocode(lat, lng);
+                            } else {
+                                alert('La dirección encontrada está fuera de los límites de Oberá.');
+                            }
+                        } else {
+                            alert('No se encontró la dirección especificada en Oberá.');
+                        }
+                    })
+                    .catch(() => {
+                        alert('Error al buscar la dirección.');
+                    });
+            }
+
+            // Event listeners
             marker.on('dragend', function (e) {
                 const position = marker.getLatLng();
                 document.getElementById('latitud').value = position.lat.toFixed(6);
@@ -320,6 +364,22 @@
                 document.getElementById('latitud').value = position.lat.toFixed(6);
                 document.getElementById('longitud').value = position.lng.toFixed(6);
                 reverseGeocode(position.lat, position.lng);
+            });
+
+            // Búsqueda por texto
+            const searchInput = document.getElementById('search-address');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchAddress(this.value);
+                }
+            });
+
+            // También agregar un botón de búsqueda opcional
+            searchInput.addEventListener('blur', function() {
+                if (this.value.trim()) {
+                    searchAddress(this.value);
+                }
             });
         });
 

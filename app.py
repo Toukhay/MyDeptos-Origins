@@ -1911,13 +1911,11 @@ def admin_edit_depto(depto_id):
 def admin_delete_depto(depto_id):
     cur = mysql.connection.cursor()
     # Elimina primero los registros relacionados en las tablas hijas
-    cur.execute("DELETE FROM clicks WHERE id_departamento = %s", (depto_id,))
     cur.execute("DELETE FROM resena WHERE id_departamento = %s", (depto_id,))
     cur.execute("DELETE FROM favorito WHERE id_departamento = %s", (depto_id,))
     cur.execute("DELETE FROM foto WHERE id_departamento = %s", (depto_id,))
     cur.execute("DELETE FROM coordenadas WHERE id_departamento = %s", (depto_id,))
-    # Si tienes otras tablas con FK a departamento, agrégalas aquí
-
+    
     # Ahora elimina el departamento
     cur.execute("DELETE FROM departamento WHERE id_departamento = %s", (depto_id,))
     mysql.connection.commit()

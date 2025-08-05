@@ -544,3 +544,52 @@ social-media a:hover {
     background-color: #f8fafc;
     font-style: italic;
 }
+
+/* Agregar estos estilos al final del archivo */
+
+/* Estilos para el campo de búsqueda de dirección */
+#search-address {
+    background-color: #f8fafc;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+#search-address:focus {
+    background-color: #fff;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+#search-address::placeholder {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.text-muted {
+    color: #6b7280 !important;
+}
+
+/* Mejorar el estilo del mapa */
+#map {
+    border: 2px solid #e2e8f0;
+    transition: border-color 0.3s ease;
+}
+
+#map:hover {
+    border-color: var(--primary-color);
+}
+
+/* Estilo para el help text del mapa */
+.map-help-text {
+    background-color: #f1f5f9;
+    padding: 0.75rem;
+    border-radius: 6px;
+    border-left: 4px solid var(--primary-color);
+    margin-top: 0.5rem;
+}
