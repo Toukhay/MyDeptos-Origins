@@ -3,6 +3,7 @@ body {
     flex-direction: column;
     min-height: 100vh;
     margin: 0;
+    font-family: 'Roboto', Arial, sans-serif; /* Agregar fuente consistente */
 }
 
 .home-page {
@@ -254,14 +255,12 @@ body {
 }
 
 .footer-content a {
-    color: white; /* Color de los enlaces */
+    color: white;
+    font-size: 1.1rem;
     text-decoration: none;
-    margin: 0 0.5rem;
-    font-size: 1rem;
-}
-
-.footer-content a:hover {
-    text-decoration: underline;
+    margin: 0 10px;
+    transition: opacity 0.3s ease;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 /* Estilos para el root */
@@ -391,6 +390,7 @@ body {
     margin-top: 0;
     color: var(--primary-color);
     word-wrap: break-word;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .home-page .search-box .form-group {
@@ -404,6 +404,7 @@ body {
     margin: 0.5rem 0 0.2rem;
     color: var(--text-color);
     word-wrap: break-word;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .home-page .search-box input, .home-page .search-box select {
@@ -413,6 +414,7 @@ body {
     border: 1px solid #ccc;
     border-radius: var(--border-radius);
     box-sizing: border-box;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .home-page .search-box button {
@@ -425,6 +427,7 @@ body {
     width: 100%;
     font-size: 1rem;
     box-sizing: border-box;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .home-page .search-box button:hover {
@@ -473,6 +476,7 @@ body {
     cursor: pointer;
     font-size: 1rem;
     transition: background-color var(--transition-duration);
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .home-page .view-listing-button:hover {
@@ -523,10 +527,11 @@ body {
 }
 
 .property-header h3 {
-    font-size: 1.1rem;
+    font-size: 1.18rem;
     color: #333;
     margin: 0;
     line-height: 1.3;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .property-location {
@@ -534,20 +539,22 @@ body {
     font-size: 0.85rem;
     color: #666;
     margin-top: 5px;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .property-description {
-    font-size: 0.9rem;
+    font-size: 1.02rem;
     color: #555;
     margin: 10px 0;
     flex-grow: 1;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Limita a 3 líneas máximo */
-    line-clamp: 3; /* Propiedad estándar para compatibilidad */
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
-    min-height: 60px; /* Altura mínima para descripciones muy cortas */
-    line-height: 1.4; /* Mejor espaciado entre líneas */
+    min-height: 60px;
+    line-height: 1.4;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .property-details {
@@ -560,15 +567,17 @@ body {
 .price {
     font-weight: bold;
     color: #4A90E2;
-    font-size: 1.2rem;
+    font-size: 1.18rem;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .operation-type {
     background: #f0f0f0;
     padding: 3px 8px;
     border-radius: 4px;
-    font-size: 0.8rem;
+    font-size: 0.98rem;
     color: #555;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 /* Botones */
@@ -592,6 +601,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 5px;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .favorite-btn {
@@ -703,6 +713,7 @@ body {
     margin-bottom: 0.3rem;
     font-weight: 700;
     letter-spacing: 0.01em;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .intro-desc {
@@ -710,6 +721,7 @@ body {
     color: #444;
     margin-bottom: 0.5rem;
     font-weight: 400;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .intro-highlight {
@@ -737,6 +749,7 @@ body {
     text-align: center;
     font-size: 1.18rem;
     margin-bottom: 1rem;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .modern-summary-section {
@@ -797,6 +810,7 @@ body {
     color: var(--primary-color);
     margin-bottom: 0.5rem;
     font-weight: 700;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .welcome-box p {
@@ -804,6 +818,7 @@ body {
     color: #444;
     margin: 0;
     font-weight: 400;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 /* Layout para las dos columnas verticales */
@@ -837,6 +852,7 @@ body {
     font-size: 1.18rem;
     margin-bottom: 1rem;
     color: var(--primary-color);
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .filter-box form {
@@ -853,6 +869,7 @@ body {
     margin-bottom: 0.3rem;
     color: #333;
     font-size: 1rem;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 .filter-box input,
@@ -864,6 +881,7 @@ body {
     margin-bottom: 0.5rem;
     font-size: 1rem;
     box-sizing: border-box;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 #buscar-btn {
@@ -876,10 +894,7 @@ body {
     cursor: pointer;
     transition: background 0.3s;
     width: 100%;
-}
-
-#buscar-btn:hover {
-    background: #357ABD;
+    font-family: 'Roboto', Arial, sans-serif; /* Aplicar fuente específica */
 }
 
 /* Caja resumen vertical derecha */

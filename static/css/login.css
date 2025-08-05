@@ -17,13 +17,58 @@ body {
     margin: 0;
     padding: 0;
     display: flex;
-    height: 100vh; /* Ocupa toda la altura de la ventana */
+    height: 100vh;
+    position: relative;
 }
 
 .left-section {
     flex: 1;
     background: url('../image/OberaWallpaper.png') no-repeat center center;
-    background-size: cover; /* Asegura que la imagen cubra toda la sección */
+    background-size: cover;
+    position: relative;
+}
+
+/* Separador elegante */
+.separator {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(74, 144, 226, 0.3) 20%,
+        rgba(74, 144, 226, 0.8) 50%,
+        rgba(74, 144, 226, 0.3) 80%,
+        transparent 100%
+    );
+    box-shadow: 0 0 20px rgba(74, 144, 226, 0.5);
+}
+
+.separator::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 0 15px rgba(74, 144, 226, 0.6);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-50%) scale(1.1);
+        opacity: 0.8;
+    }
 }
 
 .right-section {
@@ -31,103 +76,91 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--background-color);
-}
-
-.container {
-    padding: 2rem;
-    max-width: 350px;
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    text-align: center;
-}
-
-.footer-content {
-    position: fixed; /* Fijar en la esquina inferior derecha */
-    bottom: 10px;
-    right: 10px;
-    font-weight: bold; /* Fuente en negrita */
-    color: black; /* Color de la fuente */
-    text-align: right;
-}
-
-.logo {
-    color: white;
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.menu {
-    list-style: none;
-    display: flex;
-    margin: 0;
-    padding: 0;
-}
-
-.menu li {
-    margin-left: 20px;
+    background: linear-gradient(135deg, var(--background-color) 0%, #f0f8ff 100%);
     position: relative;
 }
 
-.menu a {
-    color: white;
-    text-decoration: none;
-    font-size: 16px;
-    padding: 5px 0;
-    display: block;
-    transition: color var(--transition-duration);
+.container {
+    padding: 3rem 2.5rem;
+    max-width: 420px;
+    width: 90%;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(74, 144, 226, 0.15);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
 }
 
-.menu a::before {
+.container::before {
     content: '';
     position: absolute;
-    width: 100%;
-    height: 2px;
-    background-color: white;
-    bottom: -5px;
+    top: 0;
     left: 0;
-    transform: scaleX(0);
-    transform-origin: bottom right;
-    transition: transform 0.25s ease-out;
-}
-
-.menu a:hover::before {
-    transform: scaleX(1);
-    transform-origin: bottom left;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), #357ABD, var(--primary-color));
+    border-radius: 20px 20px 0 0;
 }
 
 h1 {
-    font-size: 2rem; /* Ajustar el tamaño de la fuente */
-    margin-bottom: 1rem;
+    font-size: 2.2rem;
+    margin-bottom: 2rem;
     color: var(--primary-color);
     text-align: center;
+    font-weight: 700;
+    position: relative;
+}
+
+h1::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+    border-radius: 2px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
+    text-align: left;
 }
 
 label {
     display: block;
     margin-bottom: 0.5rem;
     color: var(--text-color);
+    font-weight: 500;
+    font-size: 0.95rem;
 }
 
 .form-control {
     width: 100%;
-    padding: 0.5rem; /* Ajustar el padding */
-    border: 1px solid #ccc;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    transition: border-color var(--transition-duration);
-    font-size: 0.9rem; /* Ajustar el tamaño de la fuente */
+    padding: 0.8rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all var(--transition-duration);
+    font-size: 1rem;
     box-sizing: border-box;
+    background-color: #fafafa;
 }
 
 .form-control:focus {
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
     outline: none;
+    background-color: white;
+    transform: translateY(-1px);
 }
 
 button {
@@ -147,6 +180,46 @@ button:hover {
     background-color: #357ABD;
 }
 
+.btn-submit {
+    background: linear-gradient(135deg, var(--primary-color), #357ABD);
+    color: white;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-duration);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-submit::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
+}
+
+.btn-submit:hover::before {
+    left: 100%;
+}
+
+.btn-submit:active {
+    transform: translateY(0);
+}
+
 .flash-messages {
     margin-bottom: 1rem;
     padding: 1rem;
@@ -154,6 +227,21 @@ button:hover {
     background-color: #f8d7da;
     color: #721c24;
     text-align: center;
+}
+
+.footer-content {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    font-weight: 600;
+    color: #666;
+    text-align: right;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
 }
 
 .footer-content {
@@ -190,46 +278,107 @@ button:hover {
     text-decoration: none;
 }
 
-.login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.btn-submit {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 0.75rem;
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color var(--transition-duration);
-}
-
-.btn-submit:hover {
-    background-color: #357ABD;
-}
-
 .form-links {
     text-align: center;
-    margin-top: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.form-links p {
+    margin: 0.5rem 0;
 }
 
 .form-links a {
     color: var(--primary-color);
     text-decoration: none;
     font-size: 0.9rem;
-    transition: color var(--transition-duration);
+    font-weight: 500;
+    transition: all var(--transition-duration);
+    position: relative;
+}
+
+.form-links a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 50%;
+    background-color: var(--primary-color);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
 }
 
 .form-links a:hover {
     color: #357ABD;
 }
 
+.form-links a:hover::after {
+    width: 100%;
+}
+
 .error-message {
-    color: red;
+    color: #e74c3c;
     font-size: 0.85rem;
-    margin-top: 0.25rem;
+    margin-top: 0.5rem;
     display: block;
+    text-align: left;
+    background-color: #ffeaea;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #e74c3c;
+}
+
+/* Efectos de entrada */
+.container {
+    animation: slideIn 0.6s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+    
+    .left-section {
+        height: 30vh;
+    }
+    
+    .separator {
+        display: none;
+    }
+    
+    .right-section {
+        flex: 1;
+        padding: 1rem;
+    }
+    
+    .container {
+        padding: 2rem 1.5rem;
+        max-width: 100%;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    .footer-content {
+        position: relative;
+        bottom: auto;
+        right: auto;
+        text-align: center;
+        margin-top: 1rem;
+    }
 }

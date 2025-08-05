@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyDeptos</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/register.css') }}">
+    <title>Registro - MyDeptos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
 </head>
 <body>
     <header>
@@ -14,72 +14,92 @@
             <ul class="menu">
                 <li><a href="/">Inicio</a></li>
                 <li><a href="/about">Acerca de</a></li>
-                <li><a href="/contact">Contacto</a></li>
+                <li><a href="/listings">Propiedades</a></li>
             </ul>
         </nav>
     </header>
+    
     <div class="container">
-        <h1 style="text-align:center;">Registro</h1>
-        <form action="{{ url_for('register') }}" method="POST">
-            {{ form.hidden_tag() }}
-            <div class="form-group">
-                <label for="username" style="display:block; text-align:left;">{{ form.username.label.text }}</label>
-                {{ form.username(id="username", class="form-control") }}
-                {% if form.username.errors %}
-                    <ul>
-                        <li style="color:red;">{{ form.username.errors[0] }}</li>
-                    </ul>
-                {% endif %}
+        <div class="register-form">
+            <h1>Crear Cuenta</h1>
+            
+            <form action="{{ url_for('register') }}" method="POST">
+                {{ form.hidden_tag() }}
+                
+                <div class="form-group">
+                    <label for="username">{{ form.username.label.text }}</label>
+                    {{ form.username(id="username", class="form-control", placeholder="Ingresa tu nombre de usuario") }}
+                    {% if form.username.errors %}
+                        <ul class="error-list">
+                            {% for error in form.username.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">{{ form.email.label.text }}</label>
+                    {{ form.email(id="email", class="form-control", placeholder="ejemplo@correo.com") }}
+                    {% if form.email.errors %}
+                        <ul class="error-list">
+                            {% for error in form.email.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">{{ form.password.label.text }}</label>
+                    {{ form.password(id="password", class="form-control", placeholder="Mínimo 6 caracteres") }}
+                    {% if form.password.errors %}
+                        <ul class="error-list">
+                            {% for error in form.password.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_password">{{ form.confirm_password.label.text }}</label>
+                    {{ form.confirm_password(id="confirm_password", class="form-control", placeholder="Repite tu contraseña") }}
+                    {% if form.confirm_password.errors %}
+                        <ul class="error-list">
+                            {% for error in form.confirm_password.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefono">Teléfono</label>
+                    {{ form.telefono(id="telefono", class="form-control", placeholder="Ej: 543755484848 (sin el +)") }}
+                    {% if form.telefono.errors %}
+                        <ul class="error-list">
+                            {% for error in form.telefono.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.submit(class="btn-blue-outline") }}
+                </div>
+            </form>
+            
+            <div class="login-link">
+                <p><a href="{{ url_for('login') }}">¿Ya tienes una cuenta? Inicia sesión aquí</a></p>
             </div>
-            <div class="form-group">
-                <label for="email" style="display:block; text-align:left;">{{ form.email.label.text }}</label>
-                {{ form.email(id="email", class="form-control") }}
-                {% if form.email.errors %}
-                    <ul>
-                        {% for error in form.email.errors %}
-                            <li style="color:red;">{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </div>
-            <div class="form-group">
-                {{ form.password.label }}<br>
-                {{ form.password(class="form-control") }}
-                {% if form.password.errors %}
-                    <ul>
-                        <li style="color:red;">{{ form.password.errors[0] }}</li>
-                    </ul>
-                {% endif %}
-            </div>
-            <div class="form-group">
-                {{ form.confirm_password.label }}<br>
-                {{ form.confirm_password(class="form-control") }}
-                {% if form.confirm_password.errors %}
-                    <ul>
-                        <li style="color:red;">{{ form.confirm_password.errors[0] }}</li>
-                    </ul>
-                {% endif %}
-            </div>
-            <div class="form-group">
-                <label for="telefono" style="display:block; text-align:left;">Teléfono (Ej: 543755484848 sin el +)</label>
-                {{ form.telefono(id="telefono", class="form-control") }}
-                {% if form.telefono.errors %}
-                    <ul>
-                        {% for error in form.telefono.errors %}
-                            <li style="color:red;">{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </div>
-            <div class="form-group">
-                {{ form.submit(class="btn-blue-outline", value="Registrarse") }}
-            </div>
-        </form>
-        <p><a href="/login">¿Ya tienes una cuenta? Inicia sesión aquí.</a></p>
+        </div>
     </div>
+    
     <footer>
         <div class="footer-content">
-            <div>&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
+            <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
             <div class="social-media">
                 <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
                 <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
