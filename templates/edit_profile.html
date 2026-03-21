@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -11,7 +11,7 @@
     <div class="container">
         
         <img src="{{ url_for('static', filename='image/modify.png') }}" alt="Modificar perfil" class="edit-profile-img no-circle">
-        <form id="editProfileForm" action="{{ url_for('edit_profile') }}" method="POST" class="edit-profile-form" autocomplete="off">
+        <form id="editProfileForm" action="{{ url_for('user.edit_profile') }}" method="POST" class="edit-profile-form" autocomplete="off">
             {{ form.hidden_tag() }}
             {% if not puede_modificar %}
                 <div class="flash-messages" style="background:#fff3cd;color:#856404;border:1px solid #ffeeba;">
@@ -103,7 +103,7 @@
             </div>
             <div class="button-group">
                 <button type="submit" class="btn-submit" {% if not puede_modificar %}disabled{% endif %}>Guardar Cambios</button>
-                <a href="{{ url_for('user_panel') }}" class="btn-cancel">Cancelar</a>
+                <a href="{{ url_for('user.user_panel') }}" class="btn-cancel">Cancelar</a>
             </div>
         </form>
         <!-- Modal de confirmación -->
@@ -123,7 +123,7 @@
                             {{ message }}<br>
                         {% endfor %}
                     </div>
-                    <button class="modal-btn" onclick="window.location.href='{{ url_for('user_panel') }}'">Aceptar</button>
+                    <button class="modal-btn" onclick="window.location.href='{{ url_for('user.user_panel') }}'">Aceptar</button>
                 </div>
             {% endif %}
         {% endwith %}

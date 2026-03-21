@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -14,7 +14,7 @@
     <div class="right-section">
         <div class="container">
             <h1>Bienvenido</h1>
-            <form action="{{ url_for('login') }}" method="POST" novalidate class="login-form">
+            <form action="{{ url_for('auth.login') }}" method="POST" novalidate class="login-form">
                 {{ form.hidden_tag() }}
                 {% if login_error %}
                     <div class="error-message">{{ login_error }}</div>
@@ -36,9 +36,9 @@
                 {{ form.submit(class="btn-submit", value="Iniciar Sesión") }}
             </form>
             <div class="form-links">
-                <p><a href="{{ url_for('forgot_password') }}">¿Olvidaste tu contraseña?</a></p>
-                <p><a href="{{ url_for('register') }}">¿No tienes una cuenta? Regístrate aquí</a></p>
-                <p><a href="{{ url_for('home') }}">← Volver al inicio</a></p>
+                <p><a href="{{ url_for('auth.forgot_password') }}">¿Olvidaste tu contraseña?</a></p>
+                <p><a href="{{ url_for('auth.register') }}">¿No tienes una cuenta? Regístrate aquí</a></p>
+                <p><a href="{{ url_for('main.home') }}">← Volver al inicio</a></p>
             </div>
         </div>
     </div>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -176,7 +176,7 @@
 <body style="background: #f3f6fa;">
     <div class="admin-form-container">
         <h1>Editar Departamento</h1>
-        <form class="admin-form" method="post" action="{{ url_for('admin_edit_depto', depto_id=depto[0]) }}" enctype="multipart/form-data">>
+        <form class="admin-form" method="post" action="{{ url_for('admin.admin_edit_depto', depto_id=depto[0]) }}" enctype="multipart/form-data">>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>Título:
                 <input type="text" name="titulo" value="{{ depto[1] }}" required>
@@ -276,7 +276,7 @@
             
             <div style="margin-top: 1.5rem;">
                 <button type="submit">Guardar</button>
-                <a href="{{ url_for('admin_panel') }}">Cancelar</a>
+                <a href="{{ url_for('admin.admin_panel') }}">Cancelar</a>
             </div>
         </form>
     </div>

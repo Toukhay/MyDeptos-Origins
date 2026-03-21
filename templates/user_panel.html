@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -219,15 +219,15 @@
         <nav>
             <div class="logo">MyDeptos</div>
             <ul class="menu">
-                <li><a href="{{ url_for('home') }}">Inicio</a></li>
+                <li><a href="{{ url_for('main.home') }}">Inicio</a></li>
                 {% if current_user.is_authenticated %}
-                    <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
-                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
-                    <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
+                    <li><a href="{{ url_for('user.favorites') }}">Favoritos</a></li>
+                    <li><a href="{{ url_for('main.listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('deptos.publish_depto') }}">Publicar</a></li>
                 {% else %}
-                    <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
-                    <li><a href="{{ url_for('register') }}">Registrarse</a></li>
-                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('auth.login') }}">Iniciar sesión</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">Registrarse</a></li>
+                    <li><a href="{{ url_for('main.listings') }}">Lista de Departamentos</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -253,12 +253,12 @@
                         <p><strong>Teléfono:</strong> {{ user_data[3] if user_data[3] else 'No especificado' }}</p>
                     </div>
                     <div class="btn-group">
-                        <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Editar Perfil</a>
-                        <a href="{{ url_for('logout') }}" class="btn btn-danger">Cerrar Sesión</a>
+                        <a href="{{ url_for('user.edit_profile') }}" class="btn btn-primary">Editar Perfil</a>
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Cerrar Sesión</a>
                     </div>
                     {% if session.get('user_rol') == 'admin' %}
                     <div style="margin-top:1rem;">
-                        <a href="{{ url_for('admin_panel') }}" class="btn btn-edit" style="background:#8e44ad;color:#fff;width:100%;">Panel de Administración</a>
+                        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-edit" style="background:#8e44ad;color:#fff;width:100%;">Panel de Administración</a>
                     </div>
                     {% endif %}
                 </div>
@@ -275,11 +275,11 @@
                                         <p>{{ notif.mensaje }}</p>
                                         <small>Recibido: {{ notif.fecha_envio.strftime('%Y-%m-%d %H:%M') }}</small>
                                         {% if notif.id_departamento_ref %}
-                                            <a href="{{ url_for('view_property', property_id=notif.id_departamento_ref) }}" class="btn btn-sm btn-info notif-btn">Ver Departamento</a>
+                                            <a href="{{ url_for('deptos.view_property', property_id=notif.id_departamento_ref) }}" class="btn btn-sm btn-info notif-btn">Ver Departamento</a>
                                         {% endif %}
                                     </div>
                                     {% if not notif.leida %}
-                                     <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notif.id) }}" class="mark-read-form">
+                                     <form method="POST" action="{{ url_for('user.mark_notification_read', notification_id=notif.id) }}" class="mark-read-form">
                                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                          <button type="submit" class="btn btn-sm btn-outline-secondary notif-btn">Marcar como leída</button>
                                      </form>
@@ -288,7 +288,7 @@
                             {% endfor %}
                         </ul>
                         <div class="notifications-actions">
-                            <a href="{{ url_for('notifications') }}" class="btn btn-secondary notif-btn">Ver todas las notificaciones</a>
+                            <a href="{{ url_for('user.notifications') }}" class="btn btn-secondary notif-btn">Ver todas las notificaciones</a>
                         </div>
                     {% else %}
                         <p>No tienes notificaciones.</p>
@@ -335,9 +335,9 @@
                                     <p><strong>Latitud:</strong> {{ publicacion[14] }}</p>
                                     <p><strong>Longitud:</strong> {{ publicacion[15] }}</p>
                                     <div class="btn-group-vertical">
-                                        <a href="{{ url_for('view_property', property_id=publicacion[0]) }}" class="btn btn-primary">Ver Publicación</a>
-                                        <a href="{{ url_for('modify_depto', depto_id=publicacion[0]) }}" class="btn btn-edit">Editar</a>
-                                        <form method="POST" action="{{ url_for('delete_publication', publication_id=publicacion[0]) }}" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta publicación?');" style="display:inline-block; width:100%;">
+                                        <a href="{{ url_for('deptos.view_property', property_id=publicacion[0]) }}" class="btn btn-primary">Ver Publicación</a>
+                                        <a href="{{ url_for('deptos.modify_depto', depto_id=publicacion[0]) }}" class="btn btn-edit">Editar</a>
+                                        <form method="POST" action="{{ url_for('deptos.delete_publication', publication_id=publicacion[0]) }}" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta publicación?');" style="display:inline-block; width:100%;">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button type="submit" class="btn btn-danger" style="width:100%;">Eliminar Publicación</button>
                                         </form>

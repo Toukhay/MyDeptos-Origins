@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -63,7 +63,7 @@
 <body style="background: #f3f6fa;">
     <div class="admin-form-container">
         <h1>Editar Usuario</h1>
-        <form class="admin-form" method="post" action="{{ url_for('admin_edit_user', user_id=user[0]) }}">
+        <form class="admin-form" method="post" action="{{ url_for('admin.admin_edit_user', user_id=user[0]) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>Nombre:
                 <input type="text" name="name" value="{{ user[1] }}" required>
@@ -84,7 +84,7 @@
             </label>
             <div style="margin-top: 1.5rem;">
                 <button type="submit">Guardar</button>
-                <a href="{{ url_for('admin_panel') }}">Cancelar</a>
+                <a href="{{ url_for('admin.admin_panel') }}">Cancelar</a>
             </div>
         </form>
     </div>

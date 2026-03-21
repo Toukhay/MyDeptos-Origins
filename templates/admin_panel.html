@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -284,8 +284,8 @@
                     <td>{{ u[3] }}</td>
                     <td>{{ u[4] }}</td>
                     <td class="actions-cell">
-                        <a href="{{ url_for('admin_edit_user', user_id=u[0]) }}">Editar</a>
-                        <form action="{{ url_for('admin_delete_user', user_id=u[0]) }}" method="post" onsubmit="return confirm('¿Eliminar usuario?');">
+                        <a href="{{ url_for('admin.admin_edit_user', user_id=u[0]) }}">Editar</a>
+                        <form action="{{ url_for('admin.admin_delete_user', user_id=u[0]) }}" method="post" onsubmit="return confirm('¿Eliminar usuario?');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit">Eliminar</button>
                         </form>
@@ -331,7 +331,7 @@
                             {% for foto in d[13].split(',') %}
                                 <div class="foto-thumb-container">
                                     <img src="{{ url_for('static', filename='image/' ~ foto) }}" alt="foto">
-                                    <form action="{{ url_for('admin_delete_foto', depto_id=d[0], foto_nombre=foto) }}" method="post">
+                                    <form action="{{ url_for('admin.admin_delete_foto', depto_id=d[0], foto_nombre=foto) }}" method="post">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="foto-delete-btn">X</button>
                                     </form>
@@ -343,8 +343,8 @@
                         {% endif %}
                     </td>
                     <td class="actions-cell">
-                        <a href="{{ url_for('admin_edit_depto', depto_id=d[0]) }}">Editar</a>
-                        <form action="{{ url_for('admin_delete_depto', depto_id=d[0]) }}" method="post" onsubmit="return confirm('¿Eliminar departamento?');">
+                        <a href="{{ url_for('admin.admin_edit_depto', depto_id=d[0]) }}">Editar</a>
+                        <form action="{{ url_for('admin.admin_delete_depto', depto_id=d[0]) }}" method="post" onsubmit="return confirm('¿Eliminar departamento?');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit">Eliminar</button>
                         </form>
@@ -410,7 +410,7 @@
     </script>
     <br>
     <div style="text-align:center;">
-        <a href="{{ url_for('home') }}" class="btn">Volver al inicio</a>
+        <a href="{{ url_for('main.home') }}" class="btn">Volver al inicio</a>
     </div>
 </body>
 </html>

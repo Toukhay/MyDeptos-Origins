@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -16,17 +16,17 @@
         <nav>
             <div class="logo">MyDeptos</div>
             <ul class="menu">
-                <li><a href="{{ url_for('home') }}">Inicio</a></li>
+                <li><a href="{{ url_for('main.home') }}">Inicio</a></li>
                 {% if current_user.is_authenticated %}
-                    <li><a href="{{ url_for('user_panel') }}">Mi Perfil</a></li>
-                    <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
-                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
-                    <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
-                    <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+                    <li><a href="{{ url_for('user.user_panel') }}">Mi Perfil</a></li>
+                    <li><a href="{{ url_for('user.favorites') }}">Favoritos</a></li>
+                    <li><a href="{{ url_for('main.listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('deptos.publish_depto') }}">Publicar</a></li>
+                    <li><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
                 {% else %}
-                    <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
-                    <li><a href="{{ url_for('register') }}">Registrarse</a></li>
-                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('auth.login') }}">Iniciar sesión</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">Registrarse</a></li>
+                    <li><a href="{{ url_for('main.listings') }}">Lista de Departamentos</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -113,7 +113,7 @@
                     {% if current_user.is_authenticated and current_user_id != departamento.propietario_id and not user_has_reviewed %}
                         <div class="card review-form-card custom-review-form">
                             <h3>Deja tu reseña</h3>
-                            <form method="POST" action="{{ url_for('add_resena', departamento_id=departamento.id) }}">
+                            <form method="POST" action="{{ url_for('deptos.add_resena', departamento_id=departamento.id) }}">
                                 {{ resena_form.hidden_tag() }}
                                 <div class="form-group mb-2">
                                     {{ resena_form.puntaje.label(class="form-label") }}
@@ -141,7 +141,7 @@
                     {% elif user_has_reviewed %}
                         <p>Ya has dejado una reseña para este departamento. Puedes editarla o eliminarla.</p>
                     {% elif not current_user.is_authenticated %}
-                        <p><a href="{{ url_for('login') }}">Inicia sesión</a> para dejar una reseña.</p>
+                        <p><a href="{{ url_for('auth.login') }}">Inicia sesión</a> para dejar una reseña.</p>
                     {% endif %}
 
                     <div class="existing-reviews">
@@ -157,7 +157,7 @@
                                     {% if current_user.is_authenticated and resena.id_usuario_calificador == current_user_id %}
                                         <div class="review-actions">
                                             <button class="btn btn-sm btn-secondary" onclick="openEditReviewModal('{{ resena.id_resena }}', '{{ resena.puntaje }}', '{{ resena.comentario }}')">Editar</button>
-                                            <form method="POST" action="{{ url_for('delete_resena', resena_id=resena.id_resena) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta reseña?');">
+                                            <form method="POST" action="{{ url_for('deptos.delete_resena', resena_id=resena.id_resena) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta reseña?');">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
                                             </form>
@@ -291,7 +291,7 @@
 
         function toggleFavorite(element, propertyId) {
             const isCurrentlyFavorite = element.classList.contains('selected');
-            const url = isCurrentlyFavorite ? "{{ url_for('remove_favorite') }}" : "{{ url_for('add_favorite') }}";
+            const url = isCurrentlyFavorite ? "{{ url_for('user.remove_favorite') }}" : "{{ url_for('user.add_favorite') }}";
             const formData = new FormData();
             formData.append('property_id', propertyId);
             const buttonTextSpan = element.querySelector('.button-text');

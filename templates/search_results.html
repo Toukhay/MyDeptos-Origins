@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -13,8 +13,8 @@
     <div id="auth-modal" class="auth-modal-hidden">
         <div class="auth-modal-content">
             <h2>Para usar estas opciones debe autenticarse y registrarse por seguridad</h2>
-            <button onclick="window.location.href='{{ url_for('register') }}'" class="register-btn">Registrarse</button>
-            <button onclick="window.location.href='{{ url_for('login') }}'" class="login-btn">Iniciar sesión</button>
+            <button onclick="window.location.href='{{ url_for('auth.register') }}'" class="register-btn">Registrarse</button>
+            <button onclick="window.location.href='{{ url_for('auth.login') }}'" class="login-btn">Iniciar sesión</button>
             <button onclick="closeAuthModal()" class="close-btn">Cerrar</button>
         </div>
     </div>
@@ -23,8 +23,8 @@
             <div class="logo">MyDeptos</div>
             <ul class="menu">
                 <li><a href="/">Inicio</a></li>
-                <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
-                <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
+                <li><a href="{{ url_for('main.listings') }}">Lista de Departamentos</a></li>
+                <li><a href="{{ url_for('user.favorites') }}">Favoritos</a></li>
             </ul>
         </nav>
     </header>
@@ -128,7 +128,7 @@
         </div>
         <!-- Botón Volver al Filtro -->
         <div class="back-to-filter">
-            <a href="{{ url_for('home') }}" class="btn-back-filter">
+            <a href="{{ url_for('main.home') }}" class="btn-back-filter">
                 <i class="fas fa-arrow-left"></i> Volver al Filtro
             </a>
         </div>
@@ -139,7 +139,7 @@
             <p>Intenta ajustar tus criterios de búsqueda o <a href="/">volver al inicio</a></p> -->
             <!-- Botón Volver al Filtro para cuando no hay resultados -->
             <div class="back-to-filter">
-                <a href="{{ url_for('home') }}" class="btn-back-filter">
+                <a href="{{ url_for('main.home') }}" class="btn-back-filter">
                     <i class="fas fa-arrow-left"></i> Volver al Filtro
                 </a>
             </div>

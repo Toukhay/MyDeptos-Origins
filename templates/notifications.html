@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -168,17 +168,17 @@
         <nav>
             <div class="logo">MyDeptos</div>
             <ul class="menu">
-                <li><a href="{{ url_for('home') }}">Inicio</a></li>
+                <li><a href="{{ url_for('main.home') }}">Inicio</a></li>
                 {% if current_user.is_authenticated %}
-                    <li><a href="{{ url_for('user_panel') }}">Mi Perfil</a></li>
-                    <li><a href="{{ url_for('favorites') }}">Favoritos</a></li>
-                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
-                    <li><a href="{{ url_for('publish_depto') }}">Publicar</a></li>
-                    <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+                    <li><a href="{{ url_for('user.user_panel') }}">Mi Perfil</a></li>
+                    <li><a href="{{ url_for('user.favorites') }}">Favoritos</a></li>
+                    <li><a href="{{ url_for('main.listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('deptos.publish_depto') }}">Publicar</a></li>
+                    <li><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
                 {% else %}
-                    <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
-                    <li><a href="{{ url_for('register') }}">Registrarse</a></li>
-                    <li><a href="{{ url_for('listings') }}">Lista de Departamentos</a></li>
+                    <li><a href="{{ url_for('auth.login') }}">Iniciar sesión</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">Registrarse</a></li>
+                    <li><a href="{{ url_for('main.listings') }}">Lista de Departamentos</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -199,7 +199,7 @@
 
         {% if notificaciones %}
             <div class="notifications-actions-top">
-                <form method="POST" action="{{ url_for('mark_all_notifications_read') }}" style="display: inline;">
+                <form method="POST" action="{{ url_for('user.mark_all_notifications_read') }}" style="display: inline;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-secondary">Marcar todas como leídas</button>
                 </form>
@@ -222,7 +222,7 @@
                         </div>
                         <div class="notification-actions-full">
                             {% if notif.id_departamento_ref %}
-                                <a href="{{ url_for('view_property', property_id=notif.id_departamento_ref) }}" class="btn btn-sm btn-info">Ver Departamento</a>
+                                <a href="{{ url_for('deptos.view_property', property_id=notif.id_departamento_ref) }}" class="btn btn-sm btn-info">Ver Departamento</a>
                             {% endif %}
                             {% if not notif.leida %}
                                 <button type="button" class="btn btn-sm btn-outline-secondary mark-as-read-btn" data-notification-id="{{ notif.id }}">Marcar como leída</button>
@@ -247,7 +247,7 @@
                 <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
             </div>
             <div class="navigation-links">
-                <a href="{{ url_for('about') }}">Sobre Nosotros</a>
+                <a href="{{ url_for('main.about') }}">Sobre Nosotros</a>
             </div>
         </div>
     </footer>
