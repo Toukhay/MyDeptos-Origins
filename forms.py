@@ -4,7 +4,6 @@ from flask_wtf.file import MultipleFileField, FileAllowed
 from wtforms import (StringField, PasswordField, SubmitField, TextAreaField,
                      DecimalField, SelectField, IntegerField)
 from wtforms.validators import DataRequired, Email, Length, NumberRange, EqualTo, Optional, ValidationError
-from extensions import mysql
 
 
 class RegisterForm(FlaskForm):
@@ -13,30 +12,24 @@ class RegisterForm(FlaskForm):
     password = PasswordField('Contraseña', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Repetir Contraseña', validators=[
         DataRequired(),
-        EqualTo('password', message='Revisa este campo, las contraseñas no coinciden')
+        EqualTo('password', message='Las contraseñas no coinciden')
     ])
     telefono = StringField('Teléfono', validators=[DataRequired(), Length(max=30)])
     submit = SubmitField('Registrarse')
 
     def validate_username(self, field):
         if not re.match(r'^[A-Za-z0-9]+$', field.data):
-            raise ValidationError('Solo puede contener letras y números, sin espacios ni símbolos.')
-        cur = mysql.connection.cursor()
-        cur.execute("SELECT id FROM usuario WHERE name = %s", (field.data,))
-        if cur.fetchone():
-            cur.close()
+            raise ValidationError('Solo letras y números, sin espacios ni símbolos.')
+        from models import Usuario
+        if Usuario.query.filter_by(name=field.data).first():
             raise ValidationError('El nombre de usuario ya está en uso.')
-        cur.close()
 
     def validate_email(self, field):
         if ' ' in field.data:
             raise ValidationError('El correo no puede contener espacios.')
-        cur = mysql.connection.cursor()
-        cur.execute("SELECT id FROM usuario WHERE email = %s", (field.data,))
-        if cur.fetchone():
-            cur.close()
+        from models import Usuario
+        if Usuario.query.filter_by(email=field.data).first():
             raise ValidationError('Ya existe una cuenta con este correo.')
-        cur.close()
 
     def validate_confirm_password(self, field):
         if field.data != self.password.data:
@@ -73,9 +66,7 @@ class PublishDeptoForm(FlaskForm):
 
     def validate_price(self, field):
         price_str = str(field.data).replace('.', '').replace(',', '').strip()
-        if not price_str:
-            raise ValidationError('El precio es requerido.')
-        if not price_str.isdigit():
+        if not price_str or not price_str.isdigit():
             raise ValidationError('El precio debe contener solo números.')
         try:
             price_value = float(price_str)
@@ -120,9 +111,6 @@ class EditProfileForm(FlaskForm):
 
     def validate_username(self, field):
         if field.data != self.original_username:
-            cur = mysql.connection.cursor()
-            cur.execute("SELECT id FROM usuario WHERE name = %s", (field.data,))
-            user = cur.fetchone()
-            cur.close()
-            if user:
+            from models import Usuario
+            if Usuario.query.filter_by(name=field.data).first():
                 raise ValidationError('El nombre de usuario ya está en uso.')

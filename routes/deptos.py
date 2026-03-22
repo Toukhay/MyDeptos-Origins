@@ -1,67 +1,63 @@
 import os
 import uuid
 from flask import (Blueprint, render_template, redirect, url_for,
-                   request, session, flash, jsonify)
+                   request, session, flash, jsonify, current_app)
 from werkzeug.utils import secure_filename
 
-from extensions import mysql
+from extensions import db
+from models import Departamento, Foto, Coordenada, Localidad, Favorito, Resena, Notificacion, Usuario
 from forms import PublishDeptoForm, ResenaForm, EditResenaForm
 
 deptos_bp = Blueprint('deptos', __name__)
 
 
+def _save_photo(photo, app):
+    filename = f"{uuid.uuid4().hex}_{secure_filename(photo.filename)}"
+    path = os.path.join(app.root_path, 'static', 'image', filename)
+    photo.save(path)
+    return filename
+
+
 @deptos_bp.route('/viewProperty/<int:property_id>', methods=['GET', 'POST'])
 def view_property(property_id):
-    cursor = mysql.connection.cursor()
-    cursor.execute('''
-        SELECT d.id_departamento, d.titulo, d.descripcion, d.tipo_publicacion,
-               d.precio, d.moneda, d.ambientes, d.dormitorios, d.banos,
-               d.superficie, d.direccion, d.rol_inmo_dir,
-               GROUP_CONCAT(f.url_foto) AS fotos,
-               c.latitud, c.longitud,
-               u.id, u.name, u.email, u.telefono
-        FROM departamento d
-        LEFT JOIN foto f ON d.id_departamento = f.id_departamento
-        LEFT JOIN coordenadas c ON d.id_departamento = c.id_departamento
-        LEFT JOIN usuario u ON d.id_usuario = u.id
-        WHERE d.id_departamento = %s
-        GROUP BY d.id_departamento, u.id, u.name, u.email, u.telefono
-    ''', (property_id,))
-    data = cursor.fetchone()
-
-    if not data:
-        cursor.close()
+    depto = Departamento.query.get(property_id)
+    if not depto:
         flash('Propiedad no encontrada.', 'danger')
         return redirect(url_for('main.home'))
 
     departamento = {
-        "id": data[0], "titulo": data[1], "descripcion": data[2],
-        "tipo_publicacion": data[3], "precio": data[4], "moneda": data[5],
-        "ambientes": data[6], "dormitorios": data[7], "banos": data[8],
-        "superficie": data[9], "direccion": data[10], "rol_inmo_dir": data[11],
-        "fotos": data[12].split(',') if data[12] else [],
-        "latitud": float(data[13]) if data[13] else 0.0,
-        "longitud": float(data[14]) if data[14] else 0.0,
-        "propietario_id": data[15]
+        "id": depto.id_departamento,
+        "titulo": depto.titulo,
+        "descripcion": depto.descripcion,
+        "tipo_publicacion": depto.tipo_publicacion,
+        "precio": depto.precio,
+        "moneda": depto.moneda,
+        "ambientes": depto.ambientes,
+        "dormitorios": depto.dormitorios,
+        "banos": depto.banos,
+        "superficie": depto.superficie,
+        "direccion": depto.direccion,
+        "rol_inmo_dir": depto.rol_inmo_dir,
+        "fotos": [f.url_foto for f in depto.fotos],
+        "latitud": float(depto.coordenadas.latitud) if depto.coordenadas else 0.0,
+        "longitud": float(depto.coordenadas.longitud) if depto.coordenadas else 0.0,
+        "propietario_id": depto.id_usuario
     }
     publicador = {
-        "id": data[15], "nombre": data[16],
-        "email": data[17], "telefono": data[18]
+        "id": depto.propietario.id,
+        "nombre": depto.propietario.name,
+        "email": depto.propietario.email,
+        "telefono": depto.propietario.telefono
     }
 
-    cursor.execute('''
-        SELECT r.id_resena, r.puntaje, r.comentario, r.fecha_calificacion,
-               u.name, r.id_usuario_calificador
-        FROM resena r
-        JOIN usuario u ON r.id_usuario_calificador = u.id
-        WHERE r.id_departamento = %s
-        ORDER BY r.fecha_calificacion DESC
-    ''', (property_id,))
     resenas = [{
-        "id_resena": r[0], "puntaje": r[1], "comentario": r[2],
-        "fecha_calificacion": r[3], "calificador_nombre": r[4],
-        "id_usuario_calificador": r[5]
-    } for r in cursor.fetchall()]
+        "id_resena": r.id_resena,
+        "puntaje": r.puntaje,
+        "comentario": r.comentario,
+        "fecha_calificacion": r.fecha_calificacion,
+        "calificador_nombre": r.calificador.name,
+        "id_usuario_calificador": r.id_usuario_calificador
+    } for r in depto.resenas]
 
     current_user_id = session.get('user_id')
     user_has_reviewed = False
@@ -69,19 +65,19 @@ def view_property(property_id):
     favoritos = []
 
     if current_user_id:
-        for resena in resenas:
-            if resena['id_usuario_calificador'] == current_user_id:
+        for r in resenas:
+            if r['id_usuario_calificador'] == current_user_id:
                 user_has_reviewed = True
-                user_review_id = resena['id_resena']
+                user_review_id = r['id_resena']
                 break
-        cursor.execute('SELECT id_departamento FROM favorito WHERE id_usuario = %s',
-                       (current_user_id,))
-        favoritos = [row[0] for row in cursor.fetchall()]
+        favoritos = [f.id_departamento for f in
+                     Favorito.query.filter_by(id_usuario=current_user_id).all()]
 
-    cursor.close()
     return render_template('viewProperty.html',
-                           departamento=departamento, publicador=publicador,
-                           resenas=resenas, resena_form=ResenaForm(),
+                           departamento=departamento,
+                           publicador=publicador,
+                           resenas=resenas,
+                           resena_form=ResenaForm(),
                            edit_resena_form=EditResenaForm(),
                            current_user_id=current_user_id,
                            user_has_reviewed=user_has_reviewed,
@@ -97,11 +93,8 @@ def publish_depto():
         return redirect(url_for('auth.login'))
 
     form = PublishDeptoForm()
-    cursor = mysql.connection.cursor()
-    cursor.execute('SELECT id_localidad, nombre FROM localidad')
-    localidades = cursor.fetchall()
-    cursor.close()
-    form.localidad.choices = [(str(id_loc), nombre) for id_loc, nombre in localidades]
+    form.localidad.choices = [(str(l.id_localidad), l.nombre)
+                              for l in Localidad.query.all()]
 
     if form.validate_on_submit():
         try:
@@ -118,48 +111,45 @@ def publish_depto():
                 return render_template('publish_depto.html', form=form)
 
             price = float(form.price.data.replace('.', '').replace(',', ''))
-            user_id = session['user_id']
 
-            cursor = mysql.connection.cursor()
-            cursor.execute('''
-                INSERT INTO departamento
-                    (id_usuario, id_localidad, titulo, descripcion, tipo_publicacion,
-                     precio, moneda, ambientes, dormitorios, banos, superficie,
-                     direccion, rol_inmo_dir, fecha_publicacion)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW())
-            ''', (user_id, form.localidad.data, form.title.data, form.description.data,
-                  form.tipo_publicacion.data, price, form.moneda.data,
-                  form.ambientes.data, form.dormitorios.data, form.banos.data,
-                  form.superficie.data, form.direccion.data, form.rol_inmo_dir.data))
-            depto_id = cursor.lastrowid
-
-            cursor.execute(
-                'INSERT INTO coordenadas (id_departamento, latitud, longitud) VALUES (%s,%s,%s)',
-                (depto_id, latitud, longitud)
+            depto = Departamento(
+                id_usuario=session['user_id'],
+                id_localidad=form.localidad.data,
+                titulo=form.title.data,
+                descripcion=form.description.data,
+                tipo_publicacion=form.tipo_publicacion.data,
+                precio=price,
+                moneda=form.moneda.data,
+                ambientes=form.ambientes.data,
+                dormitorios=form.dormitorios.data,
+                banos=form.banos.data,
+                superficie=form.superficie.data,
+                direccion=form.direccion.data,
+                rol_inmo_dir=form.rol_inmo_dir.data
             )
+            db.session.add(depto)
+            db.session.flush()
+
+            coords = Coordenada(id_departamento=depto.id_departamento,
+                                latitud=latitud, longitud=longitud)
+            db.session.add(coords)
 
             for photo in valid_photos:
-                filename = f"{uuid.uuid4().hex}_{secure_filename(photo.filename)}"
-                from flask import current_app
-                photo.save(os.path.join(current_app.root_path, 'static', 'image', filename))
-                cursor.execute(
-                    'INSERT INTO foto (id_departamento, url_foto) VALUES (%s,%s)',
-                    (depto_id, filename)
-                )
+                filename = _save_photo(photo, current_app._get_current_object())
+                db.session.add(Foto(id_departamento=depto.id_departamento,
+                                    url_foto=filename))
 
-            mysql.connection.commit()
-            cursor.close()
+            db.session.commit()
             return redirect(url_for('deptos.publication_success'))
 
         except Exception as e:
-            mysql.connection.rollback()
+            db.session.rollback()
             flash(f'Error al publicar: {str(e)}', 'danger')
             return render_template('publish_depto.html', form=form)
 
     for field, errors in form.errors.items():
         for error in errors:
-            label = getattr(form, field).label.text
-            flash(f"Error en '{label}': {error}", 'danger')
+            flash(f"Error en '{getattr(form, field).label.text}': {error}", 'danger')
 
     return render_template('publish_depto.html', form=form)
 
@@ -167,239 +157,178 @@ def publish_depto():
 @deptos_bp.route('/modify_depto/<int:depto_id>', methods=['GET', 'POST'])
 def modify_depto(depto_id):
     if 'user_id' not in session:
-        flash('Debes iniciar sesión primero', 'warning')
         return redirect(url_for('auth.login'))
 
-    cursor = mysql.connection.cursor()
-    cursor.execute('''
-        SELECT d.titulo, d.descripcion, d.tipo_publicacion, d.precio, d.moneda,
-               d.ambientes, d.dormitorios, d.banos, d.superficie, d.direccion,
-               d.id_localidad, d.rol_inmo_dir, d.estado,
-               GROUP_CONCAT(f.url_foto) AS fotos
-        FROM departamento d
-        LEFT JOIN foto f ON d.id_departamento = f.id_departamento
-        WHERE d.id_departamento = %s AND d.id_usuario = %s
-        GROUP BY d.id_departamento
-    ''', (depto_id, session['user_id']))
-    depto_data = cursor.fetchone()
-
-    if not depto_data:
+    depto = Departamento.query.filter_by(
+        id_departamento=depto_id, id_usuario=session['user_id']
+    ).first()
+    if not depto:
         flash('Departamento no encontrado o sin permisos.', 'danger')
-        cursor.close()
         return redirect(url_for('user.user_panel'))
 
-    cursor.execute('SELECT id_localidad, nombre FROM localidad')
-    localidades = cursor.fetchall()
-    cursor.execute('SELECT latitud, longitud FROM coordenadas WHERE id_departamento = %s', (depto_id,))
-    coords = cursor.fetchone()
-    cursor.close()
-
     form = PublishDeptoForm()
-    form.localidad.choices = [(str(id_loc), nombre) for id_loc, nombre in localidades]
+    form.localidad.choices = [(str(l.id_localidad), l.nombre)
+                              for l in Localidad.query.all()]
     form.photos.validators = []
 
     if request.method == 'GET':
-        form.title.data = depto_data[0]
-        form.description.data = depto_data[1]
-        form.tipo_publicacion.data = depto_data[2]
-        form.price.data = f"{int(depto_data[3]):,}".replace(',', '.')
-        form.moneda.data = depto_data[4]
-        form.ambientes.data = depto_data[5]
-        form.dormitorios.data = depto_data[6]
-        form.banos.data = depto_data[7]
-        form.superficie.data = depto_data[8]
-        form.direccion.data = depto_data[9]
-        form.localidad.data = str(depto_data[10])
-        form.rol_inmo_dir.data = depto_data[11]
+        form.title.data = depto.titulo
+        form.description.data = depto.descripcion
+        form.tipo_publicacion.data = depto.tipo_publicacion
+        form.price.data = f"{int(depto.precio):,}".replace(',', '.')
+        form.moneda.data = depto.moneda
+        form.ambientes.data = depto.ambientes
+        form.dormitorios.data = depto.dormitorios
+        form.banos.data = depto.banos
+        form.superficie.data = depto.superficie
+        form.direccion.data = depto.direccion
+        form.localidad.data = str(depto.id_localidad)
+        form.rol_inmo_dir.data = depto.rol_inmo_dir
 
     if form.validate_on_submit():
         try:
-            price = float(form.price.data.replace('.', '').replace(',', ''))
-            cursor = mysql.connection.cursor()
-            cursor.execute('''
-                UPDATE departamento SET titulo=%s, descripcion=%s, tipo_publicacion=%s,
-                    precio=%s, moneda=%s, ambientes=%s, dormitorios=%s, banos=%s,
-                    superficie=%s, direccion=%s, id_localidad=%s, rol_inmo_dir=%s, estado=%s
-                WHERE id_departamento=%s AND id_usuario=%s
-            ''', (form.title.data, form.description.data, form.tipo_publicacion.data,
-                  price, form.moneda.data, form.ambientes.data, form.dormitorios.data,
-                  form.banos.data, form.superficie.data, form.direccion.data,
-                  form.localidad.data, form.rol_inmo_dir.data,
-                  request.form.get('estado'), depto_id, session['user_id']))
+            depto.titulo = form.title.data
+            depto.descripcion = form.description.data
+            depto.tipo_publicacion = form.tipo_publicacion.data
+            depto.precio = float(form.price.data.replace('.', '').replace(',', ''))
+            depto.moneda = form.moneda.data
+            depto.ambientes = form.ambientes.data
+            depto.dormitorios = form.dormitorios.data
+            depto.banos = form.banos.data
+            depto.superficie = form.superficie.data
+            depto.direccion = form.direccion.data
+            depto.id_localidad = form.localidad.data
+            depto.rol_inmo_dir = form.rol_inmo_dir.data
+            depto.estado = request.form.get('estado', depto.estado)
 
             lat = request.form.get('latitud')
             lon = request.form.get('longitud')
-            if lat and lon:
-                cursor.execute(
-                    'UPDATE coordenadas SET latitud=%s, longitud=%s WHERE id_departamento=%s',
-                    (lat, lon, depto_id)
-                )
+            if lat and lon and depto.coordenadas:
+                depto.coordenadas.latitud = lat
+                depto.coordenadas.longitud = lon
 
             new_photos = [p for p in request.files.getlist(form.photos.name)
                           if p and p.filename]
             if new_photos:
-                cursor.execute('SELECT COUNT(*) FROM foto WHERE id_departamento=%s', (depto_id,))
-                current_count = cursor.fetchone()[0]
+                current_count = len(depto.fotos)
                 slots = 5 - current_count
                 if slots <= 0:
                     flash('Ya tenés el máximo de 5 imágenes.', 'warning')
                 else:
                     for photo in new_photos[:slots]:
-                        from flask import current_app
-                        filename = f"{uuid.uuid4().hex}_{secure_filename(photo.filename)}"
-                        photo.save(os.path.join(current_app.root_path, 'static', 'image', filename))
-                        cursor.execute(
-                            'INSERT INTO foto (id_departamento, url_foto) VALUES (%s,%s)',
-                            (depto_id, filename)
-                        )
+                        filename = _save_photo(photo, current_app._get_current_object())
+                        db.session.add(Foto(id_departamento=depto_id, url_foto=filename))
 
-            mysql.connection.commit()
-            cursor.close()
+            db.session.commit()
             flash('Departamento actualizado.', 'success')
             return redirect(url_for('user.user_panel'))
 
         except Exception as e:
-            mysql.connection.rollback()
+            db.session.rollback()
             flash(f'Error al actualizar: {str(e)}', 'danger')
-        finally:
-            if cursor:
-                cursor.close()
 
-    current_photos = depto_data[13].split(',') if depto_data[13] else []
+    current_photos = [f.url_foto for f in depto.fotos]
+    lat = float(depto.coordenadas.latitud) if depto.coordenadas else ''
+    lon = float(depto.coordenadas.longitud) if depto.coordenadas else ''
     return render_template('modify_depto.html', form=form, depto_id=depto_id,
-                           latitud=coords[0] if coords else '',
-                           longitud=coords[1] if coords else '',
+                           latitud=lat, longitud=lon,
                            current_photos=current_photos,
-                           current_status=depto_data[12])
+                           current_status=depto.estado)
 
 
 @deptos_bp.route('/delete_publication/<int:publication_id>', methods=['POST'])
 def delete_publication(publication_id):
     if 'user_id' not in session:
-        flash('Debes iniciar sesión primero', 'warning')
         return redirect(url_for('auth.login'))
-    try:
-        cursor = mysql.connection.cursor()
-        cursor.execute('DELETE FROM coordenadas WHERE id_departamento=%s', (publication_id,))
-        cursor.execute('DELETE FROM foto WHERE id_departamento=%s', (publication_id,))
-        cursor.execute('DELETE FROM departamento WHERE id_departamento=%s AND id_usuario=%s',
-                       (publication_id, session['user_id']))
-        mysql.connection.commit()
-        cursor.close()
-        return redirect(url_for('deptos.delete_confirmation'))
-    except Exception as e:
-        mysql.connection.rollback()
-        flash(f'Error al eliminar: {e}', 'danger')
-        return redirect(url_for('user.user_panel'))
+    depto = Departamento.query.filter_by(
+        id_departamento=publication_id, id_usuario=session['user_id']
+    ).first()
+    if depto:
+        db.session.delete(depto)
+        db.session.commit()
+    return redirect(url_for('deptos.delete_confirmation'))
 
 
 @deptos_bp.route('/update_status/<int:publication_id>', methods=['POST'])
 def update_status(publication_id):
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
-    new_status = request.form.get('estado')
     valid_states = ['disponible', 'reservado', 'vendido', 'alquilado']
+    new_status = request.form.get('estado')
     if not new_status or new_status not in valid_states:
         flash('Estado inválido.', 'danger')
         return redirect(url_for('user.user_panel'))
-    try:
-        cursor = mysql.connection.cursor()
-        cursor.execute(
-            'UPDATE departamento SET estado=%s WHERE id_departamento=%s AND id_usuario=%s',
-            (new_status, publication_id, session['user_id'])
-        )
-        mysql.connection.commit()
-        cursor.close()
+    depto = Departamento.query.filter_by(
+        id_departamento=publication_id, id_usuario=session['user_id']
+    ).first()
+    if depto:
+        depto.estado = new_status
+        db.session.commit()
         flash(f'Estado actualizado a: {new_status}', 'success')
-    except Exception as e:
-        mysql.connection.rollback()
-        flash(f'Error: {e}', 'danger')
     return redirect(url_for('user.user_panel'))
 
 
 @deptos_bp.route('/delete_photo/<int:depto_id>/<photo_name>', methods=['POST'])
 def delete_photo(depto_id, photo_name):
     if 'user_id' not in session:
-        return jsonify({'success': False, 'message': 'No autenticado'})
-    try:
-        from flask import current_app
-        cursor = mysql.connection.cursor()
-        cursor.execute(
-            'SELECT id_departamento FROM departamento WHERE id_departamento=%s AND id_usuario=%s',
-            (depto_id, session['user_id'])
-        )
-        if not cursor.fetchone():
-            cursor.close()
-            return jsonify({'success': False, 'message': 'Sin permisos'})
-        cursor.execute('DELETE FROM foto WHERE id_departamento=%s AND url_foto=%s',
-                       (depto_id, photo_name))
-        mysql.connection.commit()
-        cursor.close()
-        foto_path = os.path.join(current_app.root_path, 'static', 'image', photo_name)
-        if os.path.exists(foto_path):
-            os.remove(foto_path)
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
+        return jsonify({'success': False})
+    depto = Departamento.query.filter_by(
+        id_departamento=depto_id, id_usuario=session['user_id']
+    ).first()
+    if not depto:
+        return jsonify({'success': False, 'message': 'Sin permisos'})
+    foto = Foto.query.filter_by(id_departamento=depto_id, url_foto=photo_name).first()
+    if foto:
+        db.session.delete(foto)
+        db.session.commit()
+        path = os.path.join(current_app.root_path, 'static', 'image', photo_name)
+        if os.path.exists(path):
+            os.remove(path)
+    return jsonify({'success': True})
 
 
 @deptos_bp.route('/departamento/<int:departamento_id>/add_resena', methods=['POST'])
 def add_resena(departamento_id):
     if 'user_id' not in session:
-        flash('Debes iniciar sesión para dejar una reseña.', 'warning')
         return redirect(url_for('auth.login'))
 
     form = ResenaForm()
     if form.validate_on_submit():
         user_id = session['user_id']
-        cursor = mysql.connection.cursor()
+        depto = Departamento.query.get(departamento_id)
 
-        cursor.execute('SELECT id_usuario FROM departamento WHERE id_departamento=%s',
-                       (departamento_id,))
-        owner = cursor.fetchone()
-        if owner and owner[0] == user_id:
+        if depto.id_usuario == user_id:
             flash('No podés reseñar tu propio departamento.', 'danger')
-            cursor.close()
             return redirect(url_for('deptos.view_property', property_id=departamento_id))
 
-        cursor.execute(
-            'SELECT id_resena FROM resena WHERE id_departamento=%s AND id_usuario_calificador=%s',
-            (departamento_id, user_id)
-        )
-        if cursor.fetchone():
+        existing = Resena.query.filter_by(
+            id_departamento=departamento_id,
+            id_usuario_calificador=user_id
+        ).first()
+        if existing:
             flash('Ya dejaste una reseña. Podés editarla.', 'info')
-            cursor.close()
             return redirect(url_for('deptos.view_property', property_id=departamento_id))
 
-        cursor.execute('''
-            INSERT INTO resena (id_departamento, id_usuario_calificador, puntaje, comentario, fecha_calificacion)
-            VALUES (%s,%s,%s,%s,NOW())
-        ''', (departamento_id, user_id, form.puntaje.data, form.comentario.data))
-        resena_id = cursor.lastrowid
+        resena = Resena(
+            id_departamento=departamento_id,
+            id_usuario_calificador=user_id,
+            puntaje=form.puntaje.data,
+            comentario=form.comentario.data
+        )
+        db.session.add(resena)
+        db.session.flush()
 
-        if owner:
-            cursor.execute('SELECT name FROM usuario WHERE id=%s', (user_id,))
-            nombre = cursor.fetchone()
-            cursor.execute('SELECT titulo FROM departamento WHERE id_departamento=%s',
-                           (departamento_id,))
-            titulo = cursor.fetchone()
-            if nombre and titulo:
-                cursor.execute('''
-                    INSERT INTO notificaciones
-                        (id_usuario_receptor, tipo_notificacion, mensaje,
-                         id_departamento_ref, id_resena_ref, fecha_envio, leida)
-                    VALUES (%s,'NUEVA_RESENA',%s,%s,%s,NOW(),0)
-                ''', (owner[0],
-                      f"'{nombre[0]}' dejó una reseña en '{titulo[0]}'.",
-                      departamento_id, resena_id))
-
-        mysql.connection.commit()
-        cursor.close()
+        calificador = Usuario.query.get(user_id)
+        notif = Notificacion(
+            id_usuario_receptor=depto.id_usuario,
+            tipo_notificacion='NUEVA_RESENA',
+            mensaje=f"'{calificador.name}' dejó una reseña en '{depto.titulo}'.",
+            id_departamento_ref=departamento_id,
+            id_resena_ref=resena.id_resena
+        )
+        db.session.add(notif)
+        db.session.commit()
         flash('Reseña agregada.', 'success')
-    else:
-        for field, errors in form.errors.items():
-            for error in errors:
-                flash(f"Error en '{getattr(form, field).label.text}': {error}", 'danger')
 
     return redirect(url_for('deptos.view_property', property_id=departamento_id))
 
@@ -408,67 +337,47 @@ def add_resena(departamento_id):
 def edit_resena(resena_id):
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
-
-    cursor = mysql.connection.cursor()
-    cursor.execute(
-        'SELECT id_departamento, id_usuario_calificador, puntaje, comentario FROM resena WHERE id_resena=%s',
-        (resena_id,)
-    )
-    resena = cursor.fetchone()
-    if not resena or resena[1] != session['user_id']:
-        flash('Sin permisos para editar esta reseña.', 'danger')
-        cursor.close()
+    resena = Resena.query.get(resena_id)
+    if not resena or resena.id_usuario_calificador != session['user_id']:
+        flash('Sin permisos.', 'danger')
         return redirect(url_for('main.home'))
 
     form = EditResenaForm(request.form)
     if request.method == 'POST' and form.validate():
-        cursor.execute(
-            'UPDATE resena SET puntaje=%s, comentario=%s, fecha_calificacion=NOW() WHERE id_resena=%s',
-            (form.puntaje.data, form.comentario.data, resena_id)
-        )
-        mysql.connection.commit()
-        cursor.close()
+        resena.puntaje = form.puntaje.data
+        resena.comentario = form.comentario.data
+        db.session.commit()
         flash('Reseña actualizada.', 'success')
-        return redirect(url_for('deptos.view_property', property_id=resena[0]))
-
+        return redirect(url_for('deptos.view_property',
+                                property_id=resena.id_departamento))
     if request.method == 'GET':
-        form.puntaje.data = str(resena[2])
-        form.comentario.data = resena[3]
+        form.puntaje.data = str(resena.puntaje)
+        form.comentario.data = resena.comentario
 
-    cursor.close()
     return render_template('edit_resena_modal_content.html', form=form,
-                           resena_id=resena_id, property_id=resena[0])
+                           resena_id=resena_id,
+                           property_id=resena.id_departamento)
 
 
 @deptos_bp.route('/resena/<int:resena_id>/delete', methods=['POST'])
 def delete_resena(resena_id):
     if 'user_id' not in session:
         return jsonify({'success': False}), 401
-
-    cursor = mysql.connection.cursor()
-    cursor.execute(
-        'SELECT id_departamento, id_usuario_calificador FROM resena WHERE id_resena=%s',
-        (resena_id,)
-    )
-    resena = cursor.fetchone()
+    resena = Resena.query.get(resena_id)
     if not resena:
-        cursor.close()
-        return jsonify({'success': False, 'message': 'No encontrada'}), 404
-    if resena[1] != session['user_id']:
-        cursor.close()
-        return jsonify({'success': False, 'message': 'Sin permisos'}), 403
-
+        return jsonify({'success': False}), 404
+    if resena.id_usuario_calificador != session['user_id']:
+        return jsonify({'success': False}), 403
+    property_id = resena.id_departamento
     try:
-        cursor.execute('DELETE FROM notificaciones WHERE id_resena_ref=%s', (resena_id,))
-        cursor.execute('DELETE FROM resena WHERE id_resena=%s', (resena_id,))
-        mysql.connection.commit()
-        cursor.close()
+        Notificacion.query.filter_by(id_resena_ref=resena_id).delete()
+        db.session.delete(resena)
+        db.session.commit()
         return jsonify({'success': True,
                         'redirect_url': url_for('deptos.view_property',
-                                                property_id=resena[0])})
+                                                property_id=property_id)})
     except Exception as e:
-        mysql.connection.rollback()
-        cursor.close()
+        db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
 

@@ -5,20 +5,20 @@ from flask import Flask, render_template, session
 from flask_login import current_user
 
 from config import Config
-from extensions import mysql, login_manager, csrf
+from extensions import db, login_manager, csrf, migrate
 
 
 def create_app():
     app = Flask(__name__, static_folder="static")
     app.config.from_object(Config)
 
-    # Validar configuración crítica
     Config.validate()
 
     # Inicializar extensiones
-    mysql.init_app(app)
+    db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    migrate.init_app(app, db)
 
     # Configurar logging
     if not os.path.exists('logs'):
@@ -31,6 +31,11 @@ def create_app():
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
     app.logger.info('MyDeptos iniciado')
+
+    # Importar modelos para que Alembic los detecte
+    from models import (Usuario, Localidad, Departamento, Foto,
+                        Coordenada, Favorito, Resena, Notificacion,
+                        ConfiguracionUsuario)
 
     # Registrar blueprints
     from routes.auth import auth_bp
@@ -45,25 +50,22 @@ def create_app():
     app.register_blueprint(user_bp)
     app.register_blueprint(admin_bp)
 
-    # Context processor para notificaciones no leídas
+    # Context processor
     @app.context_processor
     def inject_globals():
         unread = 0
         if 'user_id' in session:
             try:
-                cursor = mysql.connection.cursor()
-                cursor.execute(
-                    "SELECT COUNT(*) FROM notificaciones WHERE id_usuario_receptor=%s AND leida=0",
-                    (session['user_id'],)
-                )
-                result = cursor.fetchone()
-                unread = result[0] if result else 0
-                cursor.close()
+                from models import Notificacion
+                unread = Notificacion.query.filter_by(
+                    id_usuario_receptor=session['user_id'],
+                    leida=False
+                ).count()
             except Exception:
                 unread = 0
         return dict(current_user=current_user, unread_notification_count=unread)
 
-    # Manejador de errores
+    # Error handlers
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('404.html'), 404
