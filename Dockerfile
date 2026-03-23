@@ -11,4 +11,4 @@ EXPOSE 5000
 
 ENV FLASK_RUN_HOST=0.0.0.0
 
-CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
+CMD ["sh", "-c", "flask db upgrade && python app.py"]
