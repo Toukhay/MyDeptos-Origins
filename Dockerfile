@@ -11,4 +11,4 @@ EXPOSE 5000
 
 ENV FLASK_RUN_HOST=0.0.0.0
 
-CMD ["sh", "-c", "flask db upgrade && python app.py"]
+CMD ["sh", "-c", "flask db upgrade && gunicorn --bind 0.0.0.0:$PORT app:app"]
