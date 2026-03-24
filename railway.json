@@ -4,7 +4,7 @@
     "builder": "DOCKERFILE"
   },
   "deploy": {
-    "startCommand": "flask db upgrade && python app.py",
+    "startCommand": "flask db upgrade && gunicorn --bind 0.0.0.0:$PORT app:app",
     "restartPolicyType": "ON_FAILURE"
   }
 }
