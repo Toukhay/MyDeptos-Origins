@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MyDeptos - Encontrá y publicá departamentos en Misiones, Argentina">
+    <title>{% block title %}MyDeptos{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    {% block styles %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+    <!-- Modal de autenticación global -->
+    <div id="auth-modal" class="auth-modal-hidden">
+        <div class="auth-modal-overlay" onclick="closeAuthModal()"></div>
+        <div class="auth-modal-content">
+            <h2>Necesitás una cuenta para continuar</h2>
+            <p>Registrate o iniciá sesión para usar esta función.</p>
+            <div class="auth-modal-buttons">
+                <button onclick="window.location.href='{{ url_for('auth.register') }}'" class="btn-modal-register">Registrarse</button>
+                <button onclick="window.location.href='{{ url_for('auth.login') }}'" class="btn-modal-login">Iniciar sesión</button>
+            </div>
+            <button onclick="closeAuthModal()" class="btn-modal-close">✕ Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="main-header">
+        <nav class="main-nav">
+            <a href="{{ url_for('main.home') }}" class="nav-logo">
+                🏢 MyDeptos
+            </a>
+
+            <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMenu()" aria-label="Menú">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <ul class="nav-menu" id="nav-menu">
+                <li><a href="{{ url_for('main.home') }}" class="nav-link">Inicio</a></li>
+                <li><a href="{{ url_for('main.listings') }}" class="nav-link">Departamentos</a></li>
+
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('user.user_panel') }}" class="nav-link">Mi Perfil</a></li>
+                    <li><a href="{{ url_for('user.favorites') }}" class="nav-link">
+                        <i class="fas fa-heart"></i> Favoritos
+                    </a></li>
+                    <li>
+                        <a href="{{ url_for('user.notifications') }}" class="nav-link nav-notif">
+                            <i class="fas fa-bell"></i>
+                            {% if unread_notification_count > 0 %}
+                                <span class="notif-badge">{{ unread_notification_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li><a href="{{ url_for('deptos.publish_depto') }}" class="nav-link btn-nav-publish">+ Publicar</a></li>
+                    <li><a href="{{ url_for('auth.logout') }}" class="nav-link btn-nav-logout">Salir</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('auth.login') }}" class="nav-link">Iniciar sesión</a></li>
+                    <li><a href="{{ url_for('auth.register') }}" class="nav-link btn-nav-publish">Registrarse</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">
+                        {{ message }}
+                        <button onclick="this.parentElement.remove()" class="flash-close">✕</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <strong>MyDeptos</strong>
+                <span>Encontrá tu próximo hogar en Misiones.</span>
+            </div>
+            <div class="footer-links">
+                <a href="{{ url_for('main.about') }}">Sobre nosotros</a>
+                <a href="{{ url_for('main.listings') }}">Departamentos</a>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('deptos.publish_depto') }}">Publicar</a>
+                {% endif %}
+            </div>
+            <div class="footer-social">
+                <a href="https://www.instagram.com/mydeptos" target="_blank" rel="noopener">
+                    <i class="fab fa-instagram"></i> Instagram
+                </a>
+                <a href="https://www.facebook.com/mydeptos" target="_blank" rel="noopener">
+                    <i class="fab fa-facebook"></i> Facebook
+                </a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 MyDeptos. Todos los derechos reservados.
+        </div>
+    </footer>
+
+    <!-- Scripts globales -->
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('nav-menu');
+            const hamburger = document.getElementById('nav-hamburger');
+            menu.classList.toggle('open');
+            hamburger.classList.toggle('open');
+        }
+
+        function showAuthModal() {
+            document.getElementById('auth-modal').classList.remove('auth-modal-hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('auth-modal-hidden');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAuthModal();
+        });
+
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('nav-menu').classList.remove('open');
+                document.getElementById('nav-hamburger').classList.remove('open');
+            });
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

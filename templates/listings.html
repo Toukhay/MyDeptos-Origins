@@ -1,308 +1,111 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Departamentos</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/listings.css') }}">
-    <script>
-        function toggleFavorite(element, propertyId) {
-            const isAuthenticated = JSON.parse('{{ is_authenticated | tojson }}'); // 🔹 Convierte bien el valor
-            if (!isAuthenticated) {
-                window.location.href = '/login';
-                return;
-            }
-    
-            const isFavorite = element.classList.contains('active');
-            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
-            const formData = new FormData();
-            formData.append('property_id', propertyId);
-    
-            fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    element.classList.toggle('active');
-                } else {
-                    alert('Error al actualizar favorito');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        }
+﻿{% extends 'base.html' %}
 
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.price').forEach(priceElement => {
-            let priceText = priceElement.textContent;
-            // Busca números en el texto
-            let priceValue = priceText.match(/\d+\.?\d*/);
-            if (priceValue) {
-                priceValue = priceValue[0];
-                // Formatea el número
-                let formatted = parseFloat(priceValue).toLocaleString('es-AR', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                });
-                // Reemplaza en el texto original
-                priceElement.textContent = priceElement.textContent.replace(priceValue, formatted);
-            }
+{% block title %}Departamentos — MyDeptos{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/listings.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="listings-container">
+    <h2 class="listings-title">Departamentos disponibles</h2>
+    <div class="listings">
+        {% for depto in departamentos %}
+            <div class="listing">
+                <div class="carousel">
+                    {% for foto in depto[12] %}
+                        <div><img src="{{ url_for('static', filename='image/' ~ foto) }}" alt="Foto"></div>
+                    {% else %}
+                        <div class="no-photo">Sin fotos</div>
+                    {% endfor %}
+                </div>
+                <div class="listing-info">
+                    <i class="fas fa-heart favorite {% if depto[0] in favoritos %}active{% endif %}"
+                       onclick="toggleFavorite(this, '{{ depto[0] }}'); return false;"></i>
+                    <h3>{{ depto[1] }}</h3>
+                    <p class="listing-desc">{{ depto[2] }}</p>
+                    <div class="listing-details">
+                        <span>📍 {{ depto[10][:25] }}{% if depto[10]|length > 25 %}...{% endif %}</span>
+                        <span>🏠 {{ depto[6] }} amb.</span>
+                        <span>🛏️ {{ depto[7] }} dorm.</span>
+                        <span>🚿 {{ depto[8] }} baños</span>
+                    </div>
+                    <p class="price">💰 {{ depto[5] }} {{ depto[4] }}</p>
+                    <button class="btn-ver-propiedad"
+                            onclick="viewProperty('{{ depto[0] }}'); return false;">
+                        Ver propiedad
+                    </button>
+                </div>
+            </div>
+        {% else %}
+            <p class="no-results">No hay departamentos disponibles.</p>
+        {% endfor %}
+    </div>
+
+    {% if total_pages > 1 %}
+    <nav class="pagination-nav">
+        <ul class="pagination">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('main.listings', page=page-1) }}">Anterior</a>
+            </li>
+            {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('main.listings', page=p) }}">{{ p }}</a>
+                </li>
+            {% endfor %}
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('main.listings', page=page+1) }}">Siguiente</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $('.carousel').slick({
+            dots: true,
+            infinite: true,
+            speed: 300,
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            prevArrow: '<button type="button" class="slick-prev"><i class="fas fa-chevron-left"></i></button>',
+            nextArrow: '<button type="button" class="slick-next"><i class="fas fa-chevron-right"></i></button>'
         });
     });
-    </script>    
-</head>
-<body class="listings-page">
-    <div id="auth-modal" class="auth-modal-hidden">
-        <div class="auth-modal-content">
-            <h2>Para usar estas opciones debe autenticarse y registrarse por seguridad</h2>
-            <button onclick="window.location.href='{{ url_for('auth.register') }}'" class="register-btn">Registrarse</button>
-            <button onclick="window.location.href='{{ url_for('auth.login') }}'" class="login-btn">Iniciar sesión</button>
-            <button onclick="closeAuthModal()" class="close-btn">Cerrar</button>
-        </div>
-    </div>
-    <header>
-        <nav>
-            <div class="logo">MyDeptos</div>
-            <ul class="menu">
-                <li><a href="{{ url_for('main.home') }}">Inicio</a></li>
-                {% if current_user.is_authenticated %}
-                    <li><a href="{{ url_for('user.user_panel') }}">Mi Perfil</a></li>
-                    <li><a href="{{ url_for('user.favorites') }}">Favoritos</a></li>
-                    <li><a href="{{ url_for('deptos.publish_depto') }}">Publicar</a></li>
-                {% else %}
-                    <li><a href="{{ url_for('auth.login') }}">Iniciar sesión</a></li>
-                    <li><a href="{{ url_for('auth.register') }}">Registrarse</a></li>
-                    <li><a href="{{ url_for('main.listings') }}">Lista de Departamentos</a></li>
-                    <li><a href="#" onclick="showAuthModal();return false;">Publicar</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    </header>
-    <div class="container">
-        <h2>Lista de Departamentos</h2>
-        <div class="listings">
-            {% for depto in departamentos %}
-                <div class="listing">
-                    <div class="carousel">
-                        {% for foto in depto[12] %}
-                            <div><img src="{{ url_for('static', filename='image/' ~ foto) }}" alt="Foto del Departamento"></div>
-                        {% endfor %}
-                    </div>
-                    <div class="listing-info">
-                        <i class="fas fa-heart favorite {% if depto[0] in favoritos %}active{% endif %}" onclick="toggleFavorite(this, '{{ depto[0] }}'); return false;"></i>
-                        <h3>{{ depto[1] }}</h3>
-                        <div class="description-container">
-                            <p>{{ depto[2] }}</p>
-                        </div>
-                        <div class="details-container">
-                            <p><strong>📍</strong> {{ depto[10][:20] }}{% if depto[10]|length > 20 %}...{% endif %}</p>
-                            <p><strong>🏠</strong> {{ depto[6] }} amb.</p>
-                            <p><strong>🛏️</strong> {{ depto[7] }} dorm.</p>
-                            <p><strong>🚿</strong> {{ depto[8] }} baños</p>
-                            <p class="price"><strong>💰</strong> {{ depto[4] }}</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="viewProperty('{{ depto[0] }}'); return false;">Ver propiedad</button>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-        <!-- PAGINACIÓN -->
-        {% if total_pages > 1 %}
-        <nav class="pagination-nav">
-            <ul class="pagination">
-                <li class="page-item{% if page == 1 %} disabled{% endif %}">
-                    <a class="page-link" href="{{ url_for('listings', page=page-1) }}" tabindex="-1">Anterior</a>
-                </li>
-                {% for p in range(1, total_pages + 1) %}
-                    <li class="page-item{% if p == page %} active{% endif %}">
-                        <a class="page-link" href="{{ url_for('listings', page=p) }}">{{ p }}</a>
-                    </li>
-                {% endfor %}
-                <li class="page-item{% if page == total_pages %} disabled{% endif %}">
-                    <a class="page-link" href="{{ url_for('listings', page=page+1) }}">Siguiente</a>
-                </li>
-            </ul>
-        </nav>
-        {% endif %}
-    </div>
-    <footer>
-        <div class="footer-content">
-            <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
-            <div class="social-media">
-                <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
-                <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
-            </div>
-            <div class="navigation-links">
-                <a href="/about">Sobre Nosotros</a>
-            </div>
-        </div>
-    </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
-    <script>
-        $(document).ready(function(){
-            $('.carousel').slick({
-                dots: true,
-                infinite: true,
-                speed: 300,
-                slidesToShow: 1,
-                slidesToScroll: 1,
-                prevArrow: '<button type="button" class="slick-prev"><i class="fas fa-chevron-left"></i></button>',
-                nextArrow: '<button type="button" class="slick-next"><i class="fas fa-chevron-right"></i></button>'
-            });
-        });
 
-        // Modal de autenticación
-        function showAuthModal() {
-            document.getElementById('auth-modal').classList.remove('auth-modal-hidden');
-        }
-        function closeAuthModal() {
-            document.getElementById('auth-modal').classList.add('auth-modal-hidden');
-        }
+    function toggleFavorite(element, propertyId) {
+        const isAuthenticated = JSON.parse('{{ is_authenticated | tojson }}');
+        if (!isAuthenticated) { showAuthModal(); return false; }
+        const isFavorite = element.classList.contains('active');
+        const formData = new FormData();
+        formData.append('property_id', propertyId);
+        fetch(isFavorite ? '/remove_favorite' : '/add_favorite', {
+            method: 'POST', body: formData,
+            headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+        })
+        .then(r => r.json())
+        .then(data => { if (data.success) element.classList.toggle('active'); });
+    }
 
-        function toggleFavorite(element, propertyId) {
-            const isAuthenticated = JSON.parse('{{ is_authenticated | tojson }}');
-            if (!isAuthenticated) {
-                showAuthModal();
-                return false;
-            }
-            const isFavorite = element.classList.contains('active');
-            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
-            const formData = new FormData();
-            formData.append('property_id', propertyId);
+    function viewProperty(propertyId) {
+        const isAuthenticated = JSON.parse('{{ is_authenticated | tojson }}');
+        if (!isAuthenticated) { showAuthModal(); return false; }
+        window.location.href = '/viewProperty/' + propertyId;
+    }
 
-            fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    element.classList.toggle('active');
-                } else {
-                    alert('Error al actualizar favorito');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+    document.querySelectorAll('.price').forEach(el => {
+        let match = el.textContent.match(/\d+\.?\d*/);
+        if (match) {
+            let formatted = parseFloat(match[0]).toLocaleString('es-AR', {minimumFractionDigits: 0});
+            el.textContent = el.textContent.replace(match[0], formatted);
         }
-
-        function viewProperty(propertyId) {
-            const isAuthenticated = JSON.parse('{{ is_authenticated | tojson }}');
-            if (!isAuthenticated) {
-                showAuthModal();
-                return false;
-            }
-            window.location.href = '/viewProperty/' + propertyId;
-        }
-    </script>
-    <style>
-    .auth-modal-hidden { display: none; }
-    #auth-modal {
-        position: fixed;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        background: #fff;
-        z-index: 9999;
-        padding: 2rem 2.5rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-        min-width: 320px;
-        max-width: 90vw;
-        text-align: center;
-    }
-    .auth-modal-content h2 {
-        margin-top: 0;
-        color: #4A90E2;
-        font-size: 1.2rem;
-    }
-    .register-btn, .login-btn {
-        background: #4A90E2;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        padding: 0.7rem 1.5rem;
-        margin: 1rem 0.5rem 0 0.5rem;
-        font-size: 1rem;
-        cursor: pointer;
-    }
-    .close-btn {
-        background: #eee;
-        color: #333;
-        border: none;
-        border-radius: 8px;
-        padding: 0.7rem 1.5rem;
-        margin: 1rem 0.5rem 0 0.5rem;
-        font-size: 1rem;
-        cursor: pointer;
-    }
-    .pagination-nav {
-        margin: 2rem 0 1rem 0;
-        text-align: center;
-    }
-    .pagination {
-        display: inline-flex;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    .pagination .page-item {
-        margin: 0 2px;
-    }
-    .pagination .page-link {
-        display: block;
-        padding: 0.5rem 1rem;
-        background: #f5f5f5;
-        color: #4A90E2;
-        border-radius: 6px;
-        text-decoration: none;
-        border: 1px solid #ddd;
-        transition: background 0.2s;
-    }
-    .pagination .page-item.active .page-link {
-        background: #4A90E2;
-        color: #fff;
-        font-weight: bold;
-        border: 1px solid #4A90E2;
-    }
-    .pagination .page-item.disabled .page-link {
-        color: #aaa;
-        pointer-events: none;
-        background: #eee;
-        border: 1px solid #eee;
-    }
-    .listing {
-        border-radius: 14px;
-        box-shadow: 0 4px 18px rgba(74,144,226,0.11);
-        padding: 0.5rem 0.5rem 1.2rem 0.5rem;
-        min-width: 260px;
-        max-width: 440px;
-        margin: 0 auto 2rem auto;
-        background: #fff;
-        display: flex;
-        flex-direction: column;
-    }
-    @media (max-width: 700px) {
-        .listing {
-            max-width: 100%;
-            min-width: 180px;
-            padding: 0.2rem 0.2rem 0.7rem 0.2rem;
-        }
-    }
-    </style>
-</body>
-</html>
+    });
+</script>
+{% endblock %}

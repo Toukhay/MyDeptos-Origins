@@ -1,702 +1,321 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyDeptos - Búsqueda de Departamentos en Misiones</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;900&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
-    <!-- Leaflet CSS para el mapa -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script>
-        function toggleFavorite(element, propertyId) {
-            const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
-            if (!isAuthenticated) {
-                showAuthModal();
-                return false;
-            }
-            
-            const isFavorite = element.classList.contains('selected');
-            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
-            const formData = new FormData();
-            formData.append('property_id', propertyId);
-            
-            fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    element.classList.toggle('selected');
-                    element.textContent = isFavorite ? 'Añadir a Favoritos' : '❤️ Quitar de Favoritos';
-                } else {
-                    alert('Error al actualizar favorito');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        }
+﻿{% extends 'base.html' %}
 
-        function showImage(carousel, index) {
-            const carouselInner = carousel.querySelector('.carousel-inner');
-            const images = carousel.querySelectorAll('img');
-            const dots = carousel.querySelectorAll('.dot');
-            const width = images[0].clientWidth;
-            carouselInner.style.transform = `translateX(${-index * width}px)`;
-            images.forEach((img, i) => {
-                img.classList.toggle('active', i === index);
-            });
-            dots.forEach((dot, i) => {
-                dot.classList.toggle('active', i === index);
-            });
-        }
+{% block title %}MyDeptos — Departamentos en Misiones{% endblock %}
 
-        function prevImage(button) {
-            const carousel = button.closest('.carousel');
-            const images = carousel.querySelectorAll('img');
-            let activeIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
-            if (activeIndex > 0) {
-                activeIndex -= 1;
-                showImage(carousel, activeIndex);
-            }
-        }
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% endblock %}
 
-        function nextImage(button) {
-            const carousel = button.closest('.carousel');
-            const images = carousel.querySelectorAll('img');
-            let activeIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
-            if (activeIndex < images.length - 1) {
-                activeIndex += 1;
-                showImage(carousel, activeIndex);
-            }
-        }
+{% block content %}
+<div class="welcome-section">
+    <h1 class="welcome-title">¡Bienvenid@!</h1>
+    <p class="welcome-desc">
+        {% if is_authenticated and user_name %}
+            {{ user_name }}, encontrá tu próximo departamento de manera fácil y segura.
+        {% else %}
+            La plataforma más dedicada a tu búsqueda. Explorá, filtrá y encontrá tu próximo hogar.
+        {% endif %}
+    </p>
+</div>
 
-        function goToImage(dot, index) {
-            const carousel = dot.closest('.carousel');
-            showImage(carousel, index);
-        }
+<div class="home-main-flex">
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.carousel').forEach(carousel => {
-                showImage(carousel, 0); // Mostrar la primera imagen al cargar la página
-            });
-        });
+    <!-- Filtro -->
+    <div class="filter-box">
+        <h2>Filtrar búsqueda</h2>
+        <form id="searchForm" action="{{ url_for('main.search') }}" method="get">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.price').forEach(priceElement => {
-            let priceText = priceElement.textContent;
-            // Busca números en el texto
-            let priceValue = priceText.match(/\d+\.?\d*/);
-            if (priceValue) {
-                priceValue = priceValue[0];
-                // Formatea el número
-                let formatted = parseFloat(priceValue).toLocaleString('es-AR', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                });
-                // Reemplaza en el texto original
-                priceElement.textContent = priceElement.textContent.replace(priceValue, formatted);
-            }
-        });
-    });
+            <div class="form-group">
+                <label for="tipo_publicacion">Tipo:</label>
+                <select name="tipo_publicacion" id="tipo_publicacion">
+                    <option value="">--Todos--</option>
+                    <option value="venta">Venta</option>
+                    <option value="alquiler">Alquiler</option>
+                </select>
+            </div>
 
-    // Formatea el input de precio con puntos de miles al escribir
-    function formatNumberInput(input) {
-        let value = input.value.replace(/\./g, '').replace(/[^0-9]/g, '');
-        if (value === '') {
-            input.value = '';
-            return;
-        }
-        input.value = parseInt(value, 10).toLocaleString('es-AR');
+            <div class="form-group">
+                <label for="rol_inmobiliario">Rol:</label>
+                <select name="rol_inmobiliario" id="rol_inmobiliario">
+                    <option value="">--Todos--</option>
+                    <option value="Dueño directo">Dueño Directo</option>
+                    <option value="Inmobiliaria">Inmobiliaria</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="precio_min">Precio mínimo:</label>
+                <input type="text" name="precio_min" id="precio_min" placeholder="Ej: 150.000">
+            </div>
+
+            <div class="form-group">
+                <label for="precio_max">Precio máximo:</label>
+                <input type="text" name="precio_max" id="precio_max" placeholder="Ej: 500.000">
+            </div>
+
+            <div class="form-group">
+                <label for="localidad">Localidad:</label>
+                <select name="localidad" id="localidad">
+                    <option value="">--Todas--</option>
+                    {% for id, nombre in localidades %}
+                        <option value="{{ id }}">{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="ambientes">Ambientes:</label>
+                <input type="number" name="ambientes" id="ambientes" placeholder="Ej: 2" min="1">
+            </div>
+
+            <div class="form-group">
+                <button type="button" id="toggle-map-btn" class="btn-map" onclick="toggleLocationMap()">
+                    🗺️ Buscar por zona
+                </button>
+                <div id="location-map-container" style="display:none; margin-top:0.75rem;">
+                    <div id="search-map" style="height:220px; border-radius:8px; margin-bottom:0.5rem;"></div>
+                    <input type="text" id="search-address" placeholder="Buscar dirección..." class="map-input">
+                    <div class="map-actions">
+                        <button type="button" onclick="clearLocationFilter()" class="btn-map-clear">Limpiar</button>
+                        <button type="button" onclick="useCurrentLocation()" class="btn-map-locate">Mi ubicación</button>
+                    </div>
+                    <small class="map-hint">Clic en el mapa para filtrar por zona (radio 2km)</small>
+                    <input type="hidden" id="filter_lat" name="filter_lat">
+                    <input type="hidden" id="filter_lng" name="filter_lng">
+                    <input type="hidden" id="filter_radius" name="filter_radius" value="2">
+                </div>
+            </div>
+
+            <button type="submit" id="buscar-btn">🔍 Buscar</button>
+        </form>
+    </div>
+
+    <!-- Departamentos -->
+    <div class="home-deptos-container">
+        <h2 class="deptos-title">Últimos departamentos publicados</h2>
+
+        {% if ultimos_departamentos %}
+        <div class="home-listings">
+            {% for depto in ultimos_departamentos %}
+            <div class="listing-card">
+                <span class="property-badge">Nuevo</span>
+                <div class="carousel">
+                    <div class="carousel-inner">
+                        {% if depto[11] %}
+                            {% for image in depto[11] %}
+                                <img src="{{ url_for('static', filename='image/' ~ image) }}" alt="Foto">
+                            {% endfor %}
+                        {% else %}
+                            <div class="no-photo-home">Sin fotos</div>
+                        {% endif %}
+                    </div>
+                    {% if depto[11] and depto[11]|length > 1 %}
+                    <button class="carousel-btn prev" onclick="prevImage(this)">&#10094;</button>
+                    <button class="carousel-btn next" onclick="nextImage(this)">&#10095;</button>
+                    <div class="carousel-dots">
+                        {% for i in range(depto[11]|length) %}
+                            <span class="dot" onclick="goToImage(this, {{ i }})"></span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="property-info">
+                    <h3>{{ depto[1] }}</h3>
+                    <p class="property-location">📍 {{ depto[9] }}</p>
+                    <p class="property-desc">{{ depto[2][:120] }}{% if depto[2]|length > 120 %}...{% endif %}</p>
+                    <div class="property-meta">
+                        <span>🏠 {{ depto[5] }} amb.</span>
+                        <span>🛏️ {{ depto[6] }} dorm.</span>
+                        <span>🚿 {{ depto[7] }} baños</span>
+                    </div>
+                    <div class="property-footer">
+                        <span class="price">{{ depto[4] }} {{ depto[3] }}</span>
+                        <div class="property-actions">
+                            <button class="btn-fav {% if depto[0] in favoritos %}selected{% endif %}"
+                                    onclick="toggleFavorite(this, '{{ depto[0] }}'); return false;">
+                                {% if depto[0] in favoritos %}❤️{% else %}🤍{% endif %}
+                            </button>
+                            <button class="btn-ver"
+                                    onclick="viewProperty('{{ depto[0] }}'); return false;">
+                                Ver propiedad
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-deptos">
+            <p>Todavía no hay departamentos publicados.</p>
+            {% if is_authenticated %}
+                <a href="{{ url_for('deptos.publish_depto') }}" class="btn-publicar">+ Publicar el primero</a>
+            {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn-publicar">Registrate para publicar</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="ver-todos">
+            <a href="{{ url_for('main.listings') }}" class="btn-ver-todos">Ver todos los departamentos →</a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    function showImage(carousel, index) {
+        const inner = carousel.querySelector('.carousel-inner');
+        const images = carousel.querySelectorAll('img');
+        const dots = carousel.querySelectorAll('.dot');
+        if (!images.length) return;
+        inner.style.transform = `translateX(${-index * images[0].clientWidth}px)`;
+        images.forEach((img, i) => img.classList.toggle('active', i === index));
+        dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+    }
+
+    function prevImage(btn) {
+        const carousel = btn.closest('.carousel');
+        const images = carousel.querySelectorAll('img');
+        let idx = Array.from(images).findIndex(img => img.classList.contains('active'));
+        if (idx > 0) showImage(carousel, idx - 1);
+    }
+
+    function nextImage(btn) {
+        const carousel = btn.closest('.carousel');
+        const images = carousel.querySelectorAll('img');
+        let idx = Array.from(images).findIndex(img => img.classList.contains('active'));
+        if (idx < images.length - 1) showImage(carousel, idx + 1);
+    }
+
+    function goToImage(dot, index) {
+        showImage(dot.closest('.carousel'), index);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Formatear los inputs de precio al escribir
+        document.querySelectorAll('.carousel').forEach(c => showImage(c, 0));
+
+        document.querySelectorAll('.price').forEach(el => {
+            let match = el.textContent.match(/\d+\.?\d*/);
+            if (match) {
+                let formatted = parseFloat(match[0]).toLocaleString('es-AR', {minimumFractionDigits: 0});
+                el.textContent = el.textContent.replace(match[0], formatted);
+            }
+        });
+
         ['precio_min', 'precio_max'].forEach(id => {
             const input = document.getElementById(id);
             if (input) {
-                input.addEventListener('input', function () {
-                    formatNumberInput(this);
-                });
-                // Al enviar el formulario, limpiar los puntos para enviar solo números
-                input.form && input.form.addEventListener('submit', function (e) {
-                    ['precio_min', 'precio_max'].forEach(fid => {
-                        const finput = document.getElementById(fid);
-                        if (finput) {
-                            finput.value = finput.value.replace(/\./g, '');
-                        }
-                    });
+                input.addEventListener('input', function() {
+                    let val = this.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+                    this.value = val ? parseInt(val).toLocaleString('es-AR') : '';
                 });
             }
         });
     });
-    </script>
-</head>
-<body class="home-page">
-    <!-- Modal solo se muestra si se intenta usar una acción restringida -->
-    <div id="auth-modal" class="auth-modal-hidden">
-        <div class="auth-modal-content">
-            <h2>Para usar estas opciones debe autenticarse y registrarse por seguridad</h2>
-            <button onclick="window.location.href='{{ url_for('auth.register') }}'" class="register-btn">Registrarse</button>
-            <button onclick="window.location.href='{{ url_for('auth.login') }}'" class="login-btn">Iniciar sesión</button>
-            <button onclick="closeAuthModal()" class="close-btn">Cerrar</button>
-        </div>
-    </div>
-    <header>
-        <nav>
-            <div class="logo">MyDeptos</div>
-            <ul class="menu">
-                {% if current_user.is_authenticated %}
-                    <li><a href="{{ url_for('user.user_panel') }}">Mi Perfil</a></li>
-                    <li><a href="{{ url_for('user.favorites') }}">Favoritos</a></li>
-                    <li><a href="{{ url_for('main.listings') }}">Lista de Departamentos</a></li>
-                    <li><a href="{{ url_for('deptos.publish_depto') }}">Publicar</a></li>
-                    <li><a href="{{ url_for('auth.logout') }}" class="btn btn-danger" style="color:#fff;">Cerrar sesión</a></li>
-                {% else %}
-                    <li><a href="{{ url_for('auth.login') }}">Iniciar sesión</a></li>
-                    <li><a href="{{ url_for('auth.register') }}">Registrarse</a></li>
-                    <li><a href="{{ url_for('main.listings') }}">Lista de Departamentos</a></li>
-                    <li><a href="#" onclick="showAuthModal();return false;">Publicar</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    </header>
-    <!-- Bienvenida arriba de todo, centrada, con espacio debajo del nav -->
-    <h1 class="welcome-title">
-        ¡Bienvenid@!
-    </h1>
-    <p class="welcome-desc">
-        {% if is_authenticated and user_name %}
-            {{ user_name }}. La web-app mas dedicada a tus busquedas mas necesitadas MyDeptos vino a quedarse<br>
-            Explora, filtra y encontra tu próximo departamento cerca de tus lugares y de la manera fácil y segura.
-        {% else %}
-            La web-app mas dedicada a tus busquedas mas necesitadas MyDeptos vino a quedarse<br>
-            Explora, filtra y encuentra tu próximo hogar de manera fácil y segura.
-        {% endif %}
-    </p>
-    <div class="home-main-flex">
-        <!-- Filtro de búsqueda a la izquierda -->
-        <div class="filter-box">
-            <h2>Filtro de búsqueda</h2>
-            <form id="searchForm" action="{{ url_for('main.search') }}" method="get">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="form-group">
-                    <label for="tipo_publicacion">Tipo de publicación:</label>
-                    <select name="tipo_publicacion" id="tipo_publicacion">
-                        <option value="">--Seleccionar--</option>
-                        <option value="venta">Venta</option>
-                        <option value="alquiler">Alquiler</option>
-                    </select>
-                    <label for="rol_inmobiliario">Tipo de Rol:</label>
-                    <select name="rol_inmobiliario" id="rol_inmobiliario">
-                        <option value="">--Seleccionar--</option>
-                        <option value="Dueño directo">Dueño Directo</option>
-                        <option value="Inmobiliaria">Inmobiliaria</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="precio_min">Precio mínimo:</label>
-                    <input type="text" name="precio_min" id="precio_min" placeholder="Ej: 150.000">
-                </div>
-                <div class="form-group">
-                    <label for="precio_max">Precio máximo:</label>
-                    <input type="text" name="precio_max" id="precio_max" placeholder="Ej: 150.000">
-                </div>
-                <div class="form-group">
-                    <label for="localidad">Localidad:</label>
-                    <select name="localidad" id="localidad">
-                        <option value="">--Seleccionar--</option>
-                        {% for id, nombre in localidades %}
-                            <option value="{{ id }}">{{ nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <!-- Filtro de Ubicación con Mapa -->
-                <div class="form-group">
-                    <label for="ubicacion">Filtrar por Ubicación:</label>
-                    <button type="button" id="toggle-map-btn" onclick="toggleLocationMap()">🗺️ Buscar en Mapa</button>
-                    <div id="location-map-container" style="display: none;">
-                        <div id="search-map" style="height: 250px; margin: 10px 0; border-radius: 8px;"></div>
-                        <input type="text" id="search-address" placeholder="Buscar dirección, barrio, calle..." style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                        <div style="display: flex; gap: 5px; margin-bottom: 5px;">
-                            <button type="button" onclick="clearLocationFilter()" style="background: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 12px;">Limpiar</button>
-                            <button type="button" onclick="useCurrentLocation()" style="background: #28a745; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 12px;">Mi Ubicación</button>
-                        </div>
-                        <small style="color: #666;">Haz clic en el mapa o busca una dirección para filtrar departamentos por zona</small>
-                        <input type="hidden" id="filter_lat" name="filter_lat">
-                        <input type="hidden" id="filter_lng" name="filter_lng">
-                        <input type="hidden" id="filter_radius" name="filter_radius" value="2">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="ambientes">Ambientes:</label>
-                    <input type="number" name="ambientes" id="ambientes" placeholder="Número de ambientes">
-                </div>
-                <button type="submit" id="buscar-btn">Buscar</button>
-            </form>
-        </div>
-        <!-- Contenido principal a la derecha -->
-        <div class="container home-bottom-container" style="margin-top: 1.2rem;">
-            <h2 class="listings-header">¡Últimos Departamentos publicados y las novedades recientes!</h2>
-            <div class="listings home-listings">
-                {% for depto in ultimos_departamentos %}
-                <div class="listing-card">
-                    <div class="property-badge">Nuevo</div>
-                    <div class="carousel">
-                        <div class="carousel-inner">
-                            {% if depto[11] %}
-                                {% for image in depto[11] %}
-                                    <img src="{{ url_for('static', filename='image/' ~ image) }}" alt="Imagen del departamento">
-                                {% endfor %}
-                            {% else %}
-                                <img src="{{ url_for('static', filename='image/imagen_no_encontrada.jpg') }}" alt="Imagen predeterminada">
-                            {% endif %}
-                        </div>
-                        <button class="prev" onclick="prevImage(this)">&#10094;</button>
-                        <button class="next" onclick="nextImage(this)">&#10095;</button>
-                        <div class="carousel-dots">
-                            {% for i in range(depto[11]|length) %}
-                            <span class="dot" onclick="goToImage(this, '{{ i }}')"></span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="property-info">
-                        <div class="property-header">
-                            <h3>{{ depto[1] }}</h3>
-                            <span class="property-location">{{ depto[9] }}</span>
-                        </div>
-                        <p class="property-description">{{ depto[2][:150] }}{% if depto[2]|length > 150 %}...{% endif %}</p>
-                        <div class="property-details">
-                            <span class="price">${{ depto[3] }}</span>
-                            <span class="operation-type">{{ depto[4] }}</span>
-                        </div>
-                        <div class="property-actions">
-                            <button class="favorite-btn {% if depto[0] in favoritos %}selected{% endif %}" 
-                            onclick="toggleFavorite(this, '{{ depto[0] }}'); return false;">
-                            {% if depto[0] in favoritos %}❤️ Quitar de Favoritos{% else %}Añadir a Favoritos{% endif %}
-                            </button>
-                            <button class="view-btn" onclick="viewProperty('{{ depto[0] }}'); return false;">
-                                👁️ Ver
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            <div class="view-listing-container">
-                <button class="view-listing-button" onclick="window.location.href='/listings'">Ver listado</button>
-            </div>
-        </div>
-    </div>
-    <div style="height: 50px;"></div>
-    <footer>
-        <div class="footer-content">
-            <div class="reserved-rights">&copy; 2025 MyDeptos. Todos los derechos reservados.</div>
-            <div class="social-media">
-                <a href="https://www.instagram.com/mydeptos" target="_blank">Instagram</a>
-                <a href="https://www.facebook.com/mydeptos" target="_blank">Facebook</a>
-            </div>
-            <div class="navigation-links">
-                <a href="/about">Sobre Nosotros</a>
-            </div>
-        </div>
-    </footer>
-    <script>
-        // Modal de autenticación
-        function showAuthModal() {
-            document.getElementById('auth-modal').classList.remove('auth-modal-hidden');
-        }
-        function closeAuthModal() {
-            document.getElementById('auth-modal').classList.add('auth-modal-hidden');
-        }
 
-        // Bloquear acciones para no autenticados
-        function toggleFavorite(element, propertyId) {
-            const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
-            if (!isAuthenticated) {
-                showAuthModal();
-                return false;
-            }
-            const isFavorite = element.classList.contains('selected');
-            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
-            const formData = new FormData();
-            formData.append('property_id', propertyId);
-
-            fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    element.classList.toggle('selected');
-                    element.textContent = isFavorite ? 'Añadir a Favoritos' : '❤️ Quitar de Favoritos';
-                } else {
-                    alert('Error al actualizar favorito');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        }
-
-        function viewProperty(propertyId) {
-            const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
-            if (!isAuthenticated) {
-                showAuthModal();
-                return false;
-            }
-            window.location.href = '/viewProperty/' + propertyId;
-        }
-
-        // Interceptar el envío del formulario de búsqueda si no está autenticado
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchForm = document.getElementById('searchForm');
-            if (searchForm) {
-                // Eliminar la restricción: ya no se bloquea el submit para no autenticados
-                // searchForm.addEventListener('submit', function(e) {
-                //     if (!isAuthenticated) {
-                //         e.preventDefault();
-                //         showAuthModal();
-                //         return false;
-                //     }
-                // });
-            }
-        });
-    </script>
-    <style>
-    /* Modal styles */
-    .auth-modal-hidden { display: none; }
-    #auth-modal {
-        position: fixed;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        background: #fff;
-        z-index: 9999;
-        padding: 2rem 2.5rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-        min-width: 320px;
-        max-width: 90vw;
-        text-align: center;
-    }
-    .auth-modal-content h2 {
-        margin-top: 0;
-        color: #4A90E2;
-        font-size: 1.2rem;
-    }
-    .register-btn, .login-btn {
-        background: #4A90E2;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        padding: 0.7rem 1.5rem;
-        margin: 1rem 0.5rem 0 0.5rem;
-        font-size: 1rem;
-        cursor: pointer;
-    }
-    .close-btn {
-        background: #eee;
-        color: #333;
-        border: none;
-        border-radius: 8px;
-        padding: 0.7rem 1.5rem;
-        margin: 1rem 0.5rem 0 0.5rem;
-        font-size: 1rem;
-        cursor: pointer;
-    }
-
-    /* Estilos adicionales para la página de inicio */
-    /* Bienvenida grande y centrada */
-.welcome-title {
-    width: 100%;
-    text-align: center;
-    font-size: 3.2rem;
-    color: var(--primary-color);
-    margin: 5.5rem 0 1.2rem 0; /* Aumenta el margen superior para bajar el texto */
-    font-weight: 900;
-    letter-spacing: 0.01em;
-}
-.welcome-desc {
-    width: 100%;
-    text-align: center;
-    font-size: 1.35rem;
-    color: #444;
-    margin: 0 0 2.5rem 0;
-    font-weight: 400;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* Layout principal: filtro chico, contenido grande */
-.home-main-flex {
-    display: flex;
-    flex-direction: row;
-    gap: 3.5rem;
-    justify-content: center;
-    align-items: flex-start;
-    width: 100%;
-    max-width: 1700px;
-    margin: 0 auto;
-}
-.filter-box {
-    flex: 0 0 320px;
-    max-width: 340px;
-    min-width: 260px;
-    margin: 0;
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 24px rgba(74,144,226,0.10), 0 1.5px 4px rgba(74,144,226,0.07);
-    border: 1.5px solid #e3eaf3;
-    padding: 2.2rem 1.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    height: fit-content;
-}
-.container.home-bottom-container {
-    flex: 1 1 70%;
-    min-width: 380px;
-    max-width: 1100px;
-    margin: 0;
-    padding: 2.5rem 2.5rem 2rem 2.5rem;
-    border-radius: 18px;
-    box-shadow: 0 6px 32px rgba(74,144,226,0.13), 0 2px 8px rgba(74,144,226,0.09);
-}
-
-/* Ajustes de tarjetas de departamentos */
-.listing-card {
-    border-radius: 14px;
-    box-shadow: 0 4px 18px rgba(74,144,226,0.11);
-    padding: 0.5rem 0.5rem 1.2rem 0.5rem;
-    min-width: 260px;
-    max-width: 440px;
-    margin: 0 auto;
-}
-.property-info {
-    padding: 1.2rem 1rem 0.8rem 1rem;
-}
-.property-header h3 {
-    font-size: 1.18rem;
-}
-.property-description {
-    font-size: 1.02rem;
-}
-.price {
-    font-size: 1.18rem;
-}
-.operation-type {
-    font-size: 0.98rem;
-}
-
-/* Ajuste de grilla de departamentos */
-.listings {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 2rem;
-}
-
-/* Responsive mejorado */
-@media (max-width: 1200px) {
-    .home-main-flex {
-        flex-direction: column; 
-        gap: 2rem; /* Reducir el espacio entre columnas */
-        max-width: 100vw;
-    }
-    .filter-box,
-    .container.home-bottom-container {
-        max-width: 100%;
-        width: 100%;
-    }
-    .filter-box {
-        margin-bottom: 2rem;
-    }
-    .container.home-bottom-container {
-        padding: 1.5rem 0.5rem 1.5rem 0.5rem;
-        margin-top: 0; 
-    }
-    .welcome-box {
-        padding: 2.2rem 0.5rem 1.5rem 0.5rem;
-    }
-    .listing-card {
-        max-width: 100%;
-    }
-}
-@media (max-width: 700px) {
-    .welcome-box h1 {
-        font-size: 2.1rem;
-    }
-    .welcome-box p {
-        font-size: 1.05rem;
-    }
-    .filter-box {
-        padding: 1.2rem 0.5rem;
-    }
-    .container.home-bottom-container {
-        /* padding: 0.5rem 0.2rem; */
-        margin-top: 0; /* Eliminar el margen superior de 1.2rem */
-        padding: 1.5rem;
-    }
-    .listing-card {
-        padding: 0.2rem 0.2rem 0.7rem 0.2rem;
-    }
-}
-
-/* ...resto de estilos existentes... */
-</style>
-
-<!-- Script de Leaflet para el mapa -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-// Variables globales para el mapa de búsqueda
-let searchMap = null;
-let searchMarker = null;
-let searchCircle = null;
-
-// Toggle del mapa de ubicación
-function toggleLocationMap() {
-    const container = document.getElementById('location-map-container');
-    const btn = document.getElementById('toggle-map-btn');
-    
-    if (container.style.display === 'none') {
-        container.style.display = 'block';
-        btn.textContent = '🗺️ Ocultar Mapa';
-        setTimeout(initSearchMap, 100); // Delay para que el container esté visible
-    } else {
-        container.style.display = 'none';
-        btn.textContent = '🗺️ Buscar en Mapa';
-    }
-}
-
-// Inicializar mapa de búsqueda
-function initSearchMap() {
-    if (searchMap) return; // Ya inicializado
-    
-    // Centrar en Oberá
-    const oberaCenter = [-27.485104, -55.119835];
-    searchMap = L.map('search-map').setView(oberaCenter, 13);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(searchMap);
-    
-    // Click en el mapa
-    searchMap.on('click', function(e) {
-        setSearchLocation(e.latlng.lat, e.latlng.lng);
-    });
-    
-    // Buscar direcciones
-    const searchInput = document.getElementById('search-address');
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            searchAddress(this.value);
-        }
-    });
-}
-
-// Establecer ubicación de búsqueda
-function setSearchLocation(lat, lng) {
-    // Remover marcador anterior
-    if (searchMarker) {
-        searchMap.removeLayer(searchMarker);
-    }
-    if (searchCircle) {
-        searchMap.removeLayer(searchCircle);
-    }
-    
-    // Crear nuevo marcador
-    searchMarker = L.marker([lat, lng]).addTo(searchMap);
-    
-    // Crear círculo de búsqueda (radio 2km)
-    searchCircle = L.circle([lat, lng], {
-        radius: 2000, // 2km
-        color: '#4A90E2',
-        fillColor: '#4A90E2',
-        fillOpacity: 0.2
-    }).addTo(searchMap);
-    
-    // Guardar coordenadas
-    document.getElementById('filter_lat').value = lat.toFixed(6);
-    document.getElementById('filter_lng').value = lng.toFixed(6);
-    
-    // Obtener dirección
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.display_name) {
-                document.getElementById('search-address').value = data.display_name;
-            }
-        });
-}
-
-// Buscar dirección
-function searchAddress(address) {
-    if (!address.trim()) return;
-    
-    // Buscar con bias hacia Oberá
-    const query = address + ', Oberá, Misiones, Argentina';
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
-        .then(response => response.json())
-        .then(data => {
-            if (data && data[0]) {
-                const lat = parseFloat(data[0].lat);
-                const lng = parseFloat(data[0].lon);
-                setSearchLocation(lat, lng);
-                searchMap.setView([lat, lng], 15);
-            } else {
-                alert('No se encontró la dirección especificada');
-            }
+    function toggleFavorite(element, propertyId) {
+        const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
+        if (!isAuthenticated) { showAuthModal(); return false; }
+        const isFav = element.classList.contains('selected');
+        const formData = new FormData();
+        formData.append('property_id', propertyId);
+        fetch(isFav ? '/remove_favorite' : '/add_favorite', {
+            method: 'POST', body: formData,
+            headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
         })
-        .catch(() => {
-            alert('Error al buscar la dirección');
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                element.classList.toggle('selected');
+                element.textContent = isFav ? '🤍' : '❤️';
+            }
         });
-}
+    }
 
-// Limpiar filtro de ubicación
-function clearLocationFilter() {
-    if (searchMarker) {
-        searchMap.removeLayer(searchMarker);
-        searchMarker = null;
+    function viewProperty(propertyId) {
+        const isAuthenticated = JSON.parse("{{ is_authenticated | tojson | safe }}");
+        if (!isAuthenticated) { showAuthModal(); return false; }
+        window.location.href = '/viewProperty/' + propertyId;
     }
-    if (searchCircle) {
-        searchMap.removeLayer(searchCircle);
-        searchCircle = null;
-    }
-    
-    document.getElementById('filter_lat').value = '';
-    document.getElementById('filter_lng').value = '';
-    document.getElementById('search-address').value = '';
-}
 
-// Usar ubicación actual
-function useCurrentLocation() {
-    if (!navigator.geolocation) {
-        alert('Tu navegador no soporta geolocalización');
-        return;
+    let searchMap = null, searchMarker = null, searchCircle = null;
+
+    function toggleLocationMap() {
+        const container = document.getElementById('location-map-container');
+        const btn = document.getElementById('toggle-map-btn');
+        const visible = container.style.display !== 'none';
+        container.style.display = visible ? 'none' : 'block';
+        btn.textContent = visible ? '🗺️ Buscar por zona' : '🗺️ Ocultar mapa';
+        if (!visible) setTimeout(initSearchMap, 100);
     }
-    
-    navigator.geolocation.getCurrentPosition(function(position) {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        setSearchLocation(lat, lng);
-        searchMap.setView([lat, lng], 15);
-    }, function() {
-        alert('No se pudo obtener tu ubicación');
-    });
-}
+
+    function initSearchMap() {
+        if (searchMap) return;
+        searchMap = L.map('search-map').setView([-27.485104, -55.119835], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(searchMap);
+        searchMap.on('click', e => setSearchLocation(e.latlng.lat, e.latlng.lng));
+        document.getElementById('search-address').addEventListener('keypress', e => {
+            if (e.key === 'Enter') { e.preventDefault(); searchAddress(e.target.value); }
+        });
+    }
+
+    function setSearchLocation(lat, lng) {
+        if (searchMarker) searchMap.removeLayer(searchMarker);
+        if (searchCircle) searchMap.removeLayer(searchCircle);
+        searchMarker = L.marker([lat, lng]).addTo(searchMap);
+        searchCircle = L.circle([lat, lng], {
+            radius: 2000, color: '#4A90E2',
+            fillColor: '#4A90E2', fillOpacity: 0.2
+        }).addTo(searchMap);
+        document.getElementById('filter_lat').value = lat.toFixed(6);
+        document.getElementById('filter_lng').value = lng.toFixed(6);
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.display_name)
+                    document.getElementById('search-address').value = data.display_name;
+            });
+    }
+
+    function searchAddress(address) {
+        if (!address.trim()) return;
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', Oberá, Misiones, Argentina')}&limit=1`)
+            .then(r => r.json())
+            .then(data => {
+                if (data[0]) {
+                    const lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
+                    setSearchLocation(lat, lng);
+                    searchMap.setView([lat, lng], 15);
+                } else alert('No se encontró la dirección');
+            });
+    }
+
+    function clearLocationFilter() {
+        if (searchMarker) { searchMap.removeLayer(searchMarker); searchMarker = null; }
+        if (searchCircle) { searchMap.removeLayer(searchCircle); searchCircle = null; }
+        ['filter_lat', 'filter_lng', 'search-address'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+    }
+
+    function useCurrentLocation() {
+        if (!navigator.geolocation) { alert('Tu navegador no soporta geolocalización'); return; }
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                setSearchLocation(pos.coords.latitude, pos.coords.longitude);
+                searchMap.setView([pos.coords.latitude, pos.coords.longitude], 15);
+            },
+            () => alert('No se pudo obtener tu ubicación')
+        );
+    }
 </script>
-
-</body>
-</html>
+{% endblock %}
